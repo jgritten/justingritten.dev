@@ -1,5 +1,4 @@
 import { useCallback, useState } from "react"
-import type { FileNode } from "@/types/fileNode";
 import { FileTree } from "./FileTree";
 import { useFileNodes } from "@/hooks/useFileNodes";
 
