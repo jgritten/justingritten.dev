@@ -3,7 +3,6 @@ name: Deploy to S3 + CloudFront
 on:
   push:
     branches: ["main"]
-
   workflow_dispatch:
 
 permissions:
@@ -39,8 +38,29 @@ jobs:
           role-to-assume: arn:aws:iam::305137865693:role/github-deploy-justingritten-dev
           aws-region: us-east-2
 
-      - name: Deploy to S3
-        run: aws s3 sync ./client/dist s3://justingritten.dev --delete
+      # 1) Upload hashed assets with long cache headers
+      - name: Deploy assets to S3 (long cache)
+        run: |
+          aws s3 sync ./client/dist/assets s3://justingritten.dev/assets \
+            --delete \
+            --cache-control "public, max-age=31536000, immutable"
 
+      # 2) Upload other static files (icons, vite.svg, etc.) with a reasonable cache
+      - name: Deploy static files to S3 (moderate cache)
+        run: |
+          aws s3 sync ./client/dist s3://justingritten.dev \
+            --delete \
+            --exclude "assets/*" \
+            --exclude "index.html" \
+            --cache-control "public, max-age=86400"
+
+      # 3) Upload index.html with no-cache so new deploys show immediately
+      - name: Deploy index.html to S3 (no cache)
+        run: |
+          aws s3 cp ./client/dist/index.html s3://justingritten.dev/index.html \
+            --cache-control "no-cache, no-store, must-revalidate" \
+            --content-type "text/html"
+
+      # 4) Invalidate CloudFront to force refresh everywhere
       - name: Invalidate CloudFront
         run: aws cloudfront create-invalidation --distribution-id E3D56KG355201F --paths "/*"

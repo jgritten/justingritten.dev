@@ -25,7 +25,7 @@ The .NET API is in place as a foundation for a future upgrade. To run it locally
 
 ```bash
 # From repo root
-dotnet run --project api
+dotnet run --project server
 ```
 
 API: **http://localhost:5237**. The client can use `VITE_API_URL` (see `client/.env.example`) when using API-backed data.
@@ -49,7 +49,7 @@ Relevant only when the browser calls an API on a different origin. Same-origin h
 | Path       | Description |
 |-----------|-------------|
 | **`client/`** | React SPA (Vite). Path alias `@/` → `src/` (api, components, hooks, types, styles, utils). |
-| **`api/`**    | .NET 10 Web API; EF Core, SQLite (future: MSSQL). Products CRUD, CORS configured for the React app. |
+| **`server/`** | .NET 10 Web API; EF Core, SQLite (future: MSSQL). Products CRUD, CORS configured for the React app. |
 
 The UI includes demo components (e.g. **FileExplorer**, **ProductList**) that showcase patterns like lazy loading and API integration, alongside portfolio content.
 

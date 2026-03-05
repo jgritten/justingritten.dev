@@ -24,9 +24,9 @@ dist-ssr
 *.sw?
 
 # .NET build output
-api/bin/
-api/obj/
+server/bin/
+server/obj/
 
 # SQLite databases (API; client-side SQLite lives in browser storage)
 *.db
-api/*.db
+server/*.db
