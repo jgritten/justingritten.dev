@@ -1,0 +1,37 @@
+---
+description: Use project docs for design and intention when implementing features
+alwaysApply: true
+---
+
+# Project docs and intention
+
+When implementing a **new feature** or making **architectural changes**, use the project documentation so that work aligns with design and intent.
+
+## Where to look
+
+- **Root docs:** `docs/` at the repo root.
+  - `docs/architecture.md` – High-level architecture, data flow, tech choices.
+  - `docs/system-overview.md` – What the site is, frontend/backend layout, where to extend.
+  - `docs/development.md` – How to run client and server locally, scripts, env.
+  - `docs/deployment.md` – CI/CD, S3/CloudFront, what gets deployed.
+  - `docs/security.md` – Public repo, no secrets in client, CORS, future auth.
+- **Decisions:** `docs/decisions/` – ADRs; see `docs/decisions/README.md` for when to add one and which docs to update.
+- **Diagrams:** `docs/diagrams/` – Mermaid lives in architecture.md; PNGs can be added in `docs/diagrams/`.
+
+## How to use
+
+1. **Before implementing a feature:** Read the relevant docs (e.g. architecture, system-overview) so the change fits the current design.
+2. **When changing structure or data flow:** Update `docs/architecture.md` or `docs/system-overview.md` and add an ADR in `docs/decisions/` if the decision is significant.
+3. **When adding deployment or security steps:** Update `docs/deployment.md` and `docs/security.md` accordingly.
+
+## Mandatory doc updates (do not skip)
+
+When you implement any of the following, **you must** add an ADR and update the listed docs before considering the feature complete:
+
+| Feature type | Add ADR in `docs/decisions/` (next number) | Update these docs |
+|--------------|--------------------------------------------|-------------------|
+| **Login / authentication** | Yes (e.g. `0003-authentication-approach.md`) | `docs/security.md` |
+| **New API surface or data model** | Yes | `docs/architecture.md`; `docs/system-overview.md` if structure changes |
+| **Deployment or hosting change** | Yes | `docs/deployment.md` |
+
+Propose the ADR and doc edits in the same change (or immediate follow-up) as the feature so they are not forgotten at check-in.

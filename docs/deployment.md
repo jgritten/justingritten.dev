@@ -1,0 +1,33 @@
+# Deployment
+
+How the portfolio site is built and published.
+
+## Current pipeline
+
+- **Trigger:** Push to `main` or manual `workflow_dispatch`.
+- **Workflow:** `.github/workflows/deploy.yml` (Deploy to S3 + CloudFront).
+
+## Steps
+
+1. **Checkout** – Repo checkout.
+2. **Node** – Setup Node 20, npm cache using `client/package-lock.json`.
+3. **Install & build** – `npm ci` and `npm run build` in `client/`.
+4. **AWS** – OIDC to assume role `github-deploy-justingritten-dev` in `us-east-2`.
+5. **S3 upload (three passes):**
+   - **Assets** – `client/dist/assets` → `s3://justingritten.dev/assets` with long cache (`max-age=31536000, immutable`).
+   - **Static files** – Rest of `client/dist` (excluding `assets/*` and `index.html`) with `max-age=86400`.
+   - **index.html** – No cache (`no-cache, no-store, must-revalidate`) so new deploys are visible immediately.
+6. **CloudFront** – Invalidation on `/*` (distribution id in workflow).
+
+## What is deployed
+
+- **Only the client:** The built React SPA. The .NET API is not deployed; the live site is static.
+
+## Local vs production
+
+- **Local:** `npm run dev` in `client/` (e.g. http://localhost:5173). Optional: `dotnet run --project server` for API (e.g. http://localhost:5237).
+- **Production:** Static files on S3 behind CloudFront; no server-side API in production today.
+
+## Future considerations
+
+- If the API is hosted (e.g. on a separate subdomain), add a separate deploy job or workflow and ensure CORS and `VITE_API_URL` (or runtime config) point to that origin.
