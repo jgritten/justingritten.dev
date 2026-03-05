@@ -30,3 +30,6 @@ server/obj/
 # SQLite databases (API; client-side SQLite lives in browser storage)
 *.db
 server/*.db
+
+# Test coverage (Vitest)
+client/coverage/

@@ -17,7 +17,7 @@ npm run dev
 ```
 
 - App: **http://localhost:5173** (or the port Vite prints).
-- **Scripts:** `npm run build`, `npm run preview`, `npm run lint`.
+- **Scripts:** `npm run build`, `npm run preview`, `npm run lint`, `npm run test`, `npm run test:watch`, `npm run test:coverage`.
 - **Path alias:** `@/` → `client/src/`.
 
 ### Environment
@@ -41,9 +41,14 @@ dotnet run --project server
 - **Frontend only:** Run `client` with `npm run dev`; use mock data or no API.
 - **Full stack:** Run both `client` and `server`; set `VITE_API_URL` if needed (default is correct for local).
 
+## Testing
+
+- **Client:** Vitest + React Testing Library. From `client/`: `npm run test` (single run), `npm run test:watch` (watch), `npm run test:coverage` (coverage report). Tests live in `src/**/*.test.{ts,tsx}`. See [ADR 0003](decisions/0003-testing-approach.md).
+- **Server:** No test project yet; .NET tests (e.g. xUnit) will be added later.
+
 ## Code quality
 
-- **Client:** `npm run lint` in `client/`.
+- **Client:** `npm run lint` and `npm run test` in `client/`.
 - **Server:** Use your IDE or `dotnet build` / analyzer rules as configured.
 
 ## Docs and decisions

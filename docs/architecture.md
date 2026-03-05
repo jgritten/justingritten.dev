@@ -70,6 +70,7 @@ flowchart LR
 - **Path alias:** In the client, `@/` resolves to `src/` (see `client/vite.config.ts`).
 - **API base URL:** Client uses `VITE_API_URL` (default `http://localhost:5237`); see `client/src/api/client.ts`.
 - **CORS:** API allows the React dev origins (`localhost:5173`, `localhost:3000`). If the API is later hosted on a different origin (e.g. `api.justingritten.dev`), CORS must include the frontend origin.
+- **Testing:** Client tests use Vitest and React Testing Library (see [ADR 0003](decisions/0003-testing-approach.md)); server tests will use xUnit when added.
 
 ## Repo layout
 
