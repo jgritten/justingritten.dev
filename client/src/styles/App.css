@@ -1,18 +1,17 @@
 /* App-level layout and styles */
 
-.app {
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-}
-
-.app > * + * {
-  margin-top: 1.5rem;
+/* Content area: main content lives in a single “transparent darker” card (borderless shell) */
+.content-card {
+  background: var(--color-panel);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px var(--black-a4), 0 0 1px var(--gray-7);
+  padding: 2rem;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* Page title - can be overridden when using Radix Heading */
-.app h1 {
+#main-content h1 {
   margin: 0 0 0.5rem;
   font-size: 2rem;
   font-weight: 600;

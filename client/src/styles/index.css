@@ -32,15 +32,6 @@ body {
 #root {
   width: 100%;
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-/* Prevent Theme wrapper from stretching so content centers vertically */
-#root > * {
-  align-self: center;
-  height: fit-content;
 }
 
 h1 {

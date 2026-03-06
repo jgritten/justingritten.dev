@@ -115,6 +115,7 @@ This doc is the **single source of truth** for feature planning and “memory”
 | **Help** | Help widget → AI chat | Later: AI API chat referencing docs; learning feature for SaaS |
 | **Audit** | Version / revision history | Object changes auditable; clear revision history visible (view previous, diff) |
 | **Dashboard** | Activity + “Ready at a Glance” | Recently edited matters; metrics e.g. Matters Opened/Closed (day/week/month/year), Docs Generated |
+| **Dashboard** | Test results visualization | One of the dashboard widgets: show **test results** (pass/fail count, coverage %) and **when** the last run was (e.g. last deploy/merge). Data from a CI-generated summary file the app fetches; see "Test results dashboard widget" (Section 5b). |
 | **Data** | File validation | Type, size, optional scan when applicable (templates, uploads) |
 | **Doc gen** | Document packages (scheduled/bulk) | Package = group of docs to generate in bulk (e.g. on Matter Closed); Admin/Manager define; available in Doc Gen |
 | **Notifications** | Email + user preferences | Emails sent for events; preferences per user, options templated by Client Admin/Managers |
@@ -132,7 +133,8 @@ Order is driven by **dependencies** and **portfolio impact**, not your original 
 ### Phase 0: Foundation (do first)
 
 - **Guest as default entry:** The site is **viewable by default as a Guest**. No login required to enter; visitors land in the app shell and are treated as **Guest** users of a **single default client** you configure. This accommodates recruiters and quick visitors: they can explore the layout, dashboard, and demos and dig deeper (sign up / log in) only if they wish.
-- **Default client:** Set up one **default client** used for all Guest sessions (shared demo client). All guest traffic is scoped to this client; rate limits and permissions apply per Guest (e.g. by IP where needed).
+- **Default client:** Set up one **default client** used for all Guest sessions (shared demo client). All guest traffic is scoped to this client; rate limits and permissions apply per Guest (e.g. by IP where needed).  
+  **When to implement:** Defer to **Phase 1 (Guest session)**. Implement the default client (e.g. constant or env `VITE_DEFAULT_CLIENT_ID`, or backend entity) when you add the explicit Guest session type and “current client = default client” for unauthenticated users; that is the first point where API or client code needs a concrete client scope for guests.
 - **App shell and layout** (three-section: menu bar, sidebar, content).  
   Sidebar: **Dashboard** (default), then **Create New**, then **Search**. Create New and Search can be placeholders or open empty modals until object model exists. Works for Guest and authenticated users.
 - **Mobile-responsive shell** (and baseline responsive rules).  
@@ -142,6 +144,8 @@ Order is driven by **dependencies** and **portfolio impact**, not your original 
 - **App / Client branding** (top-left of menu bar): App name always visible; optional client name/icon when tenancy exists. Design so it can later move to top of sidebar with menu items below.
 
 **Why first:** Recruiters and casual visitors see the product immediately without friction; auth and full tenancy then slot into the same shell.
+
+**Phase 0 complete.** Implemented: shell, Dashboard, placeholder modals (Create New, Search), Settings (sidebar + sub-menu + placeholder pages), theme (persistence + Theme settings modal), footer (favicon, Resume, LinkedIn, Email), mobile (hamburger, slide-out sidebar, two-column settings view). Default client deferred to Phase 1.
 
 ### Phase 1: Authentication
 
@@ -195,6 +199,7 @@ Order is driven by **dependencies** and **portfolio impact**, not your original 
 - **Global search (modal):** **Search** in sidebar opens a modal with table and filters. **Client users:** results scoped to their client. **Support:** can search across clients. Implement once object model and tenancy are clear.
 - **Create New (modal wizard):** **Create New** in sidebar opens a modal wizard to start object creation; wire to your object types when defined.
 - **Dashboard activity + “Ready at a Glance”:** Recently edited matters; metrics such as Matters Opened/Closed (day/week/month/year), Documents Generated, and other object activity as you define them.
+- **Test results (dashboard widget):** One of the offered dashboard visualizations: **Test results** — show pass/fail count, coverage percentage, and when the last run was (e.g. "Last run: after merge to main"). Data comes from a small **CI-generated summary file** (see Section 5b). Can be implemented **earlier** as a portfolio demo (e.g. with or just after Phase 1) since it only needs the deploy pipeline to run tests and emit the summary; no tenancy required.
 - **Configurable dashboard:** **Client** can use Default Dashboard or **toggle on/off** offered components. **Users** of that client see the client default but **can edit their own** dashboard (personal override).
 - **Offline / graceful degradation:** When API or WebSocket is unavailable, **banner or theme shift** and **header or other text** to convey connection status to the user.
 
@@ -261,7 +266,17 @@ Order is driven by **dependencies** and **portfolio impact**, not your original 
 - **Onboarding tour** → Phase 4; implement once features are defined.
 - **Help widget / AI chat** → Phase 5 (later; learning feature).
 
-### 5b. Ideas for the future (not soon)
+### 5b. Test results dashboard widget (data source)
+
+For the **Test results** dashboard visualization (coverage + last run), the app needs a small, machine-readable summary. Do **not** check in the full `client/coverage` folder.
+
+**Recommended approach:** In the **deploy workflow** (or a step that runs on every merge to `main`), run client tests with coverage (e.g. `npm run test:coverage`), then produce a **summary file** (e.g. Vitest `json-summary` reporter → `coverage/coverage-summary.json`, or a small custom file with `{ passed, failed, total, coveragePct, timestamp, sha }`). Write that file into `client/dist` (e.g. `client/dist/test-results.json`) **before** the S3 upload step, so it is deployed with the site. The dashboard fetches `/test-results.json` and displays it. “Last run” then means *the test run that produced the current deploy* (e.g. last merge to main).
+
+**Alternative:** Have CI (on push to main or on merge) run tests, generate the same summary, and **commit** it to the repo (e.g. `client/public/test-results.json`) so the next build includes it. Simpler deploy (no test step in deploy), but adds commit-from-CI and possible noise in history; the deployed site would show “last run” as of the last commit that updated that file.
+
+When you implement the widget, add a short note to `docs/deployment.md` (e.g. “Deploy workflow runs tests and writes `test-results.json` into dist”) and optionally an ADR if you want to lock in the format or location.
+
+### 5c. Ideas for the future (not soon)
 
 Prioritized in the same “later” area; add to feature list and phases when you choose to do them.
 
@@ -269,7 +284,7 @@ Prioritized in the same “later” area; add to feature list and phases when yo
 - **Localization readiness:** Structure copy for i18n (e.g. keys, one locale) even if only shipping English. Same priority band as keyboard shortcuts.
 - **Export:** CSV/Excel (or PDF) export for lists and reports. Add when you have list views that benefit from it.
 
-### 5c. Ten suggestions — decisions and status
+### 5d. Ten suggestions — decisions and status
 
 1. **Version / revision history** – **Yes.** Object changes auditable; clear revision history visible (view previous, diff). In feature list and Phase 2.
 2. **Dashboard activity / “Ready at a Glance”** – **Yes.** Recently edited matters; metrics e.g. Matters Opened/Closed (day/week/month/year), Documents Generated, other object activity as defined. In feature list and Phase 3.

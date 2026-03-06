@@ -12,6 +12,7 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
+    setupFiles: ['./src/test-setup.ts'],
     env: {
       // Predictable base URL in tests (no .env required).
       VITE_API_URL: 'http://localhost:5237',

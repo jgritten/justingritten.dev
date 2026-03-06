@@ -1,0 +1,51 @@
+/* Three-section app shell: menu bar, then sidebar + content (all borderless) */
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  background: var(--color-background);
+}
+
+.app-shell__main {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.app-shell__content {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  background: var(--color-background);
+  padding: 1.5rem;
+}
+
+.app-shell__content {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  background: var(--color-background);
+  padding: 1.5rem;
+}
+
+/* Mobile: backdrop for sidebar overlay (only when sidebar open) */
+.sidebar-backdrop {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .app-shell__main {
+    flex-direction: column;
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 140;
+    background: var(--black-a6);
+    cursor: pointer;
+  }
+}
