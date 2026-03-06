@@ -1,0 +1,295 @@
+# Feature roadmap and reference
+
+This doc is the **single source of truth** for feature planning and “memory” when discussing the site’s direction. Use it to stay on track and to align implementation order with dependencies and portfolio goals.
+
+---
+
+## 1. Reference and principles (memory)
+
+### Purpose of the site
+
+- **Portfolio / showcase:** Demonstrate ability to deliver features typical of a **SaaS product** so potential employers can see what you’re capable of.
+- **Public repo:** Design and docs should be recruiter-friendly; no secrets in code.
+
+### Stated goals (your ideas, unordered)
+
+- **User login:** Username/password; email verification; optional third-party logins (Google, Facebook, etc.).
+- **Guest login (default entry for now):** To accommodate **recruiters and other quick visitors**, a **Guest** login is available and is the **default way to view the site** initially. Every guest is treated as a user of the **same default client** you set up (a single shared “demo” client). This lets casual users get into the site quickly, see what’s there, and **dig deeper only if they wish** (e.g. sign up or log in for full access). Rate limits and other guest-specific behaviour (e.g. doc gen by IP) apply to this path.
+- **Login path trigger (two cases—not account creation vs returning):**
+  - **First-time / no client (e.g. cold-call or new account):** User has no client. Show modal: would they like to go through the **Client Creation wizard**? Wizard (modal) guides client creation and ends with them **landing on the dashboard of their new client**. If their email is tied to a **pending invitation** instead, ask to **accept the invitation**; accepting grants the **assigned role** and **access** to that client’s data.
+  - **Returning user (already has account):** User simply logs in. Then a **condition check**: Does the user have **multiple clients**? If **yes** → show a **modal: “Please choose a client”** → user picks one → go to that client’s dashboard. If **one client** → go **directly to that client’s dashboard** (no modal). If the returning user has a **new (pending) invitation** to another client, they must have the **opportunity to accept that invitation**; after that, they **choose which client** to use and land on that client’s dashboard (so: accept new invitation if desired, then “choose a client” including the newly accepted one).
+- **Current client context and multi-client:** The app treats the user with a clear **current Client** in mind. If the user is in **multiple clients**, they have a **means to switch** (e.g. from menu bar or sidebar). The same user may be e.g. **Manager** for one client and **Associate** for another; **permissions and application access must change accordingly** when switching. A user’s **permissions and access must be validated before any data can be accessed** (authorization on every data access).
+- **Client (tenant) creation:** Users can be grouped under a **Client** with:
+  - Shared objects: head office location, user groups, permissions.
+  - Admin: enable/disable features per client (all users under that client are restricted).
+  - Document generation: editable custom letterhead and footer per client.
+- **WebSocket:** Server ↔ client communication for:
+  - Support staff messaging (to a user or to all users of a client).
+- **Notifications** (leveraging WebSocket):
+  - Small alerts.
+  - Notification icon with history of past notifications.
+  - Full-page modal notifications (e.g. “You’re about to generate a file. This comes with a charge. Do you accept?”).
+- **Mobile responsive:** Application works well on mobile.
+- **Desktop layout – persistent user area:** User info in a persistent place (e.g. bottom of sidebar or top-right of page).
+- **Three-section layout:**
+  1. **Row 1 (full width):** Menu bar – notification icons, header info, client icon (left), user icon/image (right).
+  2. **Row 2:** Left = **sidebar** (menu items); right = **content** (driven by sidebar selection). Default = Dashboard.
+- **Username dropdown:** Account Settings (user info, address), Application Settings (theme, etc.), Logout.
+- **User roles (two levels):**
+  - **Client roles:** Roles for users *within* a client (client users using the product); used for permissions and feature access per client.
+  - **SaaS roles:** Support and Admin for the product itself. Support can message users, **emulate (impersonate)** a user to assist with issues, and perform **elevated data manipulation** (CRUD on objects that normal client users cannot access—e.g. fix data in the DB). Admin has full control.
+- **App / Client branding:** Either the **app name** is always visible at the top-left of the menu bar, or some combination of **app name + client name/icon**. May later move client icon/name to the **top of the sidebar**, with sidebar menu items starting on the next row below.
+- **Theme:** All **Radix theme functionality** that we can use should be editable and **persist between sessions** (dark mode, accent colours, header font, etc.). **Clients** can optionally set a **persistent theme for all their users** (tenant-level default or override).
+- **Audit log (within a client):** Whenever data is manipulated within a client, an **accessible log for client users** (e.g. “12:34 Aug 1st – Shanda updated Matter 56. Added new item 123. 12:36 – Shanda updated Matter 56. Edited item 456…”).
+- **Document generation:** Upload a **template PDF** with editable placeholders (e.g. “On this day of [ADD DATE HERE], [NAME] bought the property [ADDRESS]…”). A **microserver** takes the template and fills in data when the user clicks **Generate**; client letterhead/footer apply.
+- **Sidebar primary actions:** Sidebar defaults to **Dashboard**; then **Create New** and **Search**. **Create New** opens a **modal wizard** to begin object creation. **Search** opens a **modal** with a table and filters—**client users** see results scoped to their client; **support** can search across clients.
+- **Soft delete:** Objects in the database are **not physically removed**; they have an **IsDeleted** boolean column. Search/list results **exclude** IsDeleted = true unless explicitly passed a flag (e.g. **IncludeDeleted**).
+- **Bulk actions:** Included as functionality **when applicable** (e.g. multi-select then act on many).
+- **Rate limiting (document generation):** Doc gen is CPU-heavy. Limit by **User** (or by **IP** for Guest)—e.g. **3 generations per day**. Nice-to-have: **Request additional generations** button that sends an email for you to approve; discuss when realized.
+- **Onboarding tour:** Implement a “click next on highlighted sections” style tour once the features to tour are defined.
+- **Help widget:** Eventually an **AI API chat** that references your documentation for help. Learning feature (first time hooking up an AI API in SaaS). Important but **later phase**.
+- **Keyboard shortcuts** and **localization readiness:** Nice-to-have; prioritize in the same **future-ideas** area (not soon).
+- **Version / revision history:** Changes to objects should be **auditable**; **clear revision history** visible (view previous versions, diff where useful).
+- **Dashboard activity:** User sees **recently edited matters** and **“Ready at a Glance”** metrics: e.g. Matters Opened/Closed (day/week/month/year), Documents Generated, and other object activity as defined during development.
+- **File validation:** When applicable (e.g. template uploads, document uploads)—type, size, optional virus scan.
+- **Scheduled jobs / document packages:** Define a **package of documents** to generate in a **bulk series** (e.g. on **Matter Closed**), so users don’t generate each one individually. **Client Admin/Manager** roles can pick and choose documents to define a package; the package is available to client users from within the Doc Gen component.
+- **Email notifications:** Emails can be sent for events. **Notification preferences are per user**, but **templated by Client Admin/Managers** (client defines which options exist; each user chooses from those).
+- **Configurable fields:** Yes, but **define objects first**; revisit custom fields when relevant.
+- **Configurable dashboard:** Each client can use the **Default Dashboard** or **toggle on/off** various offered components. Users of that client see that default but **can also edit their own** dashboard (personal override).
+- **2FA:** Yes, but **nice to have for later**.
+- **API keys:** Not at this stage, **possibly never**.
+- **Offline / graceful degradation:** When API or WebSocket is unavailable, **banner or theme should shift** and **header or other text** should convey status to the user.
+
+### How we stay on track
+
+- **Order of work:** Decide per phase; the list above is **not** the implementation order. Dependencies (e.g. auth before clients, WebSocket before notifications) drive order.
+- **Docs and ADRs:** For each major feature (auth, new API surface, deployment change), add/update as per [docs/decisions/README.md](decisions/README.md) and the workspace rule (e.g. ADR + `security.md` for auth).
+- **Scope per slice:** Prefer small, shippable slices (e.g. “login UI + token” then “email verification” then “Google OAuth”) so the roadmap stays manageable and demoable.
+
+---
+
+## 2. Feature list (consolidated)
+
+| Area | Feature | Notes |
+|------|---------|------|
+| **Auth** | Guest login (default entry) | Default way to view site; all guests use same default client; recruiters/casual visitors can explore without signing in |
+| **Auth** | Username/password login | Core flow for recruiters to see |
+| **Auth** | Email verification | Optional; document approach (e.g. token in link, rate limits) |
+| **Auth** | Third-party login | Google, Facebook, etc.; document OAuth/OpenID choice |
+| **Auth** | Login path trigger | After login: first-time/no client (wizard or accept invitation) vs returning (choose client or go straight to dashboard) |
+| **Tenancy** | Default client for guests | Single preconfigured client; all Guest users are scoped to this client for demo/exploration |
+| **Tenancy** | Client (tenant) model | Create client; associate users to client |
+| **Tenancy** | Client Creation wizard | Modal wizard for no-client users; create client then land on that client’s dashboard |
+| **Tenancy** | Client invitation flow | Accept invitation → join client with assigned role and permissions (first-time or returning with new invitation) |
+| **Tenancy** | Returning user: choose client | If multiple clients → modal “Please choose a client”; if one client → go directly to that client’s dashboard |
+| **Tenancy** | Returning user: new invitation | If returning user has pending invitation, opportunity to accept it, then choose which client to open (including newly accepted) |
+| **Tenancy** | Current client context | App always has a “current Client”; all data and UI scoped to current client |
+| **Tenancy** | Switch client (multi-client) | If user is in multiple clients, UI to switch; role and access differ per client |
+| **Tenancy** | Per-client role | Same user can have different client role per client (e.g. Manager here, Associate there) |
+| **Tenancy** | Authorization on data access | Validate user permissions for current client/role before any data is returned or action allowed |
+| **Tenancy** | Shared data per client | Head office, user groups, permissions |
+| **Tenancy** | Client admin | Enable/disable features per client; letterhead/footer for doc gen |
+| **Realtime** | WebSocket | Server ↔ client; support messaging (to user or to all users of a client) |
+| **Notifications** | Small alerts | Toast/snackbar style |
+| **Notifications** | Notification icon + history | Badge + list of past notifications |
+| **Notifications** | Full-page modal | E.g. confirm charge before generating file |
+| **Layout** | Mobile responsive | All key flows work on small screens |
+| **Layout** | Persistent user area (desktop) | Bottom of sidebar or top-right; consistent placement |
+| **Layout** | Three-section shell | Menu bar → Sidebar + Content; default = Dashboard |
+| **Shell** | Menu bar | Notifications, header, app/client branding (left), user (right) |
+| **Shell** | Username dropdown | Account Settings, Application Settings, Logout |
+| **Shell** | App / Client branding | App name always top-left, or app + client name/icon; may move to top of sidebar later |
+| **Roles** | Client roles | Roles for users within a client; permissions and feature access per client |
+| **Roles** | SaaS roles: Support, Admin | Support: messaging, impersonation, elevated CRUD; Admin: full control |
+| **Roles** | Impersonation (emulate user) | Support can “be” a user to reproduce and assist with issues |
+| **Roles** | Support data manipulation | CRUD on objects not exposed to normal client users (fix DB/data) |
+| **Theme** | Full Radix theming + persistence | All theme options (dark, colours, fonts, etc.) editable; persist per user across sessions |
+| **Theme** | Client default theme | Optional tenant-level theme applied to all users of that client |
+| **Audit** | Client-accessible audit log | Per-client log of data changes (who, when, what—e.g. “Shanda updated Matter 56. Added item 123”) |
+| **Doc gen** | Template PDF + microserver | Upload template with placeholders; microserver fills data on Generate; client letterhead/footer |
+| **Doc gen** | Rate limiting | Per User (or per IP for Guest) e.g. 3 generations/day; optional “Request additional” → email for approval |
+| **Shell** | Sidebar: Create New, Search | Dashboard default; Create New = modal wizard; Search = modal table + filters (client-scoped; support cross-client) |
+| **Data** | Soft delete | IsDeleted column; results exclude deleted unless IncludeDeleted flag |
+| **Data** | Bulk actions | Multi-select and act on many when applicable |
+| **UX** | Onboarding tour | “Next” through highlighted sections; implement once features are defined |
+| **Help** | Help widget → AI chat | Later: AI API chat referencing docs; learning feature for SaaS |
+| **Audit** | Version / revision history | Object changes auditable; clear revision history visible (view previous, diff) |
+| **Dashboard** | Activity + “Ready at a Glance” | Recently edited matters; metrics e.g. Matters Opened/Closed (day/week/month/year), Docs Generated |
+| **Data** | File validation | Type, size, optional scan when applicable (templates, uploads) |
+| **Doc gen** | Document packages (scheduled/bulk) | Package = group of docs to generate in bulk (e.g. on Matter Closed); Admin/Manager define; available in Doc Gen |
+| **Notifications** | Email + user preferences | Emails sent for events; preferences per user, options templated by Client Admin/Managers |
+| **Tenancy** | Configurable fields | Custom fields on objects; revisit once objects are defined |
+| **Dashboard** | Configurable dashboard | Client: default or toggle components; users see client default, can edit their own |
+| **Auth** | 2FA | Nice to have; later |
+| **UX** | Offline / graceful degradation | Banner or theme shift + header/text to convey connection status |
+
+---
+
+## 3. Suggested implementation order (phases)
+
+Order is driven by **dependencies** and **portfolio impact**, not your original brainstorm order.
+
+### Phase 0: Foundation (do first)
+
+- **Guest as default entry:** The site is **viewable by default as a Guest**. No login required to enter; visitors land in the app shell and are treated as **Guest** users of a **single default client** you configure. This accommodates recruiters and quick visitors: they can explore the layout, dashboard, and demos and dig deeper (sign up / log in) only if they wish.
+- **Default client:** Set up one **default client** used for all Guest sessions (shared demo client). All guest traffic is scoped to this client; rate limits and permissions apply per Guest (e.g. by IP where needed).
+- **App shell and layout** (three-section: menu bar, sidebar, content).  
+  Sidebar: **Dashboard** (default), then **Create New**, then **Search**. Create New and Search can be placeholders or open empty modals until object model exists. Works for Guest and authenticated users.
+- **Mobile-responsive shell** (and baseline responsive rules).  
+  Everything you build later should fit this.
+- **Persistent user area** (placeholder or “Guest” until auth exists).  
+  Establishes where Account/App settings and Logout will live (username dropdown); for Guest, can show “Sign in” or “Continue as guest” as appropriate.
+- **App / Client branding** (top-left of menu bar): App name always visible; optional client name/icon when tenancy exists. Design so it can later move to top of sidebar with menu items below.
+
+**Why first:** Recruiters and casual visitors see the product immediately without friction; auth and full tenancy then slot into the same shell.
+
+### Phase 1: Authentication
+
+- **Guest session:** Support **Guest** as an explicit session type (no credentials; optional token or session cookie for “current client = default client”). Guest uses the **default client** for all scoped data; rate limits (e.g. doc gen) by IP. Provide a way to **upgrade** to full user (sign up / log in) when the visitor wants to dig deeper.
+- **Username/password login** (API: login endpoint, JWT or session; client: login page, token storage, protected routes).  
+  ADR + `docs/security.md` update.
+- **Account Settings** (user info, address) and **Application Settings** (theme) + **Logout** in the username dropdown.  
+  Reuse shell from Phase 0.
+- **Theme (Application Settings):** Full Radix theming (dark/light, colours, fonts, etc.) editable and **persisting between sessions** (e.g. CSS variables + localStorage or API). ADR for theme approach.
+- **Roles (foundation):** Introduce **SaaS roles** (e.g. User, Support, Admin) and **client roles** (e.g. per-client roles for permissions). Auth and API must know role for impersonation and support CRUD later.
+- **Login path trigger (post-login):** After successful login, check whether the user’s email has **no client** or is **tied to a client invitation**. This branch drives the next UX (wizard vs accept-invitation); full flows implemented in Phase 2 once tenancy exists.
+- **Email verification** (optional): e.g. “Verify email” flow with token in link; document in ADR.
+- **Third-party login** (Google, then optionally Facebook): OAuth/OpenID; document in ADR and security.
+
+**Why this order:** Auth is required for “per user” and “per client” features; roles early so tenancy and support features can gate correctly; dropdown and theme make the app feel complete.
+
+### Phase 2: Tenancy (clients)
+
+- **Client (tenant) entity** and API (create client, assign users to client).  
+  ADR for multi-tenancy model.
+- **Login path flows:**  
+  - **First-time / no client:** If user has no client, show modal: “Would you like to create a client?” → **Client Creation wizard** (modal) → land on **dashboard of new client**. If user has a **pending invitation**, ask to **accept**; on accept, join that client with **assigned role** and **access**.  
+  - **Returning user:** After login, run a **condition check**. If user has **multiple clients** → show **modal: “Please choose a client”** → user selects one → go to that client’s dashboard. If **one client** → go **directly** to that client’s dashboard (no modal). If returning user has a **new (pending) invitation**, give them the **option to accept it**, then **choose which client** to open (including the newly accepted client if they accepted) and land on that client’s dashboard.
+- **Current client context:** App always has a **current Client** for the logged-in user. All data and UI (sidebar, dashboard, search, etc.) are **scoped to current client**. Store current client in session/state; APIs receive client context (e.g. header or claim).
+- **Multi-client and switch client:** If user is a member of **multiple clients**, provide a **switch-client** control (e.g. client name/icon in menu bar or sidebar). On switch, **permissions and application access update** to that client and the user’s **role in that client** (e.g. Manager in one, Associate in another).
+- **Authorization on data access:** **Validate user permissions for current client and role before any data is returned or action allowed** (API and, where needed, UI). No data access without passing this check.
+- **Shared data per client:** head office, user groups, permissions (model + API + UI where needed). Client roles drive what each user can do within the client.
+- **Client admin:** feature flags per client (enable/disable features); letterhead/footer for document generation.  
+  Can start with DB + API; doc gen UI can follow in a later phase.
+- **Client default theme:** Optional persistent theme per client applied to all users of that client (override or default for Application Settings).
+- **Support impersonation (emulate user):** Support staff can “become” a specific user (session/context switch) to reproduce issues and assist. Audit this action.
+- **Support data manipulation:** Support-only API surfaces (or elevated permissions) for CRUD on entities that normal client users cannot access (e.g. fix bad data, restore records). Document in ADR and security.
+- **Soft delete (data model):** All relevant entities use **IsDeleted** boolean; no physical delete. APIs and search exclude deleted unless **IncludeDeleted** (or equivalent) is passed. Support/Admin can see or restore deleted when needed.
+- **Audit log (within client):** When data is manipulated, append to a **client-accessible audit log** (e.g. “12:34 Aug 1st – Shanda updated Matter 56. Added new item 123”). Expose via API and UI so client users can view activity for their client.
+- **Document generation (template + microserver):** Upload template PDF with placeholders (e.g. [DATE], [NAME], [ADDRESS]); **microserver** fills data on Generate; client letterhead/footer apply. Rate limit: e.g. **3 generations per day** per User (or per IP for Guest). Nice-to-have: “Request additional generations” → email for approval (refine when realized).
+- **Document packages (scheduled / bulk):** Client **Admin/Manager** can define a **package** of documents to generate in one go (e.g. on **Matter Closed**). Package available to client users from within Doc Gen; runs as **scheduled/background job** so user doesn’t generate each doc individually.
+- **Version / revision history:** Object changes **auditable**; **revision history** visible (view previous versions, diff where useful). Implement for key entities as they’re defined.
+- **File validation:** When applicable (template uploads, document uploads)—type, size, optional virus scan.
+- **Email notifications:** Ability to send emails for events. **User notification preferences** templated by **Client Admin/Managers** (client defines which notification types/options exist; each user sets their own choices).
+
+**Why after auth:** You need users and roles before “users under a client,” impersonation, support-only CRUD, client-scoped audit, and doc packages.
+
+### Phase 3: Realtime and notifications
+
+- **WebSocket** (server endpoint + client connection; auth-aware).  
+  ADR for tech choice (e.g. SignalR on .NET).
+- **Support messaging** (to user or to all users of a client) over WebSocket.
+- **Notifications:**  
+  - Small alerts (toast) and notification icon + history (stored notifications, delivered via WebSocket or poll).  
+  - Full-page modal for confirmations (e.g. “Accept charge?” before file generation).
+- **Global search (modal):** **Search** in sidebar opens a modal with table and filters. **Client users:** results scoped to their client. **Support:** can search across clients. Implement once object model and tenancy are clear.
+- **Create New (modal wizard):** **Create New** in sidebar opens a modal wizard to start object creation; wire to your object types when defined.
+- **Dashboard activity + “Ready at a Glance”:** Recently edited matters; metrics such as Matters Opened/Closed (day/week/month/year), Documents Generated, and other object activity as you define them.
+- **Configurable dashboard:** **Client** can use Default Dashboard or **toggle on/off** offered components. **Users** of that client see the client default but **can edit their own** dashboard (personal override).
+- **Offline / graceful degradation:** When API or WebSocket is unavailable, **banner or theme shift** and **header or other text** to convey connection status to the user.
+
+**Why after tenancy:** “All users of a client” and “support staff” concepts depend on clients and roles; search, create, and dashboard need object model.
+
+### Phase 4: Polish and extra features
+
+- **Onboarding tour:** “Click next” through highlighted sections of the UI; implement once the features to highlight are defined.
+- Any **billing/charge** UX (e.g. “accept charge” modal) integrated with real backend or clearly demo-only.
+- **Branding placement:** If you move client name/icon from menu bar to **top of sidebar** (menu items below), do it in this phase so the shell is stable.
+- **Bulk actions:** Add multi-select and bulk actions wherever applicable (lists, tables).
+
+### Phase 5: Later / learning-focused
+
+- **Help widget → AI chat:** AI API chat that references your documentation. Later-phase target; important for you as a learning feature (first time wiring an AI API in SaaS). Document approach in ADR when you start.
+- **2FA:** Optional two-factor authentication; nice to have for later. Not in scope for current phases.
+- **Configurable fields:** Revisit once objects are defined; client-defined custom fields on objects.
+- **API keys:** Not planned at this stage; possibly never. Omit from implementation unless you decide otherwise.
+
+---
+
+## 4. Ideas and suggestions (from this discussion)
+
+- **App / Client branding:** Top-left = app name always visible, or app + client name/icon. Design the shell so branding can later live at the **top of the sidebar** with menu items on the next row—no need to commit to one place yet.
+- **Roles (two levels):** (1) **Client roles** – permissions and feature access for users within a client. (2) **SaaS roles** – User, Support, Admin. Support gets impersonation + elevated CRUD; Admin gets full control. Model both in the DB and in auth (e.g. claims) so APIs can authorize correctly.
+- **Impersonation:** When Support “emulates” a user, log the event (who impersonated whom, when) for audit. Consider a clear UI indicator (“You are viewing as [User]”) and an easy “Exit” to return to support context.
+- **Support CRUD:** Expose support-only or role-gated endpoints (or same endpoints with elevated permission checks) for fixing data. Document in `docs/security.md` and an ADR; avoid exposing these to the normal client bundle (e.g. route guard or separate support UI).
+- **Theme:** Use Radix theming (e.g. theme tokens, dark/light, accent, typography) and persist via localStorage and/or API. Client default theme can be stored on the tenant and applied when user has no personal override (or as default for new users).
+- **Guest and default client:** Treat “no auth” as Guest; assign a single **default client** ID for all guest sessions so the app has a consistent “current client” from day one. Dashboard, search, and doc gen can all be scoped to that client for guests; rate limiting (e.g. doc gen) by IP. Later, “Sign in” or “Create account” upgrades the session to a full user with normal login paths.
+- **Login path and current client:** Implement the path trigger (cold vs invited) and current-client context early in Phase 2 so every subsequent feature (dashboard, search, doc gen) is scoped to “current client” and respects role. Authorization checks on the API (and guarded routes/UI) should run for every data request.
+- **Deployment:** Auth and API mean you’ll eventually host the .NET API (e.g. separate subdomain). When you do, add an ADR and update `docs/deployment.md` and `docs/security.md` (CORS, auth in production).
+- **Demo vs production:** For portfolio, consider which flows are “live” (e.g. real email) vs “demo” (e.g. magic link in dev) and document that in ADR or roadmap so recruiters understand what’s implemented vs simulated.
+
+---
+
+## 5. Other feature ideas
+
+### 5a. Already reflected above
+
+- **Guest login (default entry)** → Stated goals + Phase 0 (Guest as default; default client) + Phase 1 (Guest session, upgrade path to sign up / log in). All guests use same default client; rate limits e.g. by IP.
+- **Login path trigger** → Stated goals + Phase 1 (post-login check) + Phase 2 (first-time: wizard or accept invitation; returning: choose client or go straight to dashboard).
+- **Client Creation wizard** → Phase 2 (modal for no-client users; land on new client dashboard).
+- **Client invitation flow** → Phase 2 (accept → role + permissions; applies to first-time and returning users with new invitation).
+- **Returning user: choose client** → Phase 2 (multiple clients = “Please choose a client” modal; one client = direct to dashboard).
+- **Returning user: new invitation** → Phase 2 (option to accept pending invitation, then choose which client to open).
+- **Current client context + switch client + per-client role** → Phase 2 (current client in state; switch UI; permissions update by client/role).
+- **Authorization on data access** → Phase 2 (validate permissions before any data/action).
+- **Audit log** → Stated goals + Phase 2 (client-accessible log).
+- **Document generation** → Template PDF + microserver + rate limiting in Phase 2.
+- **Document packages** → Phase 2 (Admin/Manager define package; bulk generate e.g. on Matter Closed; scheduled job).
+- **Global search + Create New** → Sidebar + Phase 3 (modal wizard, search modal scoped by role).
+- **Bulk actions** → “When applicable”; Phase 4.
+- **Soft delete** → IsDeleted + IncludeDeleted in data model; Phase 2.
+- **Rate limiting** → Doc gen (3/day, request more); Phase 2.
+- **Version / revision history** → Phase 2 (auditable object changes; visible revision history).
+- **Dashboard activity + “Ready at a Glance”** → Phase 3 (recent matters, metrics: Matters Opened/Closed, Docs Generated, etc.).
+- **Configurable dashboard** → Phase 3 (client default + toggle components; user can edit own).
+- **File validation** → When applicable in doc gen and upload flows.
+- **Email notifications** → Phase 2 (emails sent; user preferences templated by Client Admin/Managers).
+- **Offline / graceful degradation** → Phase 3 (banner or theme + header/text for status).
+- **Configurable fields** → Revisit when objects defined; Phase 5 / when relevant.
+- **2FA** → Phase 5 / later; nice to have.
+- **API keys** → Not planned; possibly never.
+- **Onboarding tour** → Phase 4; implement once features are defined.
+- **Help widget / AI chat** → Phase 5 (later; learning feature).
+
+### 5b. Ideas for the future (not soon)
+
+Prioritized in the same “later” area; add to feature list and phases when you choose to do them.
+
+- **Keyboard shortcuts and accessibility:** Shortcuts for main actions (e.g. “G then D” for Dashboard); ARIA and focus management. Not anytime soon.
+- **Localization readiness:** Structure copy for i18n (e.g. keys, one locale) even if only shipping English. Same priority band as keyboard shortcuts.
+- **Export:** CSV/Excel (or PDF) export for lists and reports. Add when you have list views that benefit from it.
+
+### 5c. Ten suggestions — decisions and status
+
+1. **Version / revision history** – **Yes.** Object changes auditable; clear revision history visible (view previous, diff). In feature list and Phase 2.
+2. **Dashboard activity / “Ready at a Glance”** – **Yes.** Recently edited matters; metrics e.g. Matters Opened/Closed (day/week/month/year), Documents Generated, other object activity as defined. In feature list and Phase 3.
+3. **File validation** – **Yes, when applicable.** Type, size, optional virus scan for templates and uploads. In feature list; apply in doc gen and upload flows.
+4. **Scheduled jobs / document packages** – **Yes.** Doc gen: define a **package** of documents to generate in bulk (e.g. on Matter Closed). Client Admin/Manager define packages; available in Doc Gen. Runs as scheduled/background job. In feature list and Phase 2.
+5. **Email notifications** – **Yes.** Emails sent for events. **Preferences per user**, but **templated by Client Admin/Managers** (client defines which options exist; user chooses). In feature list and Phase 2.
+6. **Configurable fields** – **Yes, revisit when objects are defined.** Clients define custom fields on objects; add once object model is clear. In feature list; Phase 5 / when relevant.
+7. **Configurable dashboard** – **Yes.** Client uses default or toggles offered components; users see client default and **can edit their own** dashboard. In feature list and Phase 3.
+8. **Two-factor authentication (2FA)** – **Yes, nice to have for later.** In feature list; Phase 5 / later. Not in current scope.
+9. **API keys** – **Not at this stage; possibly never.** Omit from implementation unless you decide otherwise.
+10. **Offline / graceful degradation** – **Yes.** Banner or theme shift plus header or other text to convey connection status. In feature list and Phase 3.
+
+---
+
+## 6. Updating this doc
+
+- **When you add or drop a feature:** Update Section 2 (feature list) and the phase in Section 3.
+- **When you change order:** Adjust Section 3 and briefly note why (e.g. “Moved X before Y so we can demo Z”).
+- **When you lock in a decision:** Add an ADR in `docs/decisions/` and point to it from here if it affects the roadmap (e.g. “See 0004-authentication-approach.md”).
+
+---
+
+*Last updated: 2025-03-06. This roadmap is a living document; implementation order may change as you iterate.*

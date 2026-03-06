@@ -42,6 +42,10 @@ What the site is and how it’s structured.
 
 Only the **client** is deployed: GitHub Actions builds the Vite app and syncs to S3; CloudFront serves the site. The server is not deployed to production today. See [deployment.md](./deployment.md).
 
+## Roadmap and planning
+
+- **Feature roadmap:** See [roadmap.md](roadmap.md) for planned features (auth, tenancy, WebSocket, notifications, layout), phased implementation order, and the reference principles used to stay on track.
+
 ## Where to extend
 
 - **New UI/features:** Add components under `client/src/components/`, hooks under `client/src/hooks/`, and types under `client/src/types/`. Follow existing patterns (Radix UI, path alias).
