@@ -2,6 +2,7 @@ import { Heading, Text, Button } from '@radix-ui/themes'
 import './WelcomeWidget.css'
 
 const GITHUB_REPO = 'https://github.com/jgritten/justingritten.dev'
+const GITHUB_PROFILE = 'https://github.com/jgritten'
 
 export function WelcomeWidget() {
   return (
@@ -33,6 +34,15 @@ export function WelcomeWidget() {
               rel="noopener noreferrer"
             >
               View source on GitHub
+            </a>
+          </Button>
+          <Button size="3" variant="soft" asChild>
+            <a
+              href={GITHUB_PROFILE}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              View profile on GitHub
             </a>
           </Button>
         </div>
