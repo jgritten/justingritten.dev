@@ -11,13 +11,15 @@ How the portfolio site is built and published.
 
 1. **Checkout** – Repo checkout.
 2. **Node** – Setup Node 20, npm cache using `client/package-lock.json`.
-3. **Install & build** – `npm ci` and `npm run build` in `client/`.
-4. **AWS** – OIDC to assume role `github-deploy-justingritten-dev` in `us-east-2`.
-5. **S3 upload (three passes):**
+3. **Install** – `npm ci` in `client/`.
+4. **Test** – `npm run test` in `client/`. All tests must pass; the job fails and deploy is skipped if any test fails.
+5. **Build** – `npm run build` in `client/`.
+6. **AWS** – OIDC to assume role `github-deploy-justingritten-dev` in `us-east-2`.
+7. **S3 upload (three passes):**
    - **Assets** – `client/dist/assets` → `s3://justingritten.dev/assets` with long cache (`max-age=31536000, immutable`).
    - **Static files** – Rest of `client/dist` (excluding `assets/*` and `index.html`) with `max-age=86400`.
    - **index.html** – No cache (`no-cache, no-store, must-revalidate`) so new deploys are visible immediately.
-6. **CloudFront** – Invalidation on `/*` (distribution id in workflow).
+8. **CloudFront** – Invalidation on `/*` (distribution id in workflow).
 
 ## What is deployed
 
