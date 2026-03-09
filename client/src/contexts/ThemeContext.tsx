@@ -117,8 +117,32 @@ interface ThemeProviderProps {
   children: ReactNode
 }
 
+/** Resolved to 'light' | 'dark' for Radix Theme (so System becomes explicit). */
+function useResolvedAppearance(appearance: ThemeAppearance): 'light' | 'dark' {
+  const [systemDark, setSystemDark] = useState(() =>
+    typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+  )
+  useEffect(() => {
+    const m = window.matchMedia('(prefers-color-scheme: dark)')
+    const handler = () => setSystemDark(m.matches)
+    m.addEventListener('change', handler)
+    return () => m.removeEventListener('change', handler)
+  }, [])
+  if (appearance === 'dark') return 'dark'
+  if (appearance === 'light') return 'light'
+  return systemDark ? 'dark' : 'light'
+}
+
 export function ThemeProvider({ children }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<ThemeState>(loadTheme)
+  const resolvedAppearance = useResolvedAppearance(theme.appearance)
+
+  /* Sync data-theme to document so we can style body (e.g. dark background overlay) by theme */
+  useEffect(() => {
+    const root = document.documentElement
+    root.dataset.theme = resolvedAppearance
+  }, [resolvedAppearance])
 
   const setTheme = useCallback((next: Partial<ThemeState>) => {
     setThemeState((prev) => {
@@ -135,10 +159,11 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
   return (
     <Theme
-      appearance={theme.appearance}
+      appearance={resolvedAppearance}
       accentColor={theme.accentColor}
       grayColor={theme.grayColor}
       radius={theme.radius}
+      hasBackground={false}
     >
       <ThemeContext.Provider value={value}>
         {children}

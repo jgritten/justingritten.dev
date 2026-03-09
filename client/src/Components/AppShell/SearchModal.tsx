@@ -1,6 +1,4 @@
-import * as Dialog from '@radix-ui/react-dialog'
-import { Button, Text } from '@radix-ui/themes'
-import './PlaceholderModal.css'
+import { Button, Dialog, Flex, Text } from '@radix-ui/themes'
 
 type SearchModalProps = {
   open: boolean
@@ -10,22 +8,19 @@ type SearchModalProps = {
 export function SearchModal({ open, onOpenChange }: SearchModalProps) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="placeholder-modal__overlay" />
-        <Dialog.Content className="placeholder-modal__content" aria-describedby={undefined}>
-          <Dialog.Title className="placeholder-modal__title">
-            Search
-          </Dialog.Title>
-          <Text as="p" size="2" color="gray" id="search-description">
-            Search here. A table with filters will appear when the feature is available.
-          </Text>
-          <div className="placeholder-modal__actions">
-            <Dialog.Close asChild>
-              <Button variant="soft">Close</Button>
-            </Dialog.Close>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
+      <Dialog.Content size="2" maxWidth="28rem" align="start" aria-describedby={undefined}>
+        <Dialog.Title>Search</Dialog.Title>
+        <Text as="p" size="2" color="gray" id="search-description">
+          Search here. A table with filters will appear when the feature is available.
+        </Text>
+        <Flex gap="3" justify="end" mt="4">
+          <Dialog.Close>
+            <Button variant="solid" size="3">
+              Close
+            </Button>
+          </Dialog.Close>
+        </Flex>
+      </Dialog.Content>
     </Dialog.Root>
   )
 }

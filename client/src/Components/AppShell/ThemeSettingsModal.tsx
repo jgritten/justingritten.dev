@@ -1,5 +1,4 @@
-import * as Dialog from '@radix-ui/react-dialog'
-import { Button, Select, Text } from '@radix-ui/themes'
+import { Button, Dialog, Flex, Select, Text } from '@radix-ui/themes'
 import { useTheme } from '@/contexts/ThemeContext'
 import type {
   ThemeAccentColor,
@@ -7,7 +6,6 @@ import type {
   ThemeGrayColor,
   ThemeRadius,
 } from '@/contexts/ThemeContext'
-import './PlaceholderModal.css'
 import './ThemeSettingsModal.css'
 
 type ThemeSettingsModalProps = {
@@ -65,20 +63,19 @@ export function ThemeSettingsModal({ open, onOpenChange }: ThemeSettingsModalPro
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="placeholder-modal__overlay" />
-        <Dialog.Content
-          className="placeholder-modal__content theme-settings-modal__content"
-          aria-describedby={undefined}
-        >
-          <Dialog.Title className="placeholder-modal__title">
-            Theme settings
-          </Dialog.Title>
-          <Text as="p" size="2" color="gray" className="theme-settings-modal__intro">
-            Customize the look of the app. Changes are saved automatically.
-          </Text>
+      <Dialog.Content
+        size="2"
+        maxWidth="22rem"
+        align="start"
+        className="theme-settings-modal__content"
+        aria-describedby={undefined}
+      >
+        <Dialog.Title>Theme settings</Dialog.Title>
+        <Text as="p" size="2" color="gray" className="theme-settings-modal__intro">
+          Customize the look of the app. Changes are saved automatically.
+        </Text>
 
-          <div className="theme-settings-modal__grid">
+        <div className="theme-settings-modal__grid">
             <label className="theme-settings-modal__label">
               <Text size="2" weight="medium">Appearance</Text>
               <Select.Root
@@ -146,15 +143,14 @@ export function ThemeSettingsModal({ open, onOpenChange }: ThemeSettingsModalPro
                 </Select.Content>
               </Select.Root>
             </label>
-          </div>
+        </div>
 
-          <div className="placeholder-modal__actions">
-            <Dialog.Close asChild>
+        <Flex gap="3" justify="end" mt="4">
+<Dialog.Close>
               <Button variant="soft">Close</Button>
             </Dialog.Close>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
+        </Flex>
+      </Dialog.Content>
     </Dialog.Root>
   )
 }

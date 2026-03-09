@@ -5,7 +5,7 @@
   flex-direction: column;
   min-height: 100vh;
   width: 100%;
-  background: var(--color-background);
+  background: transparent;
 }
 
 .app-shell__main {
@@ -18,15 +18,7 @@
   flex: 1;
   min-width: 0;
   overflow: auto;
-  background: var(--color-background);
-  padding: 1.5rem;
-}
-
-.app-shell__content {
-  flex: 1;
-  min-width: 0;
-  overflow: auto;
-  background: var(--color-background);
+  background: transparent;
   padding: 1.5rem;
 }
 

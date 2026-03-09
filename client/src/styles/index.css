@@ -26,7 +26,14 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #ffffff;
+  background-color: #e8e6e3;
+  /* Soft overlay + image to keep background subtle in light theme */
+  background-image:
+    linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0)),
+    url('/background_light.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
 }
 
 #root {
@@ -39,22 +46,14 @@ h1 {
   line-height: 1.1;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #f9f9f9;
-  color: #213547;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+/* Buttons: Radix Theme styles all <Button> components. Do not add global `button {}`
+   here or it will override Radix for real <button> elements; asChild buttons
+   render as <a> and would not be overridden, causing inconsistent look. */
+
+/* Dark theme background: darker base + overlays to soften image */
+html[data-theme='dark'] body {
+  background-color: #020617;
+  background-image:
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+    url('/background_dark.png');
 }

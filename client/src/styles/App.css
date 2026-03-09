@@ -3,11 +3,23 @@
 /* Content area: main content lives in a single “transparent darker” card (borderless shell) */
 .content-card {
   background: var(--color-panel);
+  /* Glass overlay tuned per theme below */
   border-radius: 12px;
   box-shadow: 0 4px 24px var(--black-a4), 0 0 1px var(--gray-7);
   padding: 2rem;
   max-width: 100%;
   box-sizing: border-box;
+  backdrop-filter: blur(4px);
+}
+
+/* Light theme: almost opaque, slightly darker for contrast over light background */
+html[data-theme='light'] .content-card {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Dark theme: darker and less transparent so white text stays readable */
+html[data-theme='dark'] .content-card {
+  background-color: rgba(0, 0, 0, 0.5);
 }
 
 /* Page title - can be overridden when using Radix Heading */
