@@ -147,7 +147,7 @@ Order is driven by **dependencies** and **portfolio impact**, not your original 
 
 **Phase 0 complete.** Implemented: shell, Dashboard, placeholder modals (Create New, Search), Settings (sidebar + sub-menu + placeholder pages), theme (persistence + Theme settings modal), footer (favicon, Resume, LinkedIn, Email), mobile (hamburger, slide-out sidebar, two-column settings view). Default client deferred to Phase 1.
 
-### Phase 1: Authentication
+### Phase 1: SaaS - Authentication
 
 - **Guest session:** Support **Guest** as an explicit session type (no credentials; optional token or session cookie for “current client = default client”). Guest uses the **default client** for all scoped data; rate limits (e.g. doc gen) by IP. Provide a way to **upgrade** to full user (sign up / log in) when the visitor wants to dig deeper.
 - **Username/password login** (API: login endpoint, JWT or session; client: login page, token storage, protected routes).  
@@ -162,7 +162,7 @@ Order is driven by **dependencies** and **portfolio impact**, not your original 
 
 **Why this order:** Auth is required for “per user” and “per client” features; roles early so tenancy and support features can gate correctly; dropdown and theme make the app feel complete.
 
-### Phase 2: Tenancy (clients)
+### Phase 2: SaaS - Tenancy (clients)
 
 - **Client (tenant) entity** and API (create client, assign users to client).  
   ADR for multi-tenancy model.
@@ -188,7 +188,7 @@ Order is driven by **dependencies** and **portfolio impact**, not your original 
 
 **Why after auth:** You need users and roles before “users under a client,” impersonation, support-only CRUD, client-scoped audit, and doc packages.
 
-### Phase 3: Realtime and notifications
+### Phase 3: SaaS - Realtime and notifications
 
 - **WebSocket** (server endpoint + client connection; auth-aware).  
   ADR for tech choice (e.g. SignalR on .NET).
@@ -205,14 +205,14 @@ Order is driven by **dependencies** and **portfolio impact**, not your original 
 
 **Why after tenancy:** “All users of a client” and “support staff” concepts depend on clients and roles; search, create, and dashboard need object model.
 
-### Phase 4: Polish and extra features
+### Phase 4: SaaS - Polish and extra features
 
 - **Onboarding tour:** “Click next” through highlighted sections of the UI; implement once the features to highlight are defined.
 - Any **billing/charge** UX (e.g. “accept charge” modal) integrated with real backend or clearly demo-only.
 - **Branding placement:** If you move client name/icon from menu bar to **top of sidebar** (menu items below), do it in this phase so the shell is stable.
 - **Bulk actions:** Add multi-select and bulk actions wherever applicable (lists, tables).
 
-### Phase 5: Later / learning-focused
+### Phase 5: SaaS - Later / learning-focused
 
 - **Help widget → AI chat:** AI API chat that references your documentation. Later-phase target; important for you as a learning feature (first time wiring an AI API in SaaS). Document approach in ADR when you start.
 - **2FA:** Optional two-factor authentication; nice to have for later. Not in scope for current phases.

@@ -19,7 +19,7 @@ const ROADMAP_PHASES = [
   },
   {
     id: 'phase-1',
-    title: 'Phase 1: Authentication',
+    title: 'Phase 1: SaaS - Authentication',
     completed: false,
     items: [
       'Guest session (explicit type; default client; upgrade path to sign up / log in)',
@@ -33,7 +33,7 @@ const ROADMAP_PHASES = [
   },
   {
     id: 'phase-2',
-    title: 'Phase 2: Tenancy (clients)',
+    title: 'Phase 2: SaaS - Tenancy (clients)',
     completed: false,
     items: [
       'Client (tenant) entity and API',
@@ -47,7 +47,7 @@ const ROADMAP_PHASES = [
   },
   {
     id: 'phase-3',
-    title: 'Phase 3: Realtime and notifications',
+    title: 'Phase 3: SaaS - Realtime and notifications',
     completed: false,
     items: [
       'WebSocket (server + client; auth-aware)',
@@ -61,7 +61,7 @@ const ROADMAP_PHASES = [
   },
   {
     id: 'phase-4',
-    title: 'Phase 4: Polish and extra features',
+    title: 'Phase 4: SaaS - Polish and extra features',
     completed: false,
     items: [
       'Onboarding tour (highlighted sections)',
@@ -72,7 +72,7 @@ const ROADMAP_PHASES = [
   },
   {
     id: 'phase-5',
-    title: 'Phase 5: Later / learning-focused',
+    title: 'Phase 5: SaaS - Later / learning-focused',
     completed: false,
     items: [
       'Help widget → AI chat (docs-aware)',
