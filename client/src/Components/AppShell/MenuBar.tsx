@@ -17,14 +17,19 @@ function IconMenu() {
 type MenuBarProps = {
   onOpenThemeSettings?: () => void
   onOpenSidebar?: () => void
+  /** When true (e.g. user has scrolled), menu bar can show a solid background (mobile only). */
+  scrolled?: boolean
 }
 
-export function MenuBar({ onOpenThemeSettings, onOpenSidebar }: MenuBarProps) {
+export function MenuBar({ onOpenThemeSettings, onOpenSidebar, scrolled }: MenuBarProps) {
   const isDark = useIsDarkTheme()
   const faviconSrc = isDark ? '/favicon_white.png' : '/favicon.png'
 
   return (
-    <header className="menu-bar" role="banner">
+    <header
+      className={`menu-bar${scrolled ? ' menu-bar--scrolled' : ''}`}
+      role="banner"
+    >
       <div className="menu-bar__brand">
         <a href="/" className="menu-bar__logo menu-bar__logo--desktop" aria-label="Home">
           <img

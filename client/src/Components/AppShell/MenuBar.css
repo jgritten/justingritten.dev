@@ -44,6 +44,17 @@
 }
 
 @media (max-width: 768px) {
+  .menu-bar {
+    position: sticky;
+    top: 0;
+    z-index: 150;
+    transition: background-color 0.2s ease-out;
+  }
+
+  .menu-bar--scrolled {
+    background-color: var(--color-background);
+  }
+
   .menu-bar__logo--desktop {
     display: none;
   }
