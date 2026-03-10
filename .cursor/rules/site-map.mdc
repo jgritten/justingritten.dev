@@ -1,0 +1,34 @@
+---
+description: High-level site map and module layout for justingritten.dev to guide navigation and future SaaS demos.
+alwaysApply: true
+---
+
+# Site map and modules
+
+This site is a **demo hub** for Justin Gritten as a developer, plus focused product/SaaS modules.
+
+## Top-level structure (client SPA)
+
+- **Shell**: `AppShell` with `MenuBar`, `Sidebar`, `Footer`, and routed content.
+- **Landing route**: `/` will be the **Profile** module (showcase Justin, current work, process, roadmap, GitHub activity).
+- **Settings**: `/settings/*` (Account, Application, Client) as internal demo/settings area.
+
+## Modules (conceptual)
+
+- **Profile module**
+  - Purpose: Portfolio-style overview of Justin as a developer.
+  - Route: `/` (shell index route).
+  - Content: Existing dashboard-style widgets (Welcome, CI/CD, Roadmap, Recent Activity) focused on Justin and this repo.
+
+- **Products area**
+  - Purpose: Entry point into focused demos that behave like SaaS products.
+  - Sidebar: Grouped under a "Products" header in the main sidebar.
+  - Routes (planned):
+    - `/products/commercial-saas` – primary **Commercial SaaS** demo, with its own dashboard-style experience.
+
+## Intent for future work
+
+- Keep **one React SPA** here as the hub; each new demo/product is a **module** with its own route subtree, not a completely separate app.
+- If a product ever becomes a real standalone SaaS, it can move to its own repo/domain, but the portfolio will still link into it from the Products area.
+- When adding or renaming modules/routes, update this file so future agents understand the navigation model.
+

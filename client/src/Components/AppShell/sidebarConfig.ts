@@ -6,8 +6,11 @@
 export interface SidebarSubMenuItem {
   id: string
   label: string
-  to: string
+  to?: string
   end?: boolean
+  action?: string
+  icon?: string
+  dividerBefore?: boolean
 }
 
 export interface SidebarSubMenu {
@@ -37,10 +40,17 @@ export interface SidebarDividerItem {
   type: 'divider'
 }
 
+export interface SidebarGroupHeaderItem {
+  type: 'groupHeader'
+  id: string
+  label: string
+}
+
 export type SidebarMainItem =
   | SidebarLinkItem
   | SidebarActionItem
   | SidebarDividerItem
+  | SidebarGroupHeaderItem
 
 export interface SidebarConfig {
   main: SidebarMainItem[]
@@ -51,26 +61,49 @@ export const defaultSidebarConfig: SidebarConfig = {
   main: [
     {
       type: 'link',
-      id: 'dashboard',
-      label: 'Dashboard',
-      icon: 'dashboard',
+      id: 'profile',
+      label: 'Profile',
+      icon: 'document',
       to: '/',
       end: true,
     },
     { type: 'divider' },
     {
-      type: 'action',
-      id: 'create-new',
-      label: 'Create New',
-      icon: 'createNew',
-      action: 'openCreateNew',
+      type: 'groupHeader',
+      id: 'demo-apps-header',
+      label: 'Demo Applications',
     },
     {
-      type: 'action',
-      id: 'search',
-      label: 'Search',
-      icon: 'search',
-      action: 'openSearch',
+      type: 'link',
+      id: 'saas',
+      label: 'SaaS',
+      icon: 'saas',
+      to: '/saas',
+      subMenu: {
+        header: 'SaaS',
+        items: [
+          {
+            id: 'saas-dashboard',
+            label: 'Dashboard',
+            to: '/saas/dashboard',
+            end: true,
+            icon: 'dashboard',
+          },
+          {
+            id: 'saas-create',
+            label: 'Create New',
+            action: 'openCreateNew',
+            icon: 'createNew',
+            dividerBefore: true,
+          },
+          {
+            id: 'saas-search',
+            label: 'Search',
+            action: 'openSearch',
+            icon: 'search',
+          },
+        ],
+      },
     },
   ],
   bottom: [

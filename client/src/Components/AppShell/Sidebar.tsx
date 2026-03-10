@@ -2,9 +2,12 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { Text } from '@radix-ui/themes'
 import {
   IconDashboard,
+  IconSpreadsheet,
+  IconDocument,
   IconCreateNew,
   IconSearch,
   IconSettings,
+  IconSaasCloud,
 } from './SidebarIcons'
 import {
   defaultSidebarConfig,
@@ -16,9 +19,12 @@ import './Sidebar.css'
 
 const ICON_MAP = {
   dashboard: IconDashboard,
+  spreadsheet: IconSpreadsheet,
+  document: IconDocument,
   createNew: IconCreateNew,
   search: IconSearch,
   settings: IconSettings,
+  saas: IconSaasCloud,
 } as const
 
 type IconKey = keyof typeof ICON_MAP
@@ -72,6 +78,15 @@ export function Sidebar({
       return (
         <li key={`divider-${index}`} className="sidebar__divider-wrapper" role="separator">
           <hr className="sidebar__divider" />
+        </li>
+      )
+    }
+    if (item.type === 'groupHeader') {
+      return (
+        <li key={item.id} className="sidebar__group-header">
+          <Text size="1" weight="bold" color="gray">
+            {item.label}
+          </Text>
         </li>
       )
     }
@@ -149,14 +164,33 @@ export function Sidebar({
           <ul className="sidebar__sublist">
             {activeItemWithSub.subMenu.items.map((sub) => (
               <li key={sub.id}>
-                <NavLink
-                  to={sub.to}
-                  end={sub.end ?? false}
-                  className={subLinkClass}
-                  onClick={onCloseSidebar}
-                >
-                  <Text size="2">{sub.label}</Text>
-                </NavLink>
+                {sub.dividerBefore && (
+                  <hr className="sidebar__subdivider sidebar__subdivider--inner" />
+                )}
+                {sub.action ? (
+                  <button
+                    type="button"
+                    className="sidebar__sublink"
+                    onClick={() => {
+                      const handler = actions[sub.action as keyof SidebarActions]
+                      handler?.()
+                      onCloseSidebar?.()
+                    }}
+                  >
+                    {sub.icon && renderIcon(sub.icon)}
+                    <Text size="2">{sub.label}</Text>
+                  </button>
+                ) : (
+                  <NavLink
+                    to={sub.to ?? ''}
+                    end={sub.end ?? false}
+                    className={subLinkClass}
+                    onClick={onCloseSidebar}
+                  >
+                    {sub.icon && renderIcon(sub.icon)}
+                    <Text size="2">{sub.label}</Text>
+                  </NavLink>
+                )}
               </li>
             ))}
           </ul>
