@@ -1,0 +1,138 @@
+.cicd-widget {
+  max-width: 56rem;
+  margin: 0 auto;
+}
+
+.cicd-widget__header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--gray-6);
+}
+
+.cicd-widget__title {
+  margin: 0 0 0.35rem;
+  letter-spacing: -0.02em;
+  color: var(--gray-12);
+}
+
+.cicd-widget__subtitle {
+  margin: 0;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Timeline: vertical flow, top-down progress */
+.cicd-widget__pipeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  counter-reset: step;
+}
+
+/* Vertical line: from center of first circle to center of last circle only */
+.cicd-widget__pipeline::before {
+  content: '';
+  position: absolute;
+  left: 1.125rem;
+  /* Inset so line does not extend above first or below last circle */
+  top: 3rem;
+  bottom: 3rem;
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    var(--gray-5),
+    var(--gray-6) 20%,
+    var(--gray-6) 80%,
+    var(--gray-5)
+  );
+  border-radius: 1px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.cicd-widget__step {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  text-align: left;
+  gap: 1.25rem;
+  padding-bottom: 1.5rem;
+}
+
+.cicd-widget__step:last-child {
+  padding-bottom: 0;
+}
+
+/* Step number / node on the timeline */
+.cicd-widget__step-connector {
+  flex-shrink: 0;
+  display: block;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: var(--accent-9);
+  color: var(--accent-contrast);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 2.25rem;
+  text-align: center;
+  box-shadow: 0 0 0 3px var(--gray-2);
+}
+
+.cicd-widget__step-connector::after {
+  counter-increment: step;
+  content: counter(step);
+}
+
+/* Card for each step */
+.cicd-widget__step-card {
+  flex: 1;
+  min-width: 0;
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-3);
+  background: var(--gray-2);
+  border: 1px solid var(--gray-5);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.cicd-widget__step-card:hover {
+  border-color: var(--gray-6);
+  box-shadow: 0 2px 8px var(--gray-a4);
+}
+
+.cicd-widget__step-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.cicd-widget__step-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray-11);
+  flex-shrink: 0;
+}
+
+.cicd-widget__step-title {
+  margin: 0;
+  color: var(--gray-12);
+  font-size: 1rem;
+}
+
+.cicd-widget__step-desc {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--gray-11);
+}
