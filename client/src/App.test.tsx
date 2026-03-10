@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import App from './App'
 
@@ -19,9 +19,10 @@ describe('App', () => {
     expect(screen.getByText(/\.NET & React developer/)).toBeTruthy()
   })
 
-  it('renders Dashboard link in sidebar', () => {
+  it('renders Profile link in sidebar', () => {
     window.history.pushState({}, '', '/')
     render(<AppWithProviders />)
-    expect(screen.getByRole('link', { name: /dashboard/i })).toBeTruthy()
+    const mainNav = screen.getByRole('navigation', { name: /main navigation/i })
+    expect(within(mainNav).getByRole('link', { name: /profile/i })).toBeTruthy()
   })
 })

@@ -24,11 +24,19 @@ describe('RoadmapWidget', () => {
   it('renders all six phases in order', () => {
     render(<RoadmapWidgetWithTheme />)
     expect(screen.getByRole('heading', { name: /Phase 0: Foundation/, level: 3 })).toBeTruthy()
-    expect(screen.getByRole('heading', { name: /Phase 1: Authentication/, level: 3 })).toBeTruthy()
-    expect(screen.getByRole('heading', { name: /Phase 2: Tenancy/, level: 3 })).toBeTruthy()
-    expect(screen.getByRole('heading', { name: /Phase 3: Realtime/, level: 3 })).toBeTruthy()
-    expect(screen.getByRole('heading', { name: /Phase 4: Polish/, level: 3 })).toBeTruthy()
-    expect(screen.getByRole('heading', { name: /Phase 5: Later/, level: 3 })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: /Phase 1: SaaS - Authentication/, level: 3 })).toBeTruthy()
+    expect(
+      screen.getByRole('heading', { name: /Phase 2: SaaS - Tenancy \(clients\)/, level: 3 })
+    ).toBeTruthy()
+    expect(
+      screen.getByRole('heading', { name: /Phase 3: SaaS - Realtime and notifications/, level: 3 })
+    ).toBeTruthy()
+    expect(
+      screen.getByRole('heading', { name: /Phase 4: SaaS - Polish and extra features/, level: 3 })
+    ).toBeTruthy()
+    expect(
+      screen.getByRole('heading', { name: /Phase 5: SaaS - Later \/ learning-focused/, level: 3 })
+    ).toBeTruthy()
   })
 
   it('marks Phase 0 as completed with Done badge', () => {

@@ -2,32 +2,54 @@ import { describe, it, expect } from 'vitest'
 import { defaultSidebarConfig } from './sidebarConfig'
 
 describe('sidebarConfig', () => {
-  it('has main list with Dashboard, divider, Create New, Search', () => {
+  it('has main list with Profile and SaaS demo menu', () => {
     const main = defaultSidebarConfig.main
     expect(main).toHaveLength(4)
 
-    const dashboard = main[0]
-    expect(dashboard).toMatchObject({
+    const profile = main[0]
+    expect(profile).toMatchObject({
       type: 'link',
-      id: 'dashboard',
-      label: 'Dashboard',
+      id: 'profile',
+      label: 'Profile',
       to: '/',
     })
 
     expect(main[1]).toMatchObject({ type: 'divider' })
 
     expect(main[2]).toMatchObject({
-      type: 'action',
-      id: 'create-new',
-      label: 'Create New',
-      action: 'openCreateNew',
+      type: 'groupHeader',
+      id: 'demo-apps-header',
+      label: 'Demo Applications',
     })
 
-    expect(main[3]).toMatchObject({
-      type: 'action',
-      id: 'search',
-      label: 'Search',
-      action: 'openSearch',
+    const saas = main[3] as { subMenu?: { header: string; items: unknown[] } }
+    expect(saas).toMatchObject({
+      type: 'link',
+      id: 'saas',
+      label: 'SaaS',
+      to: '/saas',
+    })
+    expect(saas).toHaveProperty('subMenu')
+    expect(saas.subMenu).toMatchObject({
+      header: 'SaaS',
+      items: [
+        {
+          id: 'saas-dashboard',
+          label: 'Dashboard',
+          to: '/saas/dashboard',
+          end: true,
+        },
+        {
+          id: 'saas-create',
+          label: 'Create New',
+          action: 'openCreateNew',
+        },
+        {
+          id: 'saas-search',
+          label: 'Search',
+          action: 'openSearch',
+        },
+      ],
     })
   })
 
