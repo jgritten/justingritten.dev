@@ -1,6 +1,5 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, type Mock } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import React from 'react'
 import FileExplorer from './FileExplorer'
 import type { fileNodesResult } from '@/hooks/useFileNodes'
 
@@ -12,7 +11,7 @@ const { useFileNodes } = await import('@/hooks/useFileNodes')
 
 describe('FileExplorer', () => {
   it('renders loading state', () => {
-    ;(useFileNodes as unknown as vi.Mock).mockReturnValue({
+    ;(useFileNodes as unknown as Mock).mockReturnValue({
       nodes: [],
       isLoading: true,
       error: null,
@@ -24,7 +23,7 @@ describe('FileExplorer', () => {
   })
 
   it('renders error state', () => {
-    ;(useFileNodes as unknown as vi.Mock).mockReturnValue({
+    ;(useFileNodes as unknown as Mock).mockReturnValue({
       nodes: [],
       isLoading: false,
       error: new Error('fail'),
@@ -37,7 +36,7 @@ describe('FileExplorer', () => {
 
   it('renders nodes and allows refresh', () => {
     const refresh = vi.fn()
-    ;(useFileNodes as unknown as vi.Mock).mockReturnValue({
+    ;(useFileNodes as unknown as Mock).mockReturnValue({
       nodes: [
         {
           name: 'root',

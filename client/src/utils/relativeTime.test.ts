@@ -25,19 +25,17 @@ describe('formatRelativeTime', () => {
   })
 
   it('falls back to formatted date when RelativeTimeFormat throws', () => {
-    const originalRtf = Intl.RelativeTimeFormat
-    // @ts-expect-error override for test
-    Intl.RelativeTimeFormat = class {
-      constructor() {
+    const spy = vi
+      .spyOn(Intl as unknown as { RelativeTimeFormat: typeof Intl.RelativeTimeFormat }, 'RelativeTimeFormat')
+      .mockImplementation(() => {
         throw new Error('nope')
-      }
-    } as any
+      })
 
     const result = formatRelativeTime(new Date().toISOString())
 
     expect(result).toMatch(/\w{3} \d{1,2}/)
 
-    Intl.RelativeTimeFormat = originalRtf
+    spy.mockRestore()
   })
 })
 
