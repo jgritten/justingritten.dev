@@ -9,7 +9,7 @@ export function SaasDashboard() {
         </Heading>
         <Text as="p" size="3" color="gray">
           Home of the SaaS product demo. This area will evolve into a realistic multi-tenant,
-          multi-user dashboard that showcases how you design and build commercial SaaS features.
+          multi-user dashboard that showcases designs and builds for commercial SaaS features.
         </Text>
       </section>
     </div>

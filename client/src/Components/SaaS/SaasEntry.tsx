@@ -1,8 +1,20 @@
 import { useNavigate } from 'react-router-dom'
 import { Button, Card, Flex, Heading, Text } from '@radix-ui/themes'
+import { useSaasClient } from '@/contexts/SaasClientContext'
 
 export function SaasEntry() {
   const navigate = useNavigate()
+  const { setActiveClient } = useSaasClient()
+
+  const enterAsClient = () => {
+    // Placeholder client for now; later this will come from real SaaS tenant data.
+    setActiveClient({
+      id: 'guest-client',
+      name: 'Guest Client',
+      logoUrl: undefined,
+    })
+    navigate('/saas/dashboard')
+  }
 
   return (
     <div className="content-card">
@@ -16,22 +28,10 @@ export function SaasEntry() {
             authentication. For now, log in as a placeholder user or continue as a guest.
           </Text>
           <Flex gap="3" justify="start" wrap="wrap">
-            <Button
-              size="3"
-              onClick={() => {
-                // Placeholder for real auth
-                navigate('/saas/dashboard')
-              }}
-            >
+            <Button size="3" onClick={enterAsClient}>
               Log in (placeholder)
             </Button>
-            <Button
-              size="3"
-              variant="soft"
-              onClick={() => {
-                navigate('/saas/dashboard')
-              }}
-            >
+            <Button size="3" variant="soft" onClick={enterAsClient}>
               Continue as Guest
             </Button>
           </Flex>

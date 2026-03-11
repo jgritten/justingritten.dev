@@ -1,5 +1,6 @@
 import { DropdownMenu, Avatar, Text } from '@radix-ui/themes'
 import { useIsDarkTheme } from '@/contexts/ThemeContext'
+import { useSaasClient } from '@/contexts/SaasClientContext'
 import './MenuBar.css'
 
 const GITHUB_REPO = 'https://github.com/jgritten/justingritten.dev'
@@ -24,6 +25,10 @@ type MenuBarProps = {
 export function MenuBar({ onOpenThemeSettings, onOpenSidebar, scrolled }: MenuBarProps) {
   const isDark = useIsDarkTheme()
   const faviconSrc = isDark ? '/favicon_white.png' : '/favicon.png'
+  const { activeClient } = useSaasClient()
+
+  const logoSrc = activeClient?.logoUrl ?? faviconSrc
+  const title = activeClient ? `${activeClient.name} – Dashboard` : 'Dashboard'
 
   return (
     <header
@@ -31,15 +36,19 @@ export function MenuBar({ onOpenThemeSettings, onOpenSidebar, scrolled }: MenuBa
       role="banner"
     >
       <div className="menu-bar__brand">
-        <a href="/" className="menu-bar__logo menu-bar__logo--desktop" aria-label="Home">
+        <button
+          type="button"
+          className="menu-bar__logo menu-bar__logo--desktop"
+          aria-label={activeClient?.name ?? 'SaaS logo'}
+        >
           <img
-            src={faviconSrc}
-            alt=""
+            src={logoSrc}
+            alt={activeClient?.name ?? 'SaaS logo'}
             className="menu-bar__favicon"
             width={28}
             height={28}
           />
-        </a>
+        </button>
         {onOpenSidebar && (
           <button
             type="button"
@@ -52,7 +61,7 @@ export function MenuBar({ onOpenThemeSettings, onOpenSidebar, scrolled }: MenuBa
         )}
       </div>
       <div className="menu-bar__center">
-        <span className="menu-bar__title">justingritten.dev</span>
+        <span className="menu-bar__title">{title}</span>
       </div>
       <div className="menu-bar__user">
         <DropdownMenu.Root>

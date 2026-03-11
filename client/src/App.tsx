@@ -1,10 +1,11 @@
-import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Navigate, Routes, Route, Outlet } from 'react-router-dom'
 import '@/styles/App.css'
 import { GlobalLayout } from './Components/AppShell/GlobalLayout'
 import { Profile } from './Components/Profile/Profile'
 import { SaasEntry } from './Components/SaaS/SaasEntry'
 import { SaasAppShell } from './Components/SaaS/SaasAppShell'
 import { SaasDashboard } from './Components/SaaS/SaasDashboard'
+import { SaasClientProvider } from './contexts/SaasClientContext'
 import {
   Settings,
   AccountSettings,
@@ -18,7 +19,14 @@ function App() {
       <Routes>
         <Route path="/" element={<GlobalLayout />}>
           <Route index element={<Profile />} />
-          <Route path="saas">
+          <Route
+            path="saas"
+            element={
+              <SaasClientProvider>
+                <Outlet />
+              </SaasClientProvider>
+            }
+          >
             <Route index element={<SaasEntry />} />
             <Route element={<SaasAppShell />}>
               <Route path="dashboard" element={<SaasDashboard />} />
