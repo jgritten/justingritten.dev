@@ -106,22 +106,68 @@ export const defaultSidebarConfig: SidebarConfig = {
       },
     },
   ],
+  bottom: [],
+}
+
+/**
+ * Sidebar configuration used inside the SaaS shell.
+ * Shows Dashboard, Create New, Search, and SaaS-scoped settings.
+ */
+export const saasSidebarConfig: SidebarConfig = {
+  main: [
+    {
+      type: 'link',
+      id: 'saas-dashboard-main',
+      label: 'Dashboard',
+      icon: 'dashboard',
+      to: '/saas/dashboard',
+      end: true,
+    },
+    {
+      type: 'action',
+      id: 'saas-create-main',
+      label: 'Create New',
+      icon: 'createNew',
+      action: 'openCreateNew',
+    },
+    {
+      type: 'action',
+      id: 'saas-search-main',
+      label: 'Search',
+      icon: 'search',
+      action: 'openSearch',
+    },
+  ],
   bottom: [
     {
       type: 'link',
-      id: 'settings',
+      id: 'saas-settings',
       label: 'Settings',
       icon: 'settings',
-      to: '/settings',
+      to: '/saas/settings',
       end: false,
       subMenu: {
         header: 'Settings',
         items: [
-          { id: 'account', label: 'Account', to: '/settings/account', end: true },
-          { id: 'application', label: 'Application', to: '/settings/application' },
-          { id: 'client', label: 'Client', to: '/settings/client' },
+          {
+            id: 'saas-settings-account',
+            label: 'Account',
+            to: '/saas/settings/account',
+            end: true,
+          },
+          {
+            id: 'saas-settings-application',
+            label: 'Application',
+            to: '/saas/settings/application',
+          },
+          {
+            id: 'saas-settings-client',
+            label: 'Client',
+            to: '/saas/settings/client',
+          },
         ],
       },
     },
   ],
 }
+

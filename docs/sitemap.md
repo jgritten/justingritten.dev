@@ -26,31 +26,35 @@ The canonical source of routes is `client/src/App.tsx`. This section mirrors tha
 
 ```text
 User opens justingritten.dev
-└─ AppShell (MenuBar, Sidebar, Footer, Content)
-   ├─ Initial page
-   │  └─ /  (Profile dashboard)
-   │     ├─ Scroll within profile sections
-   │     └─ Use sidebar to jump to other areas
+└─ Global layout (GlobalMenuBar with tabs, Footer)
+   ├─ Tabs in GlobalMenuBar
+   │  ├─ Profile tab → /
+   │  └─ SaaS tab    → /saas
    │
-   ├─ Navigation via Sidebar
-   │  ├─ Profile/Dashboard → /
-   │  ├─ SaaS → /saas/dashboard
-   │  └─ Settings → /settings → /settings/account
-   │        ├─ /settings/account
-   │        ├─ /settings/application
-   │        └─ /settings/client
+   ├─ /  (Profile dashboard)
+   │  ├─ Scroll within profile sections
+   │  └─ Use SaaS tab to enter SaaS experience
    │
-   ├─ Actions via Sidebar buttons
-   │  ├─ Create New → opens Create New modal (overlay)
-   │  └─ Search     → opens Search modal (overlay)
-   │
-   ├─ Actions via MenuBar
-   │  ├─ Site name/logo → navigate to / (Profile)
-   │  └─ Theme settings → open Theme Settings modal, persist theme
-   │
-   └─ External links
-      ├─ From MenuBar (e.g. GitHub, resume)
-      └─ From Footer (resume, LinkedIn, email, etc.)
+   └─ /saas  (SaaS entry)
+      ├─ SaaSEntry (login / continue as guest placeholder)
+      │  ├─ "Log in (placeholder)"    → /saas/dashboard
+      │  └─ "Continue as Guest"       → /saas/dashboard
+      │
+      └─ SaaS shell (SaasAppShell: SaaS MenuBar, Sidebar, Content)
+         ├─ Main routes
+         │  ├─ /saas/dashboard
+         │  └─ /saas/settings
+         │        ├─ /saas/settings/account
+         │        ├─ /saas/settings/application
+         │        └─ /saas/settings/client
+         │
+         ├─ Actions via Sidebar buttons
+         │  ├─ Create New → opens Create New modal (overlay)
+         │  └─ Search     → opens Search modal (overlay)
+         │
+         └─ Actions via SaaS MenuBar
+            ├─ User menu (Guest placeholder)
+            └─ Theme settings → open Theme Settings modal, persist theme
 ```
 
 ## Per-page navigation
