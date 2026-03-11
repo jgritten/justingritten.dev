@@ -15,6 +15,7 @@ import {
   type SidebarLinkItem,
   type SidebarMainItem,
 } from './sidebarConfig'
+import { PROFILE_WIDGETS } from '../Profile/Profile'
 import './Sidebar.css'
 
 const ICON_MAP = {
@@ -39,6 +40,7 @@ type SidebarProps = {
   actions?: SidebarActions
   mobileOpen?: boolean
   onCloseSidebar?: () => void
+  onProfileSectionSelect?: (sectionId: string) => void
 }
 
 function isLinkItem(item: SidebarMainItem): item is SidebarLinkItem {
@@ -50,6 +52,7 @@ export function Sidebar({
   actions = {},
   mobileOpen = false,
   onCloseSidebar,
+  onProfileSectionSelect,
 }: SidebarProps) {
   const { pathname } = useLocation()
   const activeItemWithSub = config.main.concat(config.bottom).find(
@@ -110,6 +113,24 @@ export function Sidebar({
               <Text size="2">{item.label}</Text>
             </span>
           </NavLink>
+          {item.id === 'profile' && (
+            <ul className="sidebar__profile-submenu" aria-label="Profile sections">
+              {PROFILE_WIDGETS.map((section) => (
+                <li key={section.id}>
+                  <button
+                    type="button"
+                    className="sidebar__sublink sidebar__sublink--profile"
+                    onClick={() => {
+                      onProfileSectionSelect?.(section.id)
+                      onCloseSidebar?.()
+                    }}
+                  >
+                    <Text size="1">{section.label}</Text>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </li>
       )
     }

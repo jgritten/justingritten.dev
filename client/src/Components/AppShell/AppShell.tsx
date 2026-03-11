@@ -34,6 +34,19 @@ export function AppShell() {
     }
   }, [])
 
+  const scrollToProfileSection = (sectionId: string) => {
+    const target =
+      contentRef.current?.querySelector<HTMLElement>(`[data-profile-section="${sectionId}"]`) ??
+      document.querySelector<HTMLElement>(`[data-profile-section="${sectionId}"]`)
+
+    if (!target) return
+
+    target.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    })
+  }
+
   return (
     <div className="app-shell">
       <MenuBar
@@ -55,6 +68,7 @@ export function AppShell() {
         <Sidebar
           mobileOpen={sidebarOpen}
           onCloseSidebar={() => setSidebarOpen(false)}
+          onProfileSectionSelect={scrollToProfileSection}
           actions={{
             openCreateNew: () => {
               setCreateNewOpen(true)
