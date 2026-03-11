@@ -5,7 +5,7 @@ import './MenuBar.css'
 
 export function GlobalMenuBar() {
   const isDark = useIsDarkTheme()
-  const { theme, setTheme } = useTheme()
+  const { setTheme } = useTheme()
   const faviconSrc = isDark ? '/favicon_white.png' : '/favicon.png'
 
   const toggleAppearance = () => {

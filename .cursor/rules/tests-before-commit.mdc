@@ -12,12 +12,20 @@ This rule keeps the repo healthy by ensuring automated tests run before changes 
 - **Always** do the following **before** proposing a commit message or running any git commit:
   - Run the client test suite using the package.json test script (e.g. `npm test` / `pnpm test` / `yarn test` depending on the project setup).
   - If server-side tests exist and the requested changes touched server code, run the server test script as well.
+  - Run the client build (e.g. `npm run build` / `pnpm build` / `yarn build`) to ensure the app still builds successfully.
 
 ## How to respond based on test results
 
 - **If tests pass:**
   - Proceed to prepare the commit message or commit as requested.
   - Briefly note that tests passed.
+
+- **If the build fails:**
+  - Do **not** suggest committing until the build failure is understood.
+  - Summarize the core build error(s) and, where possible, point to the failing file(s) or configuration.
+  - Either:
+    - Attempt to fix the build, re-run it, and then propose a commit message, or
+    - If fixes are out of scope, clearly state that the commit message is being suggested with a known failing build.
 
 - **If tests fail:**
   - Do **not** suggest committing until the failures are understood.
