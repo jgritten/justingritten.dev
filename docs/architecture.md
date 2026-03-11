@@ -52,6 +52,10 @@ flowchart LR
   end
 ```
 
+## User flow (guest journey)
+
+For a human-readable map of pages and navigation (including a tree-style flow), see [`docs/sitemap.md`](./sitemap.md). This file focuses on the technical architecture, stack, and data flow.
+
 ## Components
 
 | Layer | Technology | Purpose |

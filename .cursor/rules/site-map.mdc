@@ -31,4 +31,5 @@ This site is a **demo hub** for Justin Gritten as a developer, plus focused prod
 - Keep **one React SPA** here as the hub; each new demo/product is a **module** with its own route subtree, not a completely separate app.
 - If a product ever becomes a real standalone SaaS, it can move to its own repo/domain, but the portfolio will still link into it from the Products area.
 - When adding or renaming modules/routes, update this file so future agents understand the navigation model.
+- When adding or renaming **routes, pages, or major navigation entries**, review and update `docs/sitemap.md` so the human-facing sitemap stays in sync with the app and this rule.
 
