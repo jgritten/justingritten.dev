@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { defaultSidebarConfig } from './sidebarConfig'
+import { defaultSidebarConfig, saasSidebarConfig } from './sidebarConfig'
 
 describe('sidebarConfig', () => {
   it('has main list with Profile and SaaS demo menu', () => {
@@ -54,23 +54,30 @@ describe('sidebarConfig', () => {
   })
 
   it('has bottom list with Settings and sub-menu', () => {
-    const bottom = defaultSidebarConfig.bottom
+    const bottom = saasSidebarConfig.bottom
     expect(bottom).toHaveLength(1)
 
-    const settings = bottom[0]
+    const settings = bottom[0] as {
+      type: string
+      id: string
+      label: string
+      to: string
+      subMenu?: { header: string; items: unknown[] }
+    }
+
     expect(settings).toMatchObject({
       type: 'link',
-      id: 'settings',
+      id: 'saas-settings',
       label: 'Settings',
-      to: '/settings',
+      to: '/saas/settings',
     })
     expect(settings).toHaveProperty('subMenu')
-    expect((settings as { subMenu: { header: string; items: unknown[] } }).subMenu).toMatchObject({
+    expect(settings.subMenu).toMatchObject({
       header: 'Settings',
       items: [
-        { id: 'account', label: 'Account', to: '/settings/account' },
-        { id: 'application', label: 'Application', to: '/settings/application' },
-        { id: 'client', label: 'Client', to: '/settings/client' },
+        { id: 'saas-settings-account', label: 'Account', to: '/saas/settings/account' },
+        { id: 'saas-settings-application', label: 'Application', to: '/saas/settings/application' },
+        { id: 'saas-settings-client', label: 'Client', to: '/saas/settings/client' },
       ],
     })
   })

@@ -22,7 +22,8 @@ describe('App', () => {
   it('renders Profile link in sidebar', () => {
     window.history.pushState({}, '', '/')
     render(<AppWithProviders />)
-    const mainNav = screen.getByRole('navigation', { name: /main navigation/i })
-    expect(within(mainNav).getByRole('link', { name: /profile/i })).toBeTruthy()
+    const primaryNav = screen.getByRole('navigation', { name: /primary sections/i })
+    expect(within(primaryNav).getByRole('link', { name: /profile/i })).toBeTruthy()
+    expect(within(primaryNav).getByRole('link', { name: /saas/i })).toBeTruthy()
   })
 })
