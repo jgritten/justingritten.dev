@@ -15,19 +15,19 @@ function WelcomeWidgetWithTheme() {
 }
 
 describe('WelcomeWidget', () => {
-  it('renders Welcome heading and description', () => {
+  it('renders main heading and intro description', () => {
     render(<WelcomeWidgetWithTheme />)
-    expect(screen.getByRole('heading', { name: 'Welcome', level: 1 })).toBeTruthy()
-    expect(
-      screen.getByText(/This site is a living portfolio of SaaS-style features/)
-    ).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'Justin Gritten', level: 1 })).toBeTruthy()
+    expect(screen.getByText(/British Columbia, Canada/)).toBeTruthy()
+    expect(screen.getByText(/full.stack developer/)).toBeTruthy()
   })
 
-  it('renders About section with name and tagline', () => {
+  it('renders About section with tagline', () => {
     render(<WelcomeWidgetWithTheme />)
-    expect(screen.getByRole('heading', { name: 'Justin Gritten', level: 2 })).toBeTruthy()
-    expect(screen.getByText('.NET & React developer')).toBeTruthy()
-    expect(screen.getByText(/Building full-stack applications · justingritten.dev/)).toBeTruthy()
+    expect(screen.getByRole('region', { name: 'About' })).toBeTruthy()
+    expect(
+      screen.getByText(/I care about thoughtful UX, strong engineering fundamentals/)
+    ).toBeTruthy()
   })
 
   it('has View source on GitHub link with correct href and opens in new tab', () => {
