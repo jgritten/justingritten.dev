@@ -1,6 +1,7 @@
 import { Card, Flex, Heading, Text } from '@radix-ui/themes'
 import type { ComponentType } from 'react'
 import { useIsDarkTheme } from '@/contexts/ThemeContext'
+import { ChatGPTIcon } from './icons/ChatGPTIcon'
 import { DesignSystemsIcon } from './icons/DesignSystemsIcon'
 import { DrawIoIcon } from './icons/DrawIoIcon'
 import { PrototypingIcon } from './icons/PrototypingIcon'
@@ -120,10 +121,7 @@ const CATEGORIES: TechCategory[] = [
       { label: 'Visual Studio', iconUrl: '/icons/Visual_Studio_Icon.png' },
       { label: 'Postman', iconSlug: 'postman' },
       { label: 'Jira', iconSlug: 'jira' },
-      {
-        label: 'ChatGPT',
-        iconUrl: '/icons/ChatGPT-Logo.png',
-      },
+      { label: 'ChatGPT', IconComponent: ChatGPTIcon, iconClassName: 'tech-wheelhouse__tag-icon' },
       {
         label: 'Claude',
         iconUrl: '/icons/Claude_AI_symbol.png',
