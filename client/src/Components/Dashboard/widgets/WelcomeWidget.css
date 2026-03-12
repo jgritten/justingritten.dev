@@ -1,13 +1,12 @@
 .welcome-widget {
-  text-align: center;
-  max-width: 40rem;
-  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr);
+  gap: 2rem;
+  align-items: center;
 }
 
 .welcome-widget__header {
-  margin-bottom: 3rem;
-  padding-bottom: 2rem;
-  border-bottom: 1px solid var(--gray-6);
+  margin-bottom: 1.75rem;
 }
 
 .welcome-widget__title {
@@ -21,17 +20,6 @@
   margin: 0;
   color: var(--gray-11);
   line-height: 1.5;
-}
-
-.welcome-widget__about {
-  max-width: 32rem;
-  margin: 0 auto;
-}
-
-.welcome-widget__name {
-  margin: 0 0 0.5rem;
-  letter-spacing: -0.02em;
-  color: var(--gray-12);
 }
 
 .welcome-widget__tagline {
@@ -63,4 +51,34 @@
   font-size: 0.75rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+}
+
+.welcome-widget__photo {
+  display: flex;
+  justify-content: center;
+}
+
+.welcome-widget__photo-inner {
+  border-radius: var(--radius-4);
+  overflow: hidden;
+  box-shadow: 0 24px 80px var(--black-a7);
+  max-width: 320px;
+  width: 100%;
+}
+
+.welcome-widget__photo-inner img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+@media (max-width: 768px) {
+  .welcome-widget {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .welcome-widget__photo {
+    order: -1;
+  }
 }

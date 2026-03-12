@@ -41,6 +41,10 @@ export function GlobalMenuBar() {
           <NavLink to="/saas" className={tabClassName}>
             SaaS
           </NavLink>
+          <span className="menu-bar__tabs-divider" aria-hidden="true" />
+          <NavLink to="/build" className={tabClassName}>
+            Build & Activity
+          </NavLink>
         </nav>
       </div>
       <div className="menu-bar__user">

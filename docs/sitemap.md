@@ -28,12 +28,19 @@ The canonical source of routes is `client/src/App.tsx`. This section mirrors tha
 User opens justingritten.dev
 └─ Global layout (GlobalMenuBar with tabs, Footer)
    ├─ Tabs in GlobalMenuBar
-   │  ├─ Profile tab → /
-   │  └─ SaaS tab    → /saas
+   │  ├─ Profile tab         → /
+   │  ├─ SaaS tab            → /saas
+   │  └─ Build & Activity tab→ /build
    │
-   ├─ /  (Profile dashboard)
-   │  ├─ Scroll within profile sections
-   │  └─ Use SaaS tab to enter SaaS experience
+   ├─ /  (Profile)
+   │  ├─ Welcome & intro
+   │  ├─ My Tech Wheelhouse
+   │  └─ Contact card
+   │
+   ├─ /build  (Build & Activity)
+   │  ├─ CI/CD overview widget
+   │  ├─ Roadmap widget
+   │  └─ Recent Activity widget
    │
    └─ /saas  (SaaS entry)
       ├─ SaaSEntry (login / continue as guest placeholder)

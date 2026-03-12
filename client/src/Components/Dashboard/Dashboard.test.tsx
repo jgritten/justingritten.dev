@@ -19,15 +19,9 @@ describe('Dashboard', () => {
     expect(container.querySelectorAll('.content-card').length).toBeGreaterThan(0)
   })
 
-  it('renders Welcome widget', () => {
+  it('renders Welcome widget heading with name', () => {
     render(<DashboardWithTheme />)
-    expect(screen.getByRole('heading', { name: 'Welcome', level: 1 })).toBeTruthy()
-  })
-
-  it('renders welcome content (name and tagline)', () => {
-    render(<DashboardWithTheme />)
-    expect(screen.getByRole('heading', { name: 'Justin Gritten', level: 2 })).toBeTruthy()
-    expect(screen.getByText('.NET & React developer')).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'Justin Gritten', level: 1 })).toBeTruthy()
   })
 
   it('includes GitHub source and profile links', () => {

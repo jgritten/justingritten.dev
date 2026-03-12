@@ -12,6 +12,10 @@
   backdrop-filter: blur(4px);
 }
 
+.content-card--wide {
+  width: 100%;
+}
+
 /* Light theme: almost opaque, slightly darker for contrast over light background */
 html[data-theme='light'] .content-card {
   background-color: rgba(255, 255, 255, 0.5);

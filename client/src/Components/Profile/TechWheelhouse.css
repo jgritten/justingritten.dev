@@ -1,0 +1,80 @@
+.tech-wheelhouse {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.tech-wheelhouse__header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.tech-wheelhouse__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.tech-wheelhouse__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tech-wheelhouse__section-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.tech-wheelhouse__items {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.tech-wheelhouse__item-card {
+  background: radial-gradient(circle at top left, var(--gray-3), transparent 55%);
+  padding: 0.75rem 1rem;
+}
+
+.tech-wheelhouse__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+}
+
+.tech-wheelhouse__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  color: var(--gray-12);
+}
+
+.tech-wheelhouse__tag-icon {
+  display: block;
+  width: 50px;
+  height: 50px;
+}
+
+html[data-theme='dark'] .tech-wheelhouse__tag-icon--rest {
+  /* REST API icon uses currentColor; in dark theme make it red */
+  color: #ef4444;
+}
+
+html[data-theme='light'] .tech-wheelhouse__tag-icon--rest {
+  /* Softer accent in light theme */
+  color: #0ea5e9;
+}
+
+html[data-theme='dark'] .tech-wheelhouse__tag-icon--prototyping {
+  color: #fff;
+}
+
+html[data-theme='light'] .tech-wheelhouse__tag-icon--prototyping {
+  color: #2c3e50;
+}
+

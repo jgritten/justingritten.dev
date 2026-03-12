@@ -15,7 +15,6 @@ import {
   type SidebarLinkItem,
   type SidebarMainItem,
 } from './sidebarConfig'
-import { PROFILE_WIDGETS } from '../Profile/Profile'
 import './Sidebar.css'
 
 const ICON_MAP = {
@@ -29,6 +28,12 @@ const ICON_MAP = {
 } as const
 
 type IconKey = keyof typeof ICON_MAP
+
+const PROFILE_SECTIONS = [
+  { id: 'welcome', label: 'Welcome' },
+  { id: 'tech-wheelhouse', label: 'Tech wheelhouse' },
+  { id: 'contact', label: 'Contact' },
+] as const
 
 export type SidebarActions = {
   openCreateNew?: () => void
@@ -115,7 +120,7 @@ export function Sidebar({
           </NavLink>
           {item.id === 'profile' && (
             <ul className="sidebar__profile-submenu" aria-label="Profile sections">
-              {PROFILE_WIDGETS.map((section) => (
+              {PROFILE_SECTIONS.map((section) => (
                 <li key={section.id}>
                   <button
                     type="button"

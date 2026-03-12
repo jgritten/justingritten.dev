@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Routes, Route, Outlet } from 'react-router-dom
 import '@/styles/App.css'
 import { GlobalLayout } from './Components/AppShell/GlobalLayout'
 import { Profile } from './Components/Profile/Profile'
+import { BuildActivityPage } from './Components/Profile/BuildActivityPage'
 import { SaasEntry } from './Components/SaaS/SaasEntry'
 import { SaasAppShell } from './Components/SaaS/SaasAppShell'
 import { SaasDashboard } from './Components/SaaS/SaasDashboard'
@@ -19,6 +20,7 @@ function App() {
       <Routes>
         <Route path="/" element={<GlobalLayout />}>
           <Route index element={<Profile />} />
+          <Route path="build" element={<BuildActivityPage />} />
           <Route
             path="saas"
             element={
