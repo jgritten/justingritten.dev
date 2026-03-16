@@ -67,6 +67,7 @@
 .menu-bar__favicon {
   display: block;
   object-fit: contain;
+  border-radius: 8px;
 }
 
 .menu-bar__center {

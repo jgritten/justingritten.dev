@@ -6,7 +6,6 @@ import './MenuBar.css'
 export function GlobalMenuBar() {
   const isDark = useIsDarkTheme()
   const { setTheme } = useTheme()
-  const faviconSrc = isDark ? '/favicon_white.png' : '/favicon.png'
 
   const toggleAppearance = () => {
     const nextAppearance = isDark ? 'light' : 'dark'
@@ -25,11 +24,11 @@ export function GlobalMenuBar() {
           aria-label="Home"
         >
           <img
-            src={faviconSrc}
-            alt=""
+            src="/icons/canada.svg"
+            alt="Canadian flag"
             className="menu-bar__favicon"
-            width={28}
-            height={28}
+            width={48}
+            height={36}
           />
         </NavLink>
       </div>
