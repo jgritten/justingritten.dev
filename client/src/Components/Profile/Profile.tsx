@@ -1,4 +1,4 @@
-import { WelcomeWidget } from '../Dashboard/widgets/WelcomeWidget'
+import { WelcomeWidget } from './WelcomeWidget'
 import { TechWheelhouse } from './TechWheelhouse'
 import { ContactCard } from './ContactCard'
 import '../Dashboard/Dashboard.css'

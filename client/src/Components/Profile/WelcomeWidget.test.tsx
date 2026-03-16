@@ -57,3 +57,4 @@ describe('WelcomeWidget', () => {
     ).toBeTruthy()
   })
 })
+
