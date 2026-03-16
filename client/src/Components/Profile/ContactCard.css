@@ -2,8 +2,19 @@
   width: 100%;
 }
 
+.contact-card__title {
+  font-size: 4rem;
+  line-height: 1.1;
+  margin-bottom: 1rem;
+}
+
+.contact-card__layout {
+  margin-top: 0.75rem;
+}
+
 .contact-card__inner {
   background: radial-gradient(circle at top left, var(--gray-3), transparent 55%);
+  flex: 1;
 }
 
 .contact-card__intro {
@@ -68,6 +79,10 @@
 @media (max-width: 768px) {
   .contact-card__row {
     flex-direction: column;
+  }
+
+  .contact-card__title {
+    font-size: 2.6rem;
   }
 }
 

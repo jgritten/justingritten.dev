@@ -75,8 +75,6 @@ const CATEGORIES: TechCategory[] = [
       { label: 'MSSQL Server', iconUrl: '/icons/mssql.jpg' },
       { label: 'PostgreSQL', iconSlug: 'postgresql' },
       { label: 'RESTful APIs', IconComponent: RestApiIcon },
-      { label: 'Background jobs' },
-      // Custom AWS icon stored under client/public/icons
       { label: 'AWS (S3, Lambda, SQS, CloudFront)', iconUrl: '/icons/aws.svg' },
       { label: 'Azure', iconUrl: '/icons/azure.png' },
       { label: 'Docker', iconSlug: 'docker' },

@@ -1,85 +1,176 @@
 .welcome-widget {
+  border-radius: 12px;
+  background: var(--color-panel);
+  box-shadow: 0 4px 24px var(--black-a4), 0 0 1px var(--gray-7);
+  max-width: 100%;
+  box-sizing: border-box;
+  backdrop-filter: blur(4px);
+  overflow: hidden;
+}
+
+/* Ensure the welcome section occupies the same width as other wide cards */
+#profile-welcome {
+  width: 100%;
+  flex-basis: 100%;
+}
+
+/* Match the darker glass tone of .content-card per theme */
+html[data-theme='light'] .welcome-widget {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+html[data-theme='dark'] .welcome-widget {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.welcome-widget__inner {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr);
   gap: 2rem;
   align-items: center;
 }
 
-.welcome-widget__header {
-  margin-bottom: 1.75rem;
-}
-
 .welcome-widget__title {
-  margin: 0 0 1rem;
+  margin: 0;
   letter-spacing: -0.03em;
   color: var(--gray-12);
   line-height: 1.1;
+  font-size: 4rem !important;
 }
 
-.welcome-widget__desc {
+.welcome-widget__text {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding: 2rem;
+}
+
+.welcome-widget__row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1.2fr);
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.welcome-widget__row--bottom {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.welcome-widget__col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.welcome-widget__col--meta {
+  align-items: flex-end;
+}
+
+.welcome-widget__version {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.welcome-widget__role {
   margin: 0;
   color: var(--gray-11);
-  line-height: 1.5;
 }
 
-.welcome-widget__tagline {
-  display: block;
-  margin: 0 0 0.5rem;
-  font-weight: 500;
+.welcome-widget__email {
+  margin: 0;
 }
 
-.welcome-widget__sub {
-  display: block;
-  margin: 0 0 2rem;
-}
-
-.welcome-widget__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  justify-content: center;
-  margin-bottom: 2rem;
-}
-
-.welcome-widget__actions a {
-  text-decoration: none;
+.welcome-widget__email-link {
   color: inherit;
+  text-decoration: underline;
+  text-decoration-style: dotted;
 }
 
-.welcome-widget__stack {
-  opacity: 0.85;
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.welcome-widget__photo {
+.welcome-widget__availability {
   display: flex;
-  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
-.welcome-widget__photo-inner {
-  border-radius: var(--radius-4);
+.welcome-widget__availability-dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 999px;
+  background: #16a34a;
+  box-shadow: 0 0 8px rgba(22, 163, 74, 0.9);
+}
+
+.welcome-widget__availability-text {
+  color: #e5ffe9;
+}
+
+html[data-theme='light'] .welcome-widget__availability-text {
+  color: #000;
+}
+
+.welcome-widget__divider {
+  width: 1px;
+  height: 1.25rem;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.welcome-widget__location-icon {
+  font-size: 0.9rem;
+}
+
+.welcome-widget__location-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+
+.welcome-widget__quick-links {
+  margin-left: auto;
+}
+
+.welcome-widget__image {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: 400px;
   overflow: hidden;
-  box-shadow: 0 24px 80px var(--black-a7);
-  max-width: 320px;
-  width: 100%;
 }
 
-.welcome-widget__photo-inner img {
+.welcome-widget__image img {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
   object-fit: cover;
 }
 
 @media (max-width: 768px) {
   .welcome-widget {
+    border-radius: var(--radius-3);
+  }
+
+  .welcome-widget__inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+  }
+
+  .welcome-widget__row {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .welcome-widget__photo {
-    order: -1;
+  .welcome-widget__title {
+    font-size: 3rem !important;
+  }
+
+  .welcome-widget__col--meta {
+    align-items: flex-start;
+  }
+
+  .welcome-widget__quick-links {
+    margin-left: 0;
   }
 }
 

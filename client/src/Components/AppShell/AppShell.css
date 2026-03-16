@@ -21,7 +21,7 @@
   min-width: 0;
   overflow: auto;
   background: transparent;
-  padding: 1.5rem;
+  padding: 1rem;
 }
 
 /* SaaS shell lives inside the global layout; it should fill available height, not the viewport */

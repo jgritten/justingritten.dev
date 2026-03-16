@@ -6,13 +6,12 @@ import '../Dashboard/Dashboard.css'
 export function Profile() {
   return (
     <div className="dashboard">
-      <div
+      <section
         id="profile-welcome"
         data-profile-section="welcome"
-        className="content-card"
       >
         <WelcomeWidget />
-      </div>
+      </section>
       <div
         id="profile-tech-wheelhouse"
         data-profile-section="tech-wheelhouse"

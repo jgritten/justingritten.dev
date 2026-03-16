@@ -10,6 +10,11 @@
   gap: 0.5rem;
 }
 
+.tech-wheelhouse__header h2 {
+  font-size: 4rem;
+  line-height: 1.1;
+}
+
 .tech-wheelhouse__grid {
   display: flex;
   flex-direction: column;
@@ -76,5 +81,11 @@ html[data-theme='dark'] .tech-wheelhouse__tag-icon--prototyping {
 
 html[data-theme='light'] .tech-wheelhouse__tag-icon--prototyping {
   color: #2c3e50;
+}
+
+@media (max-width: 768px) {
+  .tech-wheelhouse__header h2 {
+    font-size: 2.6rem;
+  }
 }
 

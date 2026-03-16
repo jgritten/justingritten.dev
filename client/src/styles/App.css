@@ -26,6 +26,12 @@ html[data-theme='dark'] .content-card {
   background-color: rgba(0, 0, 0, 0.5);
 }
 
+@media (max-width: 768px) {
+  .content-card {
+    padding: 1.25rem;
+  }
+}
+
 /* Page title - can be overridden when using Radix Heading */
 #main-content h1 {
   margin: 0 0 0.5rem;

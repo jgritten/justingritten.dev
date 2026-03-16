@@ -1,57 +1,101 @@
-import { Heading, Text, Button } from '@radix-ui/themes'
+import { Heading, Text, Button, Badge, Flex } from '@radix-ui/themes'
+import { useIsDarkTheme } from '@/contexts/ThemeContext'
 import './WelcomeWidget.css'
 
 const GITHUB_REPO = 'https://github.com/jgritten/justingritten.dev'
 const GITHUB_PROFILE = 'https://github.com/jgritten'
+const EMAIL = 'justin.gritten@gmail.com'
+const SITE_VERSION = '0.1.0'
+
+function VersionBadge() {
+  return (
+    <div className="welcome-widget__version">
+      <Text as="span" size="2" color="gray">
+        Site version{' '}
+        <Badge size="1" color="green" variant="soft">
+          v{SITE_VERSION}
+        </Badge>
+      </Text>
+    </div>
+  )
+}
 
 export function WelcomeWidget() {
+  const isDark = useIsDarkTheme()
+
   return (
     <div className="welcome-widget">
-      <div>
-        <header className="welcome-widget__header" aria-label="Welcome">
-          <Heading as="h1" size="9" weight="bold" className="welcome-widget__title">
-            Justin Gritten
-          </Heading>
-          <Text as="p" size="4" className="welcome-widget__desc">
-            Hi, I&apos;m Justin – a full‑stack developer based in British Columbia, Canada. I&apos;ve
-            spent over a decade helping teams ship SaaS products that feel fast, polished, and easy to
-            live in day‑to‑day.
-          </Text>
-        </header>
-        <section className="welcome-widget__about" aria-label="About">
-          <Text as="p" size="3" color="gray" className="welcome-widget__tagline">
-            I care about thoughtful UX, strong engineering fundamentals, and closing the loop between
-            design, implementation, and real‑world performance for clients.
-          </Text>
-          <div className="welcome-widget__actions">
-            <Button size="3" asChild>
-              <a
-                href={GITHUB_REPO}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                View source on GitHub
-              </a>
-            </Button>
-            <Button size="3" variant="soft" asChild>
-              <a
-                href={GITHUB_PROFILE}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                View profile on GitHub
-              </a>
-            </Button>
-          </div>
-          <Text as="p" size="1" color="gray" className="welcome-widget__stack">
-            React · TypeScript · Vite · Radix UI · .NET
-          </Text>
-        </section>
-      </div>
-      <div className="welcome-widget__photo" aria-hidden="true">
-        <div className="welcome-widget__photo-inner">
+      <div className="welcome-widget__inner">
+        <div className="welcome-widget__text">
+          <header className="welcome-widget__row welcome-widget__row--top" aria-label="Welcome">
+            <div className="welcome-widget__col welcome-widget__col--primary">
+              <Heading as="h1" size="9" weight="bold" className="welcome-widget__title">
+                Justin Gritten
+              </Heading>
+            </div>
+            <div className="welcome-widget__col welcome-widget__col--meta">
+              <VersionBadge />
+            </div>
+          </header>
+
+          <section className="welcome-widget__row welcome-widget__row--middle" aria-label="Role and contact">
+            <div className="welcome-widget__col welcome-widget__col--primary">
+              <Text as="p" size="3" className="welcome-widget__role">
+                Full‑stack developer, crafting systems and design.
+              </Text>
+            </div>
+            <div className="welcome-widget__col welcome-widget__col--meta">
+              <Text as="p" size="2" color="gray" className="welcome-widget__email">
+                <span>Email:</span>{' '}
+                <a href={`mailto:${EMAIL}`} className="welcome-widget__email-link">
+                  {EMAIL}
+                </a>
+              </Text>
+            </div>
+          </section>
+
+          <section className="welcome-widget__row welcome-widget__row--bottom" aria-label="Availability and links">
+            <div className="welcome-widget__availability">
+              <span className="welcome-widget__availability-dot" aria-hidden="true" />
+              <Text as="span" size="2" className="welcome-widget__availability-text">
+                Available for work
+              </Text>
+              <span className="welcome-widget__divider" aria-hidden="true" />
+              <span className="welcome-widget__location-group">
+                <span className="welcome-widget__location-icon" aria-hidden="true">
+                  &#x1F4CD;
+                </span>
+                <Text as="span" size="2" color="gray">
+                  Lake Country, BC
+                </Text>
+              </span>
+              <span className="welcome-widget__divider" aria-hidden="true" />
+              <Flex gap="2" className="welcome-widget__quick-links">
+                <Button size="3" asChild>
+                  <a
+                    href={GITHUB_PROFILE}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    GitHub profile
+                  </a>
+                </Button>
+                <Button size="3" variant="soft" asChild>
+                  <a
+                    href={GITHUB_REPO}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Site repo
+                  </a>
+                </Button>
+              </Flex>
+            </div>
+          </section>
+        </div>
+        <div className="welcome-widget__image" aria-hidden="true">
           <img
-            src="/Justin.jpg"
+            src={isDark ? '/Justin.jpg' : '/justin_nomad_coder.jpg'}
             alt=""
           />
         </div>

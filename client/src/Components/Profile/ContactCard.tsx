@@ -12,29 +12,22 @@ export function ContactCard() {
 
   return (
     <div className="contact-card">
-      <Card className="contact-card__inner">
-        <Flex direction={{ initial: 'column', md: 'row' }} gap="4">
-          <Flex direction="column" gap="3" className="contact-card__intro">
-            <Heading as="h2" size="7" weight="bold">
-              Ready to work on your product?
-            </Heading>
-            <Text as="p" size="3" color="gray">
-              Tell me about your idea, existing system, or SaaS product. I&apos;ll follow up with
-              next steps and questions within 1-2 business days.
-            </Text>
-            <div className="contact-card__email-pill">
-              <Text as="span" size="2" color="gray">
-                Email
-              </Text>
-              <a
-                href="mailto:justin.gritten@gmail.com"
-                className="contact-card__email-link"
-              >
-                justin.gritten@gmail.com
-              </a>
-            </div>
-          </Flex>
-
+      <Heading as="h2" size="7" weight="bold" className="contact-card__title">
+        Ready to work on your product?
+      </Heading>
+      <Flex direction={{ initial: 'column', md: 'row' }} gap="4" className="contact-card__layout">
+        <Flex direction="column" gap="3" className="contact-card__intro">
+          <Heading as="h3" size="5" weight="bold">
+            I help early‑stage founders and teams launch SaaS MVPs in 2–4 weeks, rework existing
+            products, or add higher‑impact features like microservices and integrations.
+          </Heading>
+          <Text as="p" size="3" color="gray">
+            MVPs are best suited for founders who need authentication, dashboards, landing pages, and core
+            product workflows brought to life quickly and maintainably.
+          </Text>
+        </Flex>
+        <Card className="contact-card__inner">
+          <Flex direction={{ initial: 'column', md: 'row' }} gap="4">
           <form className="contact-card__form" onSubmit={handleSubmit}>
             <Flex direction="column" gap="3">
               <div className="contact-card__notice">
@@ -46,7 +39,7 @@ export function ContactCard() {
                   >
                     justin.gritten@gmail.com
                   </a>
-                  .
+                   if you need help.
                 </Text>
               </div>
               <div className="contact-card__row contact-card__row--split">
@@ -103,8 +96,9 @@ export function ContactCard() {
               </div>
             </Flex>
           </form>
-        </Flex>
-      </Card>
+          </Flex>
+        </Card>
+      </Flex>
     </div>
   )
 }
