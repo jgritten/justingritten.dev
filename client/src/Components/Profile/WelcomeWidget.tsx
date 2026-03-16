@@ -1,12 +1,11 @@
 import { Heading, Text, Button, Badge, Flex } from '@radix-ui/themes'
 import { useIsDarkTheme } from '@/contexts/ThemeContext'
+import { SITE_VERSION } from '@/utils/siteVersion'
 import './WelcomeWidget.css'
 
 const GITHUB_REPO = 'https://github.com/jgritten/justingritten.dev'
 const GITHUB_PROFILE = 'https://github.com/jgritten'
 const EMAIL = 'justin.gritten@gmail.com'
-const SITE_VERSION = '0.1.0'
-
 function VersionBadge() {
   return (
     <div className="welcome-widget__version">
