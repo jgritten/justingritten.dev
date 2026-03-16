@@ -1,13 +1,87 @@
+import { useState, useCallback } from 'react'
 import { Button, Card, Flex, Heading, Text, TextArea, TextField } from '@radix-ui/themes'
 import './ContactCard.css'
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const MAX_LENGTH = { firstName: 100, lastName: 100, email: 254, company: 200, message: 2000 }
+const SUBMIT_COOLDOWN_MS = 60_000
+
+function trim(s: string): string {
+  return s.trim()
+}
+
 export function ContactCard() {
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [lastSubmitAt, setLastSubmitAt] = useState<number>(0)
+
+  const validate = useCallback(
+    (formData: FormData): Record<string, string> => {
+      const firstName = trim((formData.get('firstName') ?? '').toString())
+      const lastName = trim((formData.get('lastName') ?? '').toString())
+      const email = trim((formData.get('email') ?? '').toString())
+      const company = trim((formData.get('company') ?? '').toString())
+      const message = trim((formData.get('message') ?? '').toString())
+
+      const next: Record<string, string> = {}
+      if (!firstName) next.firstName = 'First name is required.'
+      else if (firstName.length > MAX_LENGTH.firstName) next.firstName = `Keep it under ${MAX_LENGTH.firstName} characters.`
+      if (!lastName) next.lastName = 'Last name is required.'
+      else if (lastName.length > MAX_LENGTH.lastName) next.lastName = `Keep it under ${MAX_LENGTH.lastName} characters.`
+      if (!email) next.email = 'Email is required.'
+      else if (!EMAIL_REGEX.test(email)) next.email = 'Please enter a valid email address.'
+      else if (email.length > MAX_LENGTH.email) next.email = `Keep it under ${MAX_LENGTH.email} characters.`
+      if (!company) next.company = 'Company or project is required.'
+      else if (company.length > MAX_LENGTH.company) next.company = `Keep it under ${MAX_LENGTH.company} characters.`
+      if (!message) next.message = 'Message is required.'
+      else if (message.length > MAX_LENGTH.message) next.message = `Keep it under ${MAX_LENGTH.message} characters.`
+      return next
+    },
+    []
+  )
+
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault()
-    // Placeholder; real submission wiring will come later.
-    window.alert(
-      "This contact form isn't wired up yet. Please email me at justin.gritten@gmail.com instead."
-    )
+    const form = event.currentTarget
+    const formData = new FormData(form)
+
+    const honeypot = (formData.get('website') ?? '').toString().trim()
+    if (honeypot) {
+      setErrors({ form: 'Something went wrong. Please try again or email me directly.' })
+      return
+    }
+
+    const now = Date.now()
+    if (now - lastSubmitAt < SUBMIT_COOLDOWN_MS) {
+      setErrors({ form: 'Please wait a minute before sending again.' })
+      return
+    }
+
+    const validationErrors = validate(formData)
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors)
+      return
+    }
+
+    setErrors({})
+
+    const firstName = trim((formData.get('firstName') ?? '').toString()).slice(0, MAX_LENGTH.firstName)
+    const lastName = trim((formData.get('lastName') ?? '').toString()).slice(0, MAX_LENGTH.lastName)
+    const email = trim((formData.get('email') ?? '').toString()).slice(0, MAX_LENGTH.email)
+    const company = trim((formData.get('company') ?? '').toString()).slice(0, MAX_LENGTH.company)
+    const message = trim((formData.get('message') ?? '').toString()).slice(0, MAX_LENGTH.message)
+
+    const subject = encodeURIComponent('New inquiry from justingritten.dev')
+    const bodyLines = [
+      `Name: ${firstName} ${lastName}`.trim(),
+      `Email: ${email}`,
+      `Company / Project: ${company}`,
+      '',
+      'Message:',
+      message,
+    ]
+    const body = encodeURIComponent(bodyLines.join('\n'))
+    window.location.href = `mailto:justin.gritten@gmail.com?subject=${subject}&body=${body}`
+    setLastSubmitAt(now)
   }
 
   return (
@@ -25,21 +99,46 @@ export function ContactCard() {
             MVPs are best suited for founders who need authentication, dashboards, landing pages, and core
             product workflows brought to life quickly and maintainably.
           </Text>
+          <div className="contact-card__primary-cta">
+            <Button size="3" asChild>
+              <a
+                href="https://calendly.com/justin-gritten/30min"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Book a 30-minute call
+              </a>
+            </Button>
+          </div>
         </Flex>
         <Card className="contact-card__inner">
           <Flex direction={{ initial: 'column', md: 'row' }} gap="4">
-          <form className="contact-card__form" onSubmit={handleSubmit}>
+          <form className="contact-card__form" onSubmit={handleSubmit} noValidate>
             <Flex direction="column" gap="3">
+              {/* Honeypot: hidden from users; bots that fill it are ignored */}
+              <div className="contact-card__honeypot" aria-hidden="true">
+                <label htmlFor="contact-website">Website</label>
+                <input type="text" id="contact-website" name="website" tabIndex={-1} autoComplete="off" />
+              </div>
+
+              {errors.form && (
+                <div className="contact-card__error contact-card__error--form" role="alert">
+                  <Text as="p" size="2" color="red">
+                    {errors.form}
+                  </Text>
+                </div>
+              )}
+
               <div className="contact-card__notice">
                 <Text as="p" size="2">
-                  This contact form isn&apos;t wired up yet. For now, please email me at{' '}
+                  Prefer email? Reach me at{' '}
                   <a
                     href="mailto:justin.gritten@gmail.com"
                     className="contact-card__email-link"
                   >
                     justin.gritten@gmail.com
                   </a>
-                   if you need help.
+                  . You can also share a bit of context here and I&apos;ll follow up.
                 </Text>
               </div>
               <div className="contact-card__row contact-card__row--split">
@@ -47,13 +146,35 @@ export function ContactCard() {
                   <Text as="span" size="2">
                     First name
                   </Text>
-                  <TextField.Root name="firstName" placeholder="John" required />
+                  <TextField.Root
+                    name="firstName"
+                    placeholder="John"
+                    required
+                    maxLength={MAX_LENGTH.firstName}
+                    color={errors.firstName ? 'red' : undefined}
+                  />
+                  {errors.firstName && (
+                    <Text as="span" size="1" color="red" className="contact-card__field-error">
+                      {errors.firstName}
+                    </Text>
+                  )}
                 </label>
                 <label className="contact-card__field">
                   <Text as="span" size="2">
                     Last name
                   </Text>
-                  <TextField.Root name="lastName" placeholder="Doe" />
+                  <TextField.Root
+                    name="lastName"
+                    placeholder="Doe"
+                    required
+                    maxLength={MAX_LENGTH.lastName}
+                    color={errors.lastName ? 'red' : undefined}
+                  />
+                  {errors.lastName && (
+                    <Text as="span" size="1" color="red" className="contact-card__field-error">
+                      {errors.lastName}
+                    </Text>
+                  )}
                 </label>
               </div>
 
@@ -67,13 +188,31 @@ export function ContactCard() {
                     placeholder="you@example.com"
                     type="email"
                     required
+                    maxLength={MAX_LENGTH.email}
+                    color={errors.email ? 'red' : undefined}
                   />
+                  {errors.email && (
+                    <Text as="span" size="1" color="red" className="contact-card__field-error">
+                      {errors.email}
+                    </Text>
+                  )}
                 </label>
                 <label className="contact-card__field">
                   <Text as="span" size="2">
                     Company or project
                   </Text>
-                  <TextField.Root name="company" placeholder="Company or project name" />
+                  <TextField.Root
+                    name="company"
+                    placeholder="Company or project name"
+                    required
+                    maxLength={MAX_LENGTH.company}
+                    color={errors.company ? 'red' : undefined}
+                  />
+                  {errors.company && (
+                    <Text as="span" size="1" color="red" className="contact-card__field-error">
+                      {errors.company}
+                    </Text>
+                  )}
                 </label>
               </div>
 
@@ -86,12 +225,19 @@ export function ContactCard() {
                   placeholder="Tell me about your timeline, goals, and what success looks like."
                   rows={4}
                   required
+                  maxLength={MAX_LENGTH.message}
+                  color={errors.message ? 'red' : undefined}
                 />
+                {errors.message && (
+                  <Text as="span" size="1" color="red" className="contact-card__field-error">
+                    {errors.message}
+                  </Text>
+                )}
               </label>
 
               <div className="contact-card__actions">
                 <Button size="3" type="submit">
-                  Submit
+                  Send message
                 </Button>
               </div>
             </Flex>

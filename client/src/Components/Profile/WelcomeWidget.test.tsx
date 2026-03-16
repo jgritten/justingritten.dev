@@ -16,7 +16,7 @@ describe('WelcomeWidget', () => {
     render(<WelcomeWidgetWithTheme />)
     expect(screen.getByRole('heading', { name: 'Justin Gritten', level: 1 })).toBeTruthy()
     expect(screen.getByText(/Lake Country, BC/)).toBeTruthy()
-    expect(screen.getByText(/Full.stack developer, crafting systems and design\./i)).toBeTruthy()
+    expect(screen.getByText(/Senior Full.Stack Engineer \(SaaS & MVPs\), helping teams ship and rescue SaaS products\./i)).toBeTruthy()
   })
 
   // Quick link buttons (GitHub profile, site repo) are exercised via accessible names and hrefs elsewhere.

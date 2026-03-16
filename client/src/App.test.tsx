@@ -16,7 +16,7 @@ describe('App', () => {
     window.history.pushState({}, '', '/')
     render(<AppWithProviders />)
     expect(screen.getByRole('heading', { name: /justin gritten/i })).toBeTruthy()
-    expect(screen.getByText(/Full.stack developer, crafting systems and design\./i)).toBeTruthy()
+    expect(screen.getByText(/Senior Full.Stack Engineer \(SaaS & MVPs\), helping teams ship and rescue SaaS products\./i)).toBeTruthy()
   })
 
   it('renders Profile link in sidebar', () => {

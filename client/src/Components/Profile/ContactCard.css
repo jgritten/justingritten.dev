@@ -47,6 +47,7 @@
 
 .contact-card__form {
   flex: 1;
+  position: relative;
 }
 
 .contact-card__notice {
@@ -74,6 +75,42 @@
 .contact-card__actions {
   display: flex;
   justify-content: flex-end;
+}
+
+/* Honeypot: hidden from view and layout; bots that fill it are rejected */
+.contact-card__honeypot {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.contact-card__honeypot label,
+.contact-card__honeypot input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.contact-card__error--form {
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-2);
+  background: var(--red-3);
+  color: var(--red-11);
+}
+
+.contact-card__field-error {
+  display: block;
+  margin-top: 0.15rem;
 }
 
 @media (max-width: 768px) {

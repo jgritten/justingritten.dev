@@ -21,7 +21,7 @@ describe('RoadmapWidget', () => {
     expect(screen.getByText('Implementation phases')).toBeTruthy()
   })
 
-  it('renders all six phases in order', () => {
+  it('renders all phases in order including future development', () => {
     render(<RoadmapWidgetWithTheme />)
     expect(screen.getByRole('heading', { name: /Phase 0: Foundation/, level: 3 })).toBeTruthy()
     expect(screen.getByRole('heading', { name: /Phase 1: SaaS - Authentication/, level: 3 })).toBeTruthy()
@@ -36,6 +36,9 @@ describe('RoadmapWidget', () => {
     ).toBeTruthy()
     expect(
       screen.getByRole('heading', { name: /Phase 5: SaaS - Later \/ learning-focused/, level: 3 })
+    ).toBeTruthy()
+    expect(
+      screen.getByRole('heading', { name: /Future development & product ideas/, level: 3 })
     ).toBeTruthy()
   })
 

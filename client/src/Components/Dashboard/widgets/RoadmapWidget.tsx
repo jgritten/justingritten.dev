@@ -80,6 +80,15 @@ const ROADMAP_PHASES = [
       'API keys not planned at this stage',
     ],
   },
+  {
+    id: 'future',
+    title: 'Future development & product ideas',
+    completed: false,
+    items: [
+      'Municipality community hub: map-based app for local government—events, construction, emergency evacuation routes, pin markers; easy sign-in and management for officials.',
+      'Other product demos and experiments as they take shape.',
+    ],
+  },
 ] as const
 
 function CheckIcon() {

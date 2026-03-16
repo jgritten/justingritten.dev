@@ -73,6 +73,13 @@ html[data-theme='dark'] .welcome-widget {
   justify-content: flex-end;
 }
 
+.welcome-widget__visits {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 0.25rem;
+}
+
 .welcome-widget__role {
   margin: 0;
   color: var(--gray-11);

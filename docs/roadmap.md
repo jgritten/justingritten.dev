@@ -8,7 +8,9 @@ This doc is the **single source of truth** for feature planning and “memory”
 
 ### Purpose of the site
 
-- **Portfolio / showcase:** Demonstrate ability to deliver features typical of a **SaaS product** so potential employers can see what you’re capable of.
+- **Portfolio / landing page (primary):** Present you as a **full‑stack engineer** who can join a team and ship reliably. The `/` route (Profile) should quickly answer “Who is Justin?”, “What does he do well?”, and “How do I book time with him?”.
+- **Commercial SaaS MVP demo (secondary):** Provide a reusable, **2–4 week SaaS starter** demo under `/saas` that shows how you design multi‑tenant, production‑grade products. Recruiters and potential buyers should be able to click through a believable dashboard + settings flow.
+- **Ideas and experiments (tertiary):** Offer a home for **personal product ideas and demos** (e.g. a **municipality community hub** with maps, event pins, construction notices, and evacuation routes) without diluting the main portfolio story.
 - **Public repo:** Design and docs should be recruiter-friendly; no secrets in code.
 
 ### Stated goals (your ideas, unordered)
