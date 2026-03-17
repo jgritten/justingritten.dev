@@ -232,7 +232,7 @@ Order is driven by **dependencies** and **portfolio impact**, not your original 
 - **Theme:** Use Radix theming (e.g. theme tokens, dark/light, accent, typography) and persist via localStorage and/or API. Client default theme can be stored on the tenant and applied when user has no personal override (or as default for new users).
 - **Guest and default client:** Treat “no auth” as Guest; assign a single **default client** ID for all guest sessions so the app has a consistent “current client” from day one. Dashboard, search, and doc gen can all be scoped to that client for guests; rate limiting (e.g. doc gen) by IP. Later, “Sign in” or “Create account” upgrades the session to a full user with normal login paths.
 - **Login path and current client:** Implement the path trigger (cold vs invited) and current-client context early in Phase 2 so every subsequent feature (dashboard, search, doc gen) is scoped to “current client” and respects role. Authorization checks on the API (and guarded routes/UI) should run for every data request.
-- **Deployment:** Auth and API mean you’ll eventually host the .NET API (e.g. separate subdomain). When you do, add an ADR and update `docs/deployment.md` and `docs/security.md` (CORS, auth in production).
+- **Deployment:** Auth and API mean you’ll eventually host the .NET API (e.g. separate subdomain). The first choice will be **AWS Elastic Beanstalk** for the .NET API, with a **fallback/alternative** of **Lambda + API Gateway (.NET serverless)** if that proves a better fit. When you decide and implement this, add an ADR and update `docs/deployment.md` and `docs/security.md` (CORS, auth in production, and contact-form email delivery).
 - **Demo vs production:** For portfolio, consider which flows are “live” (e.g. real email) vs “demo” (e.g. magic link in dev) and document that in ADR or roadmap so recruiters understand what’s implemented vs simulated.
 
 ---
@@ -285,6 +285,7 @@ Prioritized in the same “later” area; add to feature list and phases when yo
 - **Keyboard shortcuts and accessibility:** Shortcuts for main actions (e.g. “G then D” for Dashboard); ARIA and focus management. Not anytime soon.
 - **Localization readiness:** Structure copy for i18n (e.g. keys, one locale) even if only shipping English. Same priority band as keyboard shortcuts.
 - **Export:** CSV/Excel (or PDF) export for lists and reports. Add when you have list views that benefit from it.
+- **Visitor metrics (backend-based):** Simple, privacy-friendly visitor metrics for the profile page using your own backend (e.g. API + SQLite) instead of third-party trackers. Revisit once the API is deployed and you want lightweight analytics.
 
 ### 5d. Ten suggestions — decisions and status
 

@@ -64,23 +64,11 @@ export function ContactCard() {
 
     setErrors({})
 
-    const firstName = trim((formData.get('firstName') ?? '').toString()).slice(0, MAX_LENGTH.firstName)
-    const lastName = trim((formData.get('lastName') ?? '').toString()).slice(0, MAX_LENGTH.lastName)
-    const email = trim((formData.get('email') ?? '').toString()).slice(0, MAX_LENGTH.email)
-    const company = trim((formData.get('company') ?? '').toString()).slice(0, MAX_LENGTH.company)
-    const message = trim((formData.get('message') ?? '').toString()).slice(0, MAX_LENGTH.message)
-
-    const subject = encodeURIComponent('New inquiry from justingritten.dev')
-    const bodyLines = [
-      `Name: ${firstName} ${lastName}`.trim(),
-      `Email: ${email}`,
-      `Company / Project: ${company}`,
-      '',
-      'Message:',
-      message,
-    ]
-    const body = encodeURIComponent(bodyLines.join('\n'))
-    window.location.href = `mailto:justin.gritten@gmail.com?subject=${subject}&body=${body}`
+    // For now, the form is intentionally disabled from sending directly.
+    // Guide users to email or book a call instead.
+    window.alert(
+      "This contact form isn't wired up to send messages yet. Please email me at justin.gritten@gmail.com or use the \"Book a 30-minute call\" button instead."
+    )
     setLastSubmitAt(now)
   }
 
@@ -131,14 +119,14 @@ export function ContactCard() {
 
               <div className="contact-card__notice">
                 <Text as="p" size="2">
-                  Prefer email? Reach me at{' '}
+                  This contact form isn&apos;t wired up to send yet. For now, please email me at{' '}
                   <a
                     href="mailto:justin.gritten@gmail.com"
                     className="contact-card__email-link"
                   >
                     justin.gritten@gmail.com
-                  </a>
-                  . You can also share a bit of context here and I&apos;ll follow up.
+                  </a>{' '}
+                  or use the &quot;Book a 30-minute call&quot; button.
                 </Text>
               </div>
               <div className="contact-card__row contact-card__row--split">
@@ -236,7 +224,7 @@ export function ContactCard() {
               </label>
 
               <div className="contact-card__actions">
-                <Button size="3" type="submit">
+                <Button size="3" type="submit" disabled>
                   Send message
                 </Button>
               </div>

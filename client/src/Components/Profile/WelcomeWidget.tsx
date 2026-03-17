@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react'
 import { Heading, Text, Button, Badge, Flex } from '@radix-ui/themes'
 import { useIsDarkTheme } from '@/contexts/ThemeContext'
 import { SITE_VERSION } from '@/utils/siteVersion'
@@ -7,7 +6,6 @@ import './WelcomeWidget.css'
 const GITHUB_REPO = 'https://github.com/jgritten/justingritten.dev'
 const GITHUB_PROFILE = 'https://github.com/jgritten'
 const EMAIL = 'justin.gritten@gmail.com'
-const COUNTAPI_HIT_URL = 'https://api.countapi.xyz/hit/justingritten.dev/visits'
 
 function VersionBadge() {
   return (
@@ -17,26 +15,6 @@ function VersionBadge() {
         <Badge size="1" color="green" variant="soft">
           v{SITE_VERSION}
         </Badge>
-      </Text>
-    </div>
-  )
-}
-
-function VisitorCounter() {
-  const [count, setCount] = useState<number | null>(null)
-
-  useEffect(() => {
-    fetch(COUNTAPI_HIT_URL)
-      .then((res) => res.json())
-      .then((data: { value?: number }) => setCount(data.value ?? null))
-      .catch(() => setCount(null))
-  }, [])
-
-  if (count === null) return null
-  return (
-    <div className="welcome-widget__visits">
-      <Text as="span" size="2" color="gray">
-        You are visitor {count.toLocaleString()}
       </Text>
     </div>
   )
@@ -57,7 +35,6 @@ export function WelcomeWidget() {
             </div>
             <div className="welcome-widget__col welcome-widget__col--meta">
               <VersionBadge />
-              <VisitorCounter />
             </div>
           </header>
 
