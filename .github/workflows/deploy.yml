@@ -48,7 +48,7 @@ jobs:
         env:
           # Production API URL baked into the client at build time (Vite).
           # Set repo variable VITE_API_URL in Settings → Actions → Variables to override.
-          VITE_API_URL: ${{ vars.VITE_API_URL != '' && vars.VITE_API_URL || 'http://justingritten-api-dev.eba-vrsgy2gn.us-east-1.elasticbeanstalk.com' }}
+          VITE_API_URL: ${{ vars.VITE_API_URL != '' && vars.VITE_API_URL || 'https://justingritten-api-dev.eba-vrsgy2gn.us-east-1.elasticbeanstalk.com' }}
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4

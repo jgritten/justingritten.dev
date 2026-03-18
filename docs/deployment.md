@@ -29,7 +29,7 @@ How the portfolio site is built and published.
 ## Local vs production
 
 - **Local:** `npm run dev` in `client/` (e.g. http://localhost:5173). API URL defaults to http://localhost:5237 (see `client/.env.example`).
-- **Production:** Static files on S3/CloudFront. The production build uses the API URL set in the workflow (default: your EB API URL). If you change the API URL (e.g. new EB environment or custom domain), set the repo variable **VITE_API_URL** in GitHub so the next build uses it.
+- **Production:** Static files on S3/CloudFront. The production build uses the API URL set in the workflow (default: your EB API URL over **HTTPS** so the browser does not block requests as mixed content). If you change the API URL (e.g. new EB environment or custom domain), set the repo variable **VITE_API_URL** in GitHub; it must be **HTTPS** when the site is served over HTTPS.
 
 ## Future considerations
 

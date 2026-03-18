@@ -10,7 +10,7 @@ This rule keeps the repo healthy by ensuring automated tests run before changes 
 ## When the user asks for a commit message or to commit changes
 
 - **Always** do the following **before** proposing a commit message or running any git commit:
-  - **Consider bumping the site version** (see “Site version” below). If the changes touch portfolio-facing code (e.g. `client/src/Components/Profile/**`, `client/src/styles/**`, new routes or major UI features), update `SITE_VERSION` in `client/src/utils/siteVersion.ts` using **Major.Minor.Patch**: **Major (X.0.0)** = big portfolio revamp or v1 launch; **Minor (0.Y.0)** = new sections, notable UX, or visible features; **Patch (0.0.Z)** = bug fixes, small styling or copy tweaks. After bumping, re-run client tests and client build.
+  - **Bump the site version** (see “Site version” below). If files changed, update `SITE_VERSION` in `client/src/utils/siteVersion.ts`. Choose one: **Major (X.0.0)** = big revamp or v1 launch (then set minor and patch to 0); **Minor (0.Y.0)** = new sections, notable UX, or visible features (then set patch to 0); **Patch (0.0.Z)** = bug fixes, config, deployment, docs, or other small changes—increment only the last number. After bumping, re-run client tests and client build.
   - Run the **client** test suite (e.g. `npm test` in `client/`). All client tests must pass.
   - Run the **server** test suite (e.g. `dotnet test server/Api.Tests/Api.Tests.csproj` from repo root). All API tests must pass.
   - Run the **client** build (e.g. `npm run build` in `client/`) to ensure the app still builds.
@@ -42,11 +42,11 @@ This rule keeps the repo healthy by ensuring automated tests run before changes 
 ## Site version
 
 - **Where:** `client/src/utils/siteVersion.ts` → `SITE_VERSION` (e.g. `'0.4.0'`).
-- **When to bump:** Staged/changed files include portfolio-facing changes: `client/src/Components/Profile/**`, `client/src/styles/**`, new routes, or major UI/UX changes.
+- **When to bump:** Whenever there are relevant file changes—always bump something; choose which segment (major, minor, or patch).
 - **How to bump (Major.Minor.Patch):**
-  - **Major (X.0.0)** – Big portfolio revamp or showcase-ready v1 launch.
-  - **Minor (0.Y.0)** – New sections, notable UX/layout changes, or visible feature additions.
-  - **Patch (0.0.Z)** – Bug fixes, small styling or copy tweaks.
+  - **Major (X.0.0)** – Big portfolio revamp or showcase-ready v1 launch. **Reset:** set minor and patch to 0.
+  - **Minor (0.Y.0)** – New sections, notable UX/layout changes, or visible feature additions. **Reset:** set patch to 0.
+  - **Patch (0.0.Z)** – Bug fixes, small styling or copy tweaks, **config/deployment/docs** (e.g. API URL, CORS, workflow, deployment docs), and other non–user-facing changes. Increment only the last number.
 - After changing the version, re-run client tests and client build before proposing the commit message.
 
 ## Scope

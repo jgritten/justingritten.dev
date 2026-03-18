@@ -24,12 +24,17 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Register repositories
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
-// Configure CORS for React frontend
+// Configure CORS for React frontend (local and production)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
+        policy.WithOrigins(
+                  "http://localhost:5173",
+                  "http://localhost:3000",
+                  "https://www.justingritten.dev",
+                  "https://justingritten.dev"
+              )
               .AllowAnyHeader()
               .AllowAnyMethod();
     });

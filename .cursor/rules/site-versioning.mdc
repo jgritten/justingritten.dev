@@ -1,11 +1,11 @@
 ---
-description: Keep client site version in sync with meaningful portfolio changes.
+description: Keep client site version in sync with every change; bump major, minor, or patch and reset lower segments when needed.
 alwaysApply: true
 ---
 
 # Site versioning on commit
 
-This rule keeps the `SITE_VERSION` in sync with visible changes to the portfolio.
+If files change, the site version **must** be updated; the only question is **which** segment to bump (major, minor, or patch).
 
 ## Where the version lives
 
@@ -13,25 +13,21 @@ This rule keeps the `SITE_VERSION` in sync with visible changes to the portfolio
   - `SITE_VERSION` – current semantic version as `major.minor.patch`
   - `parseSiteVersion` – helper to break it into numeric parts
 
-## When to bump the version
+## When to bump (every commit with changes)
 
-When preparing a commit message or commit that touches any of the following, **consider bumping** `SITE_VERSION`:
+On every commit that has relevant file changes, **bump** `SITE_VERSION`. Choose exactly one:
 
-- `client/src/Components/Profile/**` (hero, tech wheelhouse, contact card, profile routing)
-- `client/src/styles/**` or other global layout/visual changes that impact the portfolio experience
-- Any new portfolio-facing route or major component
+- **Major (X.0.0)** – Big portfolio revamp or a showcase‑ready “v1” launch. When you bump major, set minor and patch to **0** (e.g. `1.0.0`).
+- **Minor (0.Y.0)** – New sections, notable UX/layout changes, or visible feature additions. When you bump minor, set patch to **0** (e.g. `0.5.0`).
+- **Patch (0.0.Z)** – Everything else: bug fixes, small styling or copy tweaks, **config/deployment/docs** (e.g. API URL, CORS, workflow, .env.example, deployment docs), and other non–user-facing or infrastructure changes. Increment only the last number (e.g. `0.4.0` → `0.4.1`).
 
-Use **semantic versioning**:
-
-- **Major (X.0.0)** – Big portfolio revamp or a showcase‑ready “v1” launch.
-- **Minor (0.Y.0)** – New sections, notable UX/layout changes, or visible feature additions.
-- **Patch (0.2.Z)** – Bug fixes, small styling or copy tweaks.
+**Reset rule:** When you increment **major**, set minor and patch to 0. When you increment **minor**, set patch to 0.
 
 ## How to apply during commit prep
 
 1. Before proposing the commit message:
-   - Review staged changes. If they include meaningful portfolio UX/content or layout changes, update `SITE_VERSION` accordingly.
+   - Review staged changes. Decide which segment to bump (major / minor / patch), update `SITE_VERSION` in `client/src/utils/siteVersion.ts`, and apply the reset rule if you bumped major or minor.
 2. After bumping the version:
-   - Re‑run `npm test` and `npm run build` (see `tests-before-commit` rule).
+   - Re‑run client tests and client build (see `tests-before-commit` rule).
 3. Mention the version bump in the commit body when it’s a **major** or **minor** increment.
 
