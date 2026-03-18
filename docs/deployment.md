@@ -13,7 +13,7 @@ How the portfolio site is built and published.
 2. **Node** – Setup Node 20, npm cache using `client/package-lock.json`.
 3. **Install** – `npm ci` in `client/`.
 4. **Test** – `npm run test` in `client/`. All tests must pass; the job fails and deploy is skipped if any test fails.
-5. **Build** – `npm run build` in `client/`.
+5. **Build** – `npm run build` in `client/` with **`VITE_API_URL`** set to the production API URL (so the deployed site calls your API, not localhost). The workflow defaults to your Elastic Beanstalk API URL; override via repo variable **Settings → Actions → Variables → VITE_API_URL**.
 6. **AWS** – OIDC to assume role `github-deploy-justingritten-dev` in `us-east-2`.
 7. **S3 upload (three passes):**
    - **Assets** – `client/dist/assets` → `s3://justingritten.dev/assets` with long cache (`max-age=31536000, immutable`).
@@ -23,12 +23,13 @@ How the portfolio site is built and published.
 
 ## What is deployed
 
-- **Only the client:** The built React SPA. The .NET API is not deployed; the live site is static.
+- **Client:** Built React SPA to S3/CloudFront. The client is built with **VITE_API_URL** pointing at your production API so contact form and visitor metrics work on the live site.
+- **API:** Deployed separately (e.g. Elastic Beanstalk); the workflow does not deploy the API.
 
 ## Local vs production
 
-- **Local:** `npm run dev` in `client/` (e.g. http://localhost:5173). Optional: `dotnet run --project server` for API (e.g. http://localhost:5237).
-- **Production:** Static files on S3 behind CloudFront; no server-side API in production today.
+- **Local:** `npm run dev` in `client/` (e.g. http://localhost:5173). API URL defaults to http://localhost:5237 (see `client/.env.example`).
+- **Production:** Static files on S3/CloudFront. The production build uses the API URL set in the workflow (default: your EB API URL). If you change the API URL (e.g. new EB environment or custom domain), set the repo variable **VITE_API_URL** in GitHub so the next build uses it.
 
 ## Future considerations
 

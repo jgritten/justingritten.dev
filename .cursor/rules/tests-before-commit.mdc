@@ -1,5 +1,5 @@
 ---
-description: Run client and server tests, builds, and a coverage evaluation before preparing commit messages or committing changes.
+description: Run client and server tests, builds, site version check (Major.Minor.Patch), and coverage evaluation before preparing commit messages or committing changes.
 alwaysApply: true
 ---
 
@@ -10,6 +10,7 @@ This rule keeps the repo healthy by ensuring automated tests run before changes 
 ## When the user asks for a commit message or to commit changes
 
 - **Always** do the following **before** proposing a commit message or running any git commit:
+  - **Consider bumping the site version** (see “Site version” below). If the changes touch portfolio-facing code (e.g. `client/src/Components/Profile/**`, `client/src/styles/**`, new routes or major UI features), update `SITE_VERSION` in `client/src/utils/siteVersion.ts` using **Major.Minor.Patch**: **Major (X.0.0)** = big portfolio revamp or v1 launch; **Minor (0.Y.0)** = new sections, notable UX, or visible features; **Patch (0.0.Z)** = bug fixes, small styling or copy tweaks. After bumping, re-run client tests and client build.
   - Run the **client** test suite (e.g. `npm test` in `client/`). All client tests must pass.
   - Run the **server** test suite (e.g. `dotnet test server/Api.Tests/Api.Tests.csproj` from repo root). All API tests must pass.
   - Run the **client** build (e.g. `npm run build` in `client/`) to ensure the app still builds.
@@ -21,6 +22,7 @@ This rule keeps the repo healthy by ensuring automated tests run before changes 
 - **If all tests pass and builds succeed:**
   - Proceed to prepare the commit message or commit as requested.
   - Briefly note that client and server tests passed and builds succeeded.
+  - If `SITE_VERSION` was bumped, include the version change in the commit message (e.g. in the body: “Site version X.Y.Z → X.Y.Z”); for **major** or **minor** bumps, mention the version in the commit body.
   - If the coverage evaluation identified likely gaps (e.g. new code without tests), mention them and suggest adding tests or noting the gap in the commit message.
 
 - **If the build fails:**
@@ -36,6 +38,16 @@ This rule keeps the repo healthy by ensuring automated tests run before changes 
   - Either:
     - Attempt to fix the failing tests/code, re-run tests, and then propose a commit message, or
     - If fixes are out of scope, clearly state that tests are failing and that the commit message is being suggested with known test failures.
+
+## Site version
+
+- **Where:** `client/src/utils/siteVersion.ts` → `SITE_VERSION` (e.g. `'0.4.0'`).
+- **When to bump:** Staged/changed files include portfolio-facing changes: `client/src/Components/Profile/**`, `client/src/styles/**`, new routes, or major UI/UX changes.
+- **How to bump (Major.Minor.Patch):**
+  - **Major (X.0.0)** – Big portfolio revamp or showcase-ready v1 launch.
+  - **Minor (0.Y.0)** – New sections, notable UX/layout changes, or visible feature additions.
+  - **Patch (0.0.Z)** – Bug fixes, small styling or copy tweaks.
+- After changing the version, re-run client tests and client build before proposing the commit message.
 
 ## Scope
 
