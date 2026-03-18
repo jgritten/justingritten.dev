@@ -82,3 +82,36 @@ jobs:
       # 4) Invalidate CloudFront to force refresh everywhere
       - name: Invalidate CloudFront
         run: aws cloudfront create-invalidation --distribution-id E3D56KG355201F --paths "/*"
+
+      # 5) Deploy API to Elastic Beanstalk (us-east-1)
+      - name: Publish API
+        run: dotnet publish server/Api.csproj -c Release -o server/bin/Release/net10.0/publish
+
+      - name: Zip API for EB
+        run: |
+          cd server/bin/Release/net10.0/publish
+          zip -r ../publish.zip .
+          cd -
+
+      - name: Upload API bundle to S3 (for EB)
+        env:
+          EB_S3_BUCKET: ${{ vars.EB_S3_BUCKET != '' && vars.EB_S3_BUCKET || 'elasticbeanstalk-us-east-1-305137865693' }}
+        run: |
+          aws s3 cp server/bin/Release/net10.0/publish.zip \
+            "s3://$EB_S3_BUCKET/deployments/api-${{ github.sha }}.zip" \
+            --region us-east-1
+
+      - name: Deploy API to Elastic Beanstalk
+        env:
+          EB_S3_BUCKET: ${{ vars.EB_S3_BUCKET != '' && vars.EB_S3_BUCKET || 'elasticbeanstalk-us-east-1-305137865693' }}
+        run: |
+          aws elasticbeanstalk create-application-version \
+            --application-name justingritten.dev.api \
+            --version-label "api-${{ github.sha }}" \
+            --source-bundle S3Bucket="$EB_S3_BUCKET",S3Key="deployments/api-${{ github.sha }}.zip" \
+            --region us-east-1
+          aws elasticbeanstalk update-environment \
+            --application-name justingritten.dev.api \
+            --environment-name justingritten-api-dev \
+            --version-label "api-${{ github.sha }}" \
+            --region us-east-1

@@ -63,4 +63,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// Health check for load balancer (EB/ELB). Configure EB health check path to /health.
+app.MapGet("/health", () => Results.Ok());
+
 app.Run();
