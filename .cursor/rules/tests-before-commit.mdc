@@ -1,5 +1,5 @@
 ---
-description: Always run tests before preparing commit messages or committing changes.
+description: Run client and server tests, builds, and a coverage evaluation before preparing commit messages or committing changes.
 alwaysApply: true
 ---
 
@@ -10,15 +10,18 @@ This rule keeps the repo healthy by ensuring automated tests run before changes 
 ## When the user asks for a commit message or to commit changes
 
 - **Always** do the following **before** proposing a commit message or running any git commit:
-  - Run the client test suite using the package.json test script (e.g. `npm test` / `pnpm test` / `yarn test` depending on the project setup).
-  - If server-side tests exist and the requested changes touched server code, run the server test script as well.
-  - Run the client build (e.g. `npm run build` / `pnpm build` / `yarn build`) to ensure the app still builds successfully.
+  - Run the **client** test suite (e.g. `npm test` in `client/`). All client tests must pass.
+  - Run the **server** test suite (e.g. `dotnet test server/Api.Tests/Api.Tests.csproj` from repo root). All API tests must pass.
+  - Run the **client** build (e.g. `npm run build` in `client/`) to ensure the app still builds.
+  - Run the **server** build (e.g. `dotnet build server` from repo root) to ensure the API still builds.
+  - **Evaluate changes for test coverage:** Review the set of changed/staged files (client and server). If new or modified production code was added (e.g. new API endpoints, new components, new services), consider whether corresponding tests exist or are needed. If coverage gaps are obvious, call them out and suggest adding tests before commit (or note the gap in the commit message so it can be addressed later).
 
 ## How to respond based on test results
 
-- **If tests pass:**
+- **If all tests pass and builds succeed:**
   - Proceed to prepare the commit message or commit as requested.
-  - Briefly note that tests passed.
+  - Briefly note that client and server tests passed and builds succeeded.
+  - If the coverage evaluation identified likely gaps (e.g. new code without tests), mention them and suggest adding tests or noting the gap in the commit message.
 
 - **If the build fails:**
   - Do **not** suggest committing until the build failure is understood.

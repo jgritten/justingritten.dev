@@ -50,11 +50,15 @@
   position: relative;
 }
 
-.contact-card__notice {
+.contact-card__fallback {
+  margin-bottom: 0.25rem;
+}
+
+.contact-card__success {
   padding: 0.6rem 0.9rem;
   margin-bottom: 0.25rem;
   border-radius: var(--radius-3);
-  background-color: var(--yellow-3);
+  background-color: var(--green-3);
 }
 
 .contact-card__row {

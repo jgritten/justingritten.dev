@@ -1,0 +1,10 @@
+# SQLite database (local and test)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml

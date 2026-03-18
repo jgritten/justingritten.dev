@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react'
 import { Heading, Text, Button, Badge, Flex } from '@radix-ui/themes'
 import { useIsDarkTheme } from '@/contexts/ThemeContext'
+import { metricsApi } from '@/api'
 import { SITE_VERSION } from '@/utils/siteVersion'
 import './WelcomeWidget.css'
 
@@ -20,8 +22,42 @@ function VersionBadge() {
   )
 }
 
+function VisitorCount({ totalCount }: { totalCount: number | null }) {
+  if (totalCount === null) return null
+  return (
+    <div className="welcome-widget__visitors">
+      <Text as="span" size="2" color="gray">
+        {totalCount.toLocaleString()} visitor{totalCount === 1 ? '' : 's'}
+      </Text>
+    </div>
+  )
+}
+
 export function WelcomeWidget() {
   const isDark = useIsDarkTheme()
+  const [visitCount, setVisitCount] = useState<number | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    const route = '/'
+    metricsApi
+      .recordVisit(route)
+      .catch(() => {})
+      .finally(() => {
+        if (cancelled) return
+        metricsApi
+          .getSummary(route)
+          .then((s) => {
+            if (!cancelled) setVisitCount(s.totalCount)
+          })
+          .catch(() => {
+            if (!cancelled) setVisitCount(null)
+          })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   return (
     <div className="welcome-widget">
@@ -35,6 +71,7 @@ export function WelcomeWidget() {
             </div>
             <div className="welcome-widget__col welcome-widget__col--meta">
               <VersionBadge />
+              <VisitorCount totalCount={visitCount} />
             </div>
           </header>
 

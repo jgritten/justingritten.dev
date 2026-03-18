@@ -151,6 +151,20 @@ Order is driven by **dependencies** and **portfolio impact**, not your original 
 
 ### Phase 1: SaaS - Authentication
 
+Between Phase 0 and the full Phase 1/2 SaaS work, there is an **API‑first slice** that stands up the backend and wires portfolio‑visible features to it.
+
+#### Phase 1A: Core API + contact + visitor metrics
+
+- **Backend API (existing `server/Api` project):** Use the existing .NET Web API project as the primary backend surface. Extend the SQLite‑backed `AppDbContext` with entities for **contact messages** and **visitor metrics** so this phase reuses infrastructure that will later grow into tenancy and SaaS features.
+- **Contact form endpoint:** Add a `POST /api/contact` endpoint that receives validated contact submissions (first name, last name, email, company/project, message, timestamps). Persist submissions in the database and optionally send an email notification (e.g. via SES/SendGrid/SMTP). Treat email as best‑effort: **persist first**, then attempt to send.
+- **Visitor metrics endpoints:** Add lightweight metrics for the portfolio/profile page, via endpoints such as `POST /api/metrics/visit` (log a visit for a given route, e.g. `/`) and `GET /api/metrics/summary` (return simple, privacy‑friendly counts or aggregates for use in a visitor counter widget). Start with per‑route totals or per‑day counts; later phases can evolve this into fuller analytics.
+- **Forward‑compatible data model:** When modelling contact messages and metrics, include fields that will make sense under later **multi‑tenancy** (e.g. a future `ClientId` and optional `UserId`), even if they are null or always set to a single default client in this phase. This keeps the schema compatible with Phase 2 without blocking you today.
+- **CORS and security posture:** Keep endpoints unauthenticated but constrained: strong input validation, IP‑based rate limiting for contact and metrics writes, and a CORS policy that only allows the SPA origins (localhost + deployed CloudFront domain). All secrets (DB connection, email provider keys) live in environment variables rather than client code.
+- **Deployment target:** Deploy the existing API project to **AWS Elastic Beanstalk** as the first real backend environment (e.g. `justingritten-api-dev`). Configure environment variables for database and email, and verify that the SPA can reach the EB URL over HTTPS.
+- **Client wiring – Contact form:** Update the portfolio `ContactCard` to send submissions to `POST /api/contact` via a small API client helper. Reflect submission states in the UI (`idle` → `submitting` → `success`/`error`), while keeping the “email me directly” instructions as a fallback when the API is unavailable.
+- **Client wiring – Visitor counter:** Add a small visitor counter on the profile/landing page that calls `POST /api/metrics/visit` on first load (debounced) and displays counts from `GET /api/metrics/summary`. If the API fails, the widget should degrade gracefully (e.g. hide itself or show a subtle “metrics unavailable” message).
+- **Status:** This phase is the **current focus** when prioritising backend/API work. Later phases (auth, tenancy, realtime) build on this API rather than replacing it.
+
 - **Guest session:** Support **Guest** as an explicit session type (no credentials; optional token or session cookie for “current client = default client”). Guest uses the **default client** for all scoped data; rate limits (e.g. doc gen) by IP. Provide a way to **upgrade** to full user (sign up / log in) when the visitor wants to dig deeper.
 - **Username/password login** (API: login endpoint, JWT or session; client: login page, token storage, protected routes).  
   ADR + `docs/security.md` update.

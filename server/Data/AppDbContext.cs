@@ -3,36 +3,59 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Api.Data;
 
-public class AppDbContext : DbContext
-{
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+    public class AppDbContext : DbContext
     {
-    }
-
-    public DbSet<Product> Products => Set<Product>();
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        base.OnModelCreating(modelBuilder);
-
-        modelBuilder.Entity<Product>(entity =>
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
-            entity.Property(e => e.Description).HasMaxLength(1000);
-            entity.Property(e => e.Price).HasPrecision(18, 2);
-            entity.Property(e => e.Category).HasMaxLength(100);
-            entity.Property(e => e.ImageUrl).HasMaxLength(500);
-            entity.HasIndex(e => e.Category);
-            entity.HasIndex(e => e.IsActive);
-        });
+        }
 
-        SeedData(modelBuilder);
-    }
+        public DbSet<Product> Products => Set<Product>();
+        public DbSet<ContactMessage> ContactMessages => Set<ContactMessage>();
+        public DbSet<VisitMetric> VisitMetrics => Set<VisitMetric>();
 
-    private static void SeedData(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<Product>().HasData(
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Product>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Description).HasMaxLength(1000);
+                entity.Property(e => e.Price).HasPrecision(18, 2);
+                entity.Property(e => e.Category).HasMaxLength(100);
+                entity.Property(e => e.ImageUrl).HasMaxLength(500);
+                entity.HasIndex(e => e.Category);
+                entity.HasIndex(e => e.IsActive);
+            });
+
+            modelBuilder.Entity<ContactMessage>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.FirstName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.LastName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Email).IsRequired().HasMaxLength(254);
+                entity.Property(e => e.CompanyOrProject).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Message).IsRequired().HasMaxLength(2000);
+                entity.Property(e => e.Source).HasMaxLength(100);
+                entity.Property(e => e.CreatedAt);
+            });
+
+            modelBuilder.Entity<VisitMetric>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Route).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Date);
+                entity.Property(e => e.Count);
+                entity.HasIndex(e => new { e.Route, e.Date }).IsUnique();
+            });
+
+            SeedData(modelBuilder);
+        }
+
+        private static void SeedData(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Product>().HasData(
             new Product
             {
                 Id = 1,
@@ -153,6 +176,6 @@ public class AppDbContext : DbContext
                 IsActive = false,
                 CreatedAt = new DateTime(2026, 1, 24, 10, 0, 0, DateTimeKind.Utc)
             }
-        );
+            );
+        }
     }
-}

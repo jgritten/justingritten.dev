@@ -36,6 +36,58 @@ dotnet run --project server
 - **Solution:** Open `JustingrittenDev.sln` in Visual Studio to work on the API.
 - **OpenAPI:** Available in Development (see `Program.cs`).
 
+### Database and migrations
+
+- The API uses **EF Core migrations only**; `EnsureCreated()` is not used. On startup, pending migrations are applied via `context.Database.Migrate()`.
+- **Reset local DB:** Delete `server/justingritten.db` (and `justingritten.db-journal` if present). On the next run, migrations recreate the schema and seed data.
+- **Schema changes:** From `server/`: run `dotnet ef migrations add <MigrationName>`. Apply with `dotnet run` (startup runs `Migrate()`). Existing data is preserved when applying new migrations.
+
+### Viewing and querying database data
+
+When you need to inspect or debug data (e.g. contact messages, visit metrics).
+
+#### Local: SQLite command line
+
+1. Install the [SQLite CLI](https://sqlite.org/cli.html) if needed (e.g. `winget install SQLite.SQLite` on Windows, or it may already be on your path).
+2. From the repo root, open a terminal and go to the server directory:
+   ```bash
+   cd server
+   ```
+3. Start the SQLite shell against the database file:
+   ```bash
+   sqlite3 justingritten.db
+   ```
+4. At the `sqlite>` prompt you can run:
+   - **List tables:**  
+     `.tables`  
+     You should see: `ContactMessages`, `VisitMetrics`, `Products`, `__EFMigrationsHistory`.
+   - **Recent contact messages (last 20):**  
+     `SELECT Id, FirstName, LastName, Email, CreatedAt FROM ContactMessages ORDER BY CreatedAt DESC LIMIT 20;`
+   - **Contact message count:**  
+     `SELECT COUNT(*) FROM ContactMessages;`
+   - **Visit metrics by route and date:**  
+     `SELECT Route, Date, Count FROM VisitMetrics ORDER BY Date DESC, Route;`
+   - **Total visits per route:**  
+     `SELECT Route, SUM(Count) AS Total FROM VisitMetrics GROUP BY Route;`
+   - **Exit the shell:**  
+     `.quit` or `Ctrl+D`
+
+#### Local: GUI
+
+- Open **`server/justingritten.db`** in [DB Browser for SQLite](https://sqlitebrowser.org/) (or another SQLite GUI). Use the “Execute SQL” tab to run the same queries as above.
+
+#### Deployed API (e.g. Elastic Beanstalk)
+
+- The SQLite file lives on the instance. From the repo (with [EB CLI](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-install.html) configured), run `eb ssh`. On the instance, find the app’s working directory (e.g. where the deployed app runs), then run `sqlite3 justingritten.db` and use the same queries as in “Local: SQLite command line” above.
+
+#### Future (hosted DB)
+
+- When you switch to a managed database (e.g. RDS, SQL Server, PostgreSQL), use that provider’s console, CLI, or client tools to connect and query; the same tables and data concepts apply.
+
+### Retry strategy (concurrency)
+
+The API uses a **retrying execution strategy** for database operations: on SQLite transient errors (e.g. “database is locked” / “busy” under concurrent traffic), EF Core retries the operation up to 5 times with a delay. This is configured in `Program.cs` via `SqliteRetryingExecutionStrategy` in **Api.Data**. When you move to a hosted database (e.g. SQL Server, PostgreSQL), replace that with the provider’s built-in retrying strategy (e.g. `SqlServerRetryingExecutionStrategy`) in the same place; the pattern of “retry on transient failures” carries over.
+
 ## Typical workflows
 
 - **Frontend only:** Run `client` with `npm run dev`; use mock data or no API.
@@ -44,7 +96,7 @@ dotnet run --project server
 ## Testing
 
 - **Client:** Vitest + React Testing Library. From `client/`: `npm run test` (single run), `npm run test:watch` (watch), `npm run test:coverage` (coverage report). Tests live in `src/**/*.test.{ts,tsx}`. See [ADR 0003](decisions/0003-testing-approach.md).
-- **Server:** No test project yet; .NET tests (e.g. xUnit) will be added later.
+- **Server:** xUnit integration tests in `server/Api.Tests/`. From repo root or `server/`: `dotnet test` (or `dotnet test server/Api.Tests/Api.Tests.csproj`). Tests use `WebApplicationFactory` and a dedicated SQLite test DB; migrations are applied in test setup. CI (GitHub Actions) runs these tests on push to `main` before deploy.
 
 ## Code quality
 

@@ -9,10 +9,17 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
-// Configure SQLite with EF Core
+// Configure SQLite with EF Core and retry strategy for concurrent access (busy/locked)
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? "Data Source=justingritten.db";
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") 
-        ?? "Data Source=products.db"));
+{
+    options.UseSqlite(connectionString, sqliteOptions =>
+    {
+        sqliteOptions.ExecutionStrategy(dependencies =>
+            new SqliteRetryingExecutionStrategy(dependencies, maxRetryCount: 5, TimeSpan.FromSeconds(30)));
+    });
+});
 
 // Register repositories
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
@@ -30,11 +37,11 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Ensure database is created and seeded
+// Apply pending EF Core migrations (creates or updates database schema)
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    context.Database.EnsureCreated();
+    context.Database.Migrate();
 }
 
 // Configure the HTTP request pipeline.

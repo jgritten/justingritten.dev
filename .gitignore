@@ -18,14 +18,19 @@ dist-ssr
 !.vscode/extensions.json
 .idea
 .DS_Store
+
+# Postman local workspace metadata
+.postman/
 *.suo
 *.ntvs*
 *.njsproj
 *.sw?
 
-# .NET build output
+# .NET build output (main API and test projects)
 server/bin/
 server/obj/
+server/**/bin/
+server/**/obj/
 
 # SQLite databases (API; client-side SQLite lives in browser storage)
 *.db

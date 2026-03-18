@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import { Button, Card, Flex, Heading, Text, TextArea, TextField } from '@radix-ui/themes'
+import { contactApi } from '@/api'
 import './ContactCard.css'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -13,6 +14,8 @@ function trim(s: string): string {
 export function ContactCard() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [lastSubmitAt, setLastSubmitAt] = useState<number>(0)
+  const [submitting, setSubmitting] = useState(false)
+  const [success, setSuccess] = useState(false)
 
   const validate = useCallback(
     (formData: FormData): Record<string, string> => {
@@ -39,7 +42,7 @@ export function ContactCard() {
     []
   )
 
-  const handleSubmit: React.FormEventHandler<HTMLFormElement> = (event) => {
+  const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault()
     const form = event.currentTarget
     const formData = new FormData(form)
@@ -63,13 +66,30 @@ export function ContactCard() {
     }
 
     setErrors({})
+    setSuccess(false)
+    setSubmitting(true)
 
-    // For now, the form is intentionally disabled from sending directly.
-    // Guide users to email or book a call instead.
-    window.alert(
-      "This contact form isn't wired up to send messages yet. Please email me at justin.gritten@gmail.com or use the \"Book a 30-minute call\" button instead."
-    )
-    setLastSubmitAt(now)
+    try {
+      await contactApi.submit({
+        firstName: trim((formData.get('firstName') ?? '').toString()),
+        lastName: trim((formData.get('lastName') ?? '').toString()),
+        email: trim((formData.get('email') ?? '').toString()),
+        companyOrProject: trim((formData.get('company') ?? '').toString()),
+        message: trim((formData.get('message') ?? '').toString()),
+      })
+      setSuccess(true)
+      setLastSubmitAt(now)
+      form.reset()
+    } catch (err) {
+      setErrors({
+        form:
+          err instanceof Error
+            ? err.message
+            : 'Something went wrong. Please try again or email me at justin.gritten@gmail.com.',
+      })
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -109,6 +129,14 @@ export function ContactCard() {
                 <input type="text" id="contact-website" name="website" tabIndex={-1} autoComplete="off" />
               </div>
 
+              {success && (
+                <div className="contact-card__success" role="status">
+                  <Text as="p" size="2" color="green">
+                    Thank you. Your message has been received and I&apos;ll get back to you soon.
+                  </Text>
+                </div>
+              )}
+
               {errors.form && (
                 <div className="contact-card__error contact-card__error--form" role="alert">
                   <Text as="p" size="2" color="red">
@@ -117,16 +145,16 @@ export function ContactCard() {
                 </div>
               )}
 
-              <div className="contact-card__notice">
-                <Text as="p" size="2">
-                  This contact form isn&apos;t wired up to send yet. For now, please email me at{' '}
+              <div className="contact-card__fallback">
+                <Text as="p" size="2" color="gray">
+                  Prefer email? Reach me at{' '}
                   <a
                     href="mailto:justin.gritten@gmail.com"
                     className="contact-card__email-link"
                   >
                     justin.gritten@gmail.com
-                  </a>{' '}
-                  or use the &quot;Book a 30-minute call&quot; button.
+                  </a>
+                  , or use the &quot;Book a 30-minute call&quot; button above.
                 </Text>
               </div>
               <div className="contact-card__row contact-card__row--split">
@@ -224,8 +252,8 @@ export function ContactCard() {
               </label>
 
               <div className="contact-card__actions">
-                <Button size="3" type="submit" disabled>
-                  Send message
+                <Button size="3" type="submit" disabled={submitting}>
+                  {submitting ? 'Sending…' : 'Send message'}
                 </Button>
               </div>
             </Flex>

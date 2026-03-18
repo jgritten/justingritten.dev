@@ -65,3 +65,26 @@ The UI includes demo components (e.g. **FileExplorer**, **ProductList**) that sh
 | `npm run lint`    | ESLint                    |
 
 **Solution:** Open **`JustingrittenDev.sln`** in Visual Studio to work on the .NET API.
+
+---
+
+## Quick reference (run, test, query DB)
+
+If you’re coming back to this repo after a while, here’s where to look and the main commands.
+
+| I want to…              | Command / where to look |
+|-------------------------|-------------------------|
+| Run the client          | `cd client && npm install && npm run dev` → http://localhost:5173 |
+| Run the API             | `dotnet run --project server` (from repo root) → http://localhost:5237 |
+| Run client tests        | `cd client && npm run test` |
+| Run API tests           | `dotnet test server/Api.Tests/Api.Tests.csproj` (from repo root) |
+| Run one API test (or a whole test class) | `dotnet test server/Api.Tests/Api.Tests.csproj --filter "FullyQualifiedName~TestMethodName"` (one test) or `--filter "FullyQualifiedName~ClassName"` (all tests in that class). Use the exact C# method or class name. |
+| Build client            | `cd client && npm run build` |
+| Build API               | `dotnet build server` (from repo root) |
+| Query the SQLite DB     | `cd server && sqlite3 justingritten.db` then e.g. `.tables`, `SELECT * FROM ContactMessages ORDER BY CreatedAt DESC LIMIT 20;` — **full instructions:** [docs/development.md#viewing-and-querying-database-data](docs/development.md#viewing-and-querying-database-data) |
+| Reset local DB          | Delete `server/justingritten.db` (and `server/justingritten.db-wal` / `.db-shm` if present), then run the API again. |
+| Add a DB migration      | `cd server && dotnet ef migrations add <MigrationName>` — see [docs/development.md](docs/development.md). |
+
+**Run a single API test:** Use `--filter "FullyQualifiedName~Name"` where `Name` is the test method name (e.g. `Create_ValidBody_ReturnsOkAndPersistsMessage`) or the test class name (e.g. `ContactControllerTests`) to run all tests in that class. Example: `dotnet test server/Api.Tests/Api.Tests.csproj --filter "FullyQualifiedName~Create_EmptyFirstName"`.
+
+**Detailed docs:** [docs/development.md](docs/development.md) (local run, test, DB, migrations), [docs/deployment.md](docs/deployment.md) (CI/CD, deploy).
