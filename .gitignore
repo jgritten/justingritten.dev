@@ -38,3 +38,5 @@ server/*.db
 
 # Test coverage (Vitest)
 client/coverage/
+
+temp/
