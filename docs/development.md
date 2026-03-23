@@ -24,6 +24,7 @@ npm run dev
 
 - Copy `client/.env.example` to `client/.env` if you need to override the API URL.
 - `VITE_API_URL` – optional; default is `http://localhost:5237`.
+- For production builds, set `VITE_API_URL` to `https://api.justingritten.dev` (or the active API domain).
 
 ## Backend (.NET API)
 
@@ -76,8 +77,9 @@ When you need to inspect or debug data (e.g. contact messages, visit metrics).
 
 - Open **`server/justingritten.db`** in [DB Browser for SQLite](https://sqlitebrowser.org/) (or another SQLite GUI). Use the “Execute SQL” tab to run the same queries as above.
 
-#### Deployed API (e.g. Elastic Beanstalk)
+#### Deployed API (Elastic Beanstalk)
 
+- Public API domain: `https://api.justingritten.dev` (TLS terminated at ALB listener 443).
 - The SQLite file lives on the instance. From the repo (with [EB CLI](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-install.html) configured), run `eb ssh`. On the instance, find the app’s working directory (e.g. where the deployed app runs), then run `sqlite3 justingritten.db` and use the same queries as in “Local: SQLite command line” above.
 
 #### Future (hosted DB)

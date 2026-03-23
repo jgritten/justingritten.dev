@@ -4,7 +4,7 @@
 
 Personal portfolio and demo site. This repository is **public** so I can share it with potential employers and link it on job applications—feel free to clone, run locally, and review the code.
 
-**Stack:** React 19, TypeScript, Vite, Radix UI · .NET Web API (foundation for future backend)
+**Stack:** React 19, TypeScript, Vite, Radix UI · .NET Web API (live backend for contact + visitor metrics)
 
 ---
 
@@ -20,15 +20,17 @@ npm run dev
 
 App runs at **http://localhost:5173** (or the port Vite prints).
 
-**Backend (optional)**  
-The .NET API is in place as a foundation for a future upgrade. To run it locally:
+**Backend (.NET API)**  
+Run the API locally:
 
 ```bash
 # From repo root
 dotnet run --project server
 ```
 
-API: **http://localhost:5237**. The client can use `VITE_API_URL` (see `client/.env.example`) when using API-backed data.
+API (local): **http://localhost:5237**.  
+API (production): **https://api.justingritten.dev**.  
+The client uses `VITE_API_URL` (see `client/.env.example`) to choose the API base URL.
 
 ---
 
@@ -36,11 +38,11 @@ API: **http://localhost:5237**. The client can use `VITE_API_URL` (see `client/.
 
 **Data persistence**
 
-- **Current:** The client (React app) uses a client-side SQLite instance (e.g. in-browser) for saving and loading data. The app does not depend on the API for persistence yet.
-- **Planned:** The API will be upgraded to MSSQL and become the primary data layer; the client will then call the API instead of client-side SQLite. The existing API (Products, EF Core, SQLite) is a template for that migration.
+- **Current:** The API persists data with EF Core + SQLite (`justingritten.db`). Profile features like contact submissions and visitor metrics are API-backed.
+- **Planned:** Move the API from SQLite to a managed relational database (e.g. RDS/PostgreSQL/SQL Server) while keeping EF migrations and retry-oriented data access patterns.
 
 **CORS**  
-Relevant only when the browser calls an API on a different origin. Same-origin hosting avoids CORS; if the API is on a different subdomain (e.g. `api.justingritten.dev`), the API’s CORS policy includes the front-end origin.
+The API allows local frontend origins and production origins (`https://justingritten.dev`, `https://www.justingritten.dev`) so browser requests from the live site succeed.
 
 ---
 
@@ -49,7 +51,7 @@ Relevant only when the browser calls an API on a different origin. Same-origin h
 | Path       | Description |
 |-----------|-------------|
 | **`client/`** | React SPA (Vite). Path alias `@/` → `src/` (api, components, hooks, types, styles, utils). |
-| **`server/`** | .NET 10 Web API; EF Core, SQLite (future: MSSQL). Products CRUD, CORS configured for the React app. |
+| **`server/`** | .NET 10 Web API; EF Core, SQLite (future: managed DB). Products + Contact + Metrics APIs, migrations, CORS configured for local and production frontend. |
 
 The UI includes demo components (e.g. **FileExplorer**, **ProductList**) that showcase patterns like lazy loading and API integration, alongside portfolio content.
 
@@ -76,6 +78,7 @@ If you’re coming back to this repo after a while, here’s where to look and t
 |-------------------------|-------------------------|
 | Run the client          | `cd client && npm install && npm run dev` → http://localhost:5173 |
 | Run the API             | `dotnet run --project server` (from repo root) → http://localhost:5237 |
+| Test production API health | `https://api.justingritten.dev/health` |
 | Run client tests        | `cd client && npm run test` |
 | Run API tests           | `dotnet test server/Api.Tests/Api.Tests.csproj` (from repo root) |
 | Run one API test (or a whole test class) | `dotnet test server/Api.Tests/Api.Tests.csproj --filter "FullyQualifiedName~TestMethodName"` (one test) or `--filter "FullyQualifiedName~ClassName"` (all tests in that class). Use the exact C# method or class name. |
