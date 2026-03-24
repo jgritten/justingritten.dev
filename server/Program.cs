@@ -1,6 +1,7 @@
 using Api.Data;
 using Api.Interfaces;
 using Api.Repositories;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +9,14 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+
+// Behind Nginx (EB) or CloudFront: honor X-Forwarded-Proto / X-Forwarded-For
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 // Configure SQLite with EF Core and retry strategy for concurrent access (busy/locked)
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -55,9 +64,15 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseForwardedHeaders();
+
 app.UseCors("AllowReactApp");
 
-app.UseHttpsRedirection();
+// TLS terminates at CloudFront/ALB; Kestrel is HTTP-only on EB — skip redirect to avoid warnings and mis-detection
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseAuthorization();
 

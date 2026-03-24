@@ -56,7 +56,30 @@ public class MetricsController : ControllerBase
             metric.Count += 1;
         }
 
-        await _context.SaveChangesAsync(cancellationToken);
+        // Concurrent POSTs can race on the unique (Route, Date) index; retry once after reload.
+        for (var attempt = 0; ; attempt++)
+        {
+            try
+            {
+                await _context.SaveChangesAsync(cancellationToken);
+                break;
+            }
+            catch (DbUpdateException) when (attempt == 0)
+            {
+                _context.ChangeTracker.Clear();
+                metric = await _context.VisitMetrics
+                    .SingleOrDefaultAsync(x => x.Route == route && x.Date == today, cancellationToken);
+                if (metric is null)
+                {
+                    metric = new VisitMetric { Route = route, Date = today, Count = 1 };
+                    await _context.VisitMetrics.AddAsync(metric, cancellationToken);
+                }
+                else
+                {
+                    metric.Count += 1;
+                }
+            }
+        }
 
         _logger.LogInformation("Recorded visit for route {Route} on {Date}. Count now {Count}.", route, today, metric.Count);
 

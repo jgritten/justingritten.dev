@@ -74,7 +74,7 @@ jobs:
         env:
           # Production API URL baked into the client at build time (Vite).
           # Set repo variable VITE_API_URL in Settings → Actions → Variables to override.
-          VITE_API_URL: ${{ vars.VITE_API_URL != '' && vars.VITE_API_URL || 'https://justingritten-api-dev.eba-vrsgy2gn.us-east-1.elasticbeanstalk.com' }}
+          VITE_API_URL: ${{ vars.VITE_API_URL != '' && vars.VITE_API_URL || 'https://api.justingritten.dev' }}
 
       - name: Upload client build artifact
         uses: actions/upload-artifact@v4
@@ -152,6 +152,13 @@ jobs:
       # 5) Deploy API to Elastic Beanstalk (us-east-1)
       - name: Publish API
         run: dotnet publish server/Api.csproj -c Release -o server/bin/Release/net10.0/publish
+
+      # EB applies .ebextensions from the bundle root; `dotnet publish` output alone omits them.
+      - name: Stage Elastic Beanstalk bundle
+        run: |
+          PUBLISH="server/bin/Release/net10.0/publish"
+          if [ -d server/.ebextensions ]; then cp -r server/.ebextensions "$PUBLISH/"; fi
+          if [ -d server/.platform ]; then cp -r server/.platform "$PUBLISH/"; fi
 
       - name: Zip API for EB
         run: |
