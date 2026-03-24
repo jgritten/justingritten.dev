@@ -13,9 +13,9 @@ If files change, the site version **must** be updated; the only question is **wh
   - `SITE_VERSION` – current semantic version as `major.minor.patch`
   - `parseSiteVersion` – helper to break it into numeric parts
 
-## When to bump (every commit with changes)
+## When to bump (every commit)
 
-On every commit that has relevant file changes, **bump** `SITE_VERSION`. Choose exactly one:
+On every commit that contains any file changes, **bump** `SITE_VERSION` with no exceptions (including docs-only, infra-only, workflow-only, and config-only commits). Choose exactly one:
 
 - **Major (X.0.0)** – Big portfolio revamp or a showcase‑ready “v1” launch. When you bump major, set minor and patch to **0** (e.g. `1.0.0`).
 - **Minor (0.Y.0)** – New sections, notable UX/layout changes, or visible feature additions. When you bump minor, set patch to **0** (e.g. `0.5.0`).
