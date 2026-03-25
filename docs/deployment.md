@@ -20,7 +20,7 @@ How the portfolio site is built and published.
    - **Static files** – Rest of `client/dist` (excluding `assets/*` and `index.html`) with `max-age=86400`.
    - **index.html** – No cache (`no-cache, no-store, must-revalidate`) so new deploys are visible immediately.
 8. **CloudFront** – Invalidation on `/*` (distribution id in workflow).
-9. **API deploy to Elastic Beanstalk** – `dotnet publish` the API, zip the publish output, upload to S3 (in **us-east-1**), then create an EB application version and update the environment `justingritten-api-dev`. Version labels are unique per run (`api-<sha>-<run_id>-<run_attempt>`) to avoid collisions on re-runs. Each push to `main` deploys both the client and the API. The S3 bucket for the deployment package defaults to `elasticbeanstalk-us-east-1-305137865693`; override with repo variable **EB_S3_BUCKET** if your EB bucket has a different name.
+9. **API deploy to Elastic Beanstalk** – `dotnet publish` the API, copy `server/.platform` hooks into the publish bundle, zip the publish output, upload to S3 (in **us-east-1**), then create an EB application version and update the environment `justingritten-api-dev`. Version labels are unique per run (`api-<sha>-<run_id>-<run_attempt>`) to avoid collisions on re-runs. Each push to `main` deploys both the client and the API. The S3 bucket for the deployment package defaults to `elasticbeanstalk-us-east-1-305137865693`; override with repo variable **EB_S3_BUCKET** if your EB bucket has a different name.
 10. **Post-deploy API verification** – after `update-environment`, the workflow waits for EB to report `Status=Ready` and `Health=Green|Ok`, checks EB events for any new **`ERROR`/`FATAL`** messages created during that deploy window, and then verifies `https://api.justingritten.dev/health`. The deploy fails if any of those checks fail.
 
 ## What is deployed
@@ -50,6 +50,16 @@ The GitHub OIDC role **github-deploy-justingritten-dev** must have, in addition 
 - **Auto Scaling / EC2 read-manage used by EB updates:** `autoscaling:DescribeAutoScalingGroups`, `autoscaling:SuspendProcesses`, `autoscaling:ResumeProcesses`, `ec2:DescribeLaunchTemplates`, `ec2:DescribeLaunchTemplateVersions`.
 
 If the API deploy step fails with “Access Denied”, add these permissions to the role’s policy in IAM.
+
+### SQLite backup/restore during API deploys
+
+- A predeploy hook (`server/.platform/hooks/predeploy/01_sqlite_backup_restore.sh`) now runs on Elastic Beanstalk deploys.
+- The hook backs up `/var/app/current/justingritten.db` to S3 and then restores the latest backup into `/var/app/staging/justingritten.db` before the new version goes live.
+- Default backup location: `s3://elasticbeanstalk-us-east-1-305137865693/sqlite-backups/justingritten-api-dev/`.
+- Optional EB environment variables:
+  - `SQLITE_BACKUP_BUCKET` – override backup bucket.
+  - `SQLITE_BACKUP_PREFIX` – override backup key prefix.
+- Required permissions for the EC2 instance profile role (not just GitHub OIDC role): `s3:GetObject`, `s3:PutObject`, and `s3:ListBucket` for the backup path.
 
 Add these permissions to your role's policy in IAM (create or edit the policy in the console or in a private copy; do not commit full policy JSON to the public repo) (e.g. `github-actions-deploy-justingritten-dev`). If the workflow uses a different role name, update the workflow’s `role-to-assume` or ensure the workflow role-to-assume matches your role name.
 

@@ -153,6 +153,12 @@ jobs:
       - name: Publish API
         run: dotnet publish server/Api.csproj -c Release -o server/bin/Release/net10.0/publish
 
+      - name: Include EB deploy hooks (SQLite backup/restore)
+        run: |
+          mkdir -p server/bin/Release/net10.0/publish/.platform
+          cp -R server/.platform/* server/bin/Release/net10.0/publish/.platform/
+          chmod +x server/bin/Release/net10.0/publish/.platform/hooks/predeploy/*.sh
+
       - name: Zip API for EB
         run: |
           cd server/bin/Release/net10.0/publish
