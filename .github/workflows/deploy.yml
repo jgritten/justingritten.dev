@@ -154,11 +154,11 @@ jobs:
         run: dotnet publish server/Api.csproj -c Release -o server/bin/Release/net10.0/publish
 
       # EB applies .ebextensions from the bundle root; `dotnet publish` output alone omits them.
-      - name: Stage Elastic Beanstalk bundle
-        run: |
-          PUBLISH="server/bin/Release/net10.0/publish"
-          if [ -d server/.ebextensions ]; then cp -r server/.ebextensions "$PUBLISH/"; fi
-          if [ -d server/.platform ]; then cp -r server/.platform "$PUBLISH/"; fi
+      # - name: Stage Elastic Beanstalk bundle
+      #   run: |
+      #     PUBLISH="server/bin/Release/net10.0/publish"
+      #     if [ -d server/.ebextensions ]; then cp -r server/.ebextensions "$PUBLISH/"; fi
+      #     if [ -d server/.platform ]; then cp -r server/.platform "$PUBLISH/"; fi
 
       - name: Zip API for EB
         run: |
