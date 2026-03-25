@@ -153,12 +153,6 @@ jobs:
       - name: Publish API
         run: dotnet publish server/Api.csproj -c Release -o server/bin/Release/net10.0/publish
 
-      - name: Include EB deploy hooks (SQLite backup/restore)
-        run: |
-          mkdir -p server/bin/Release/net10.0/publish/.platform
-          cp -R server/.platform/* server/bin/Release/net10.0/publish/.platform/
-          chmod +x server/bin/Release/net10.0/publish/.platform/hooks/predeploy/*.sh
-
       - name: Zip API for EB
         run: |
           cd server/bin/Release/net10.0/publish
@@ -234,43 +228,6 @@ jobs:
             exit 1
           fi
 
-          echo "Waiting for post-deploy health stabilization (avoids transient warm-up 5xx)..."
-          STABLE_POLLS_REQUIRED=6
-          STABLE_POLLS=0
-          for i in $(seq 1 36); do
-            HEALTH=$(aws elasticbeanstalk describe-environments \
-              --environment-names "$EB_ENV_NAME" \
-              --region us-east-1 \
-              --query "Environments[0].Health" \
-              --output text)
-            STATUS=$(aws elasticbeanstalk describe-environments \
-              --environment-names "$EB_ENV_NAME" \
-              --region us-east-1 \
-              --query "Environments[0].Status" \
-              --output text)
-
-            if [ "$STATUS" = "Ready" ] && { [ "$HEALTH" = "Green" ] || [ "$HEALTH" = "Ok" ]; }; then
-              STABLE_POLLS=$((STABLE_POLLS + 1))
-              echo "Stabilization poll $i/36 -> Status=$STATUS Health=$HEALTH (stable $STABLE_POLLS/$STABLE_POLLS_REQUIRED)"
-              if [ "$STABLE_POLLS" -ge "$STABLE_POLLS_REQUIRED" ]; then
-                break
-              fi
-            else
-              STABLE_POLLS=0
-              echo "Stabilization poll $i/36 -> Status=$STATUS Health=$HEALTH (reset stability counter)"
-            fi
-            sleep 10
-          done
-
-          if [ "$STABLE_POLLS" -lt "$STABLE_POLLS_REQUIRED" ]; then
-            echo "Environment never reached sustained Ready/Green|Ok stabilization window."
-            aws elasticbeanstalk describe-events \
-              --environment-name "$EB_ENV_NAME" \
-              --region us-east-1 \
-              --max-records 30
-            exit 1
-          fi
-
           echo "Checking EB events for new ERROR/FATAL entries since deploy start: $DEPLOY_START_UTC"
           aws elasticbeanstalk describe-events \
             --environment-name "$EB_ENV_NAME" \
@@ -287,54 +244,6 @@ jobs:
           print('No ERROR/FATAL EB events detected during this deploy window.') if not bad else print('Found ERROR/FATAL EB events during this deploy window:\\n' + '\\n'.join([f\"- [{e.get('EventDate')}] {e.get('Severity')}: {e.get('Message', '')}\" for e in bad])); \
           sys.exit(1 if bad else 0)"
 
-          curl_with_backoff() {
-            local url="$1"
-            local label="$2"
-            # Low-frequency checks reduce the chance that verification traffic skews EB 5xx% health.
-            local delays=(20 30 45 60 60 60)
-
-            for i in "${!delays[@]}"; do
-              local attempt=$((i + 1))
-              if curl -fsS --max-time 20 --connect-timeout 5 "$url" >/dev/null; then
-                echo "$label check passed on attempt $attempt/${#delays[@]}."
-                return 0
-              fi
-              echo "$label check failed on attempt $attempt/${#delays[@]}; retrying in ${delays[$i]}s..."
-              sleep "${delays[$i]}"
-            done
-
-            echo "$label check failed after ${#delays[@]} attempts."
-            return 1
-          }
-
-          echo "Resolving EB environment CNAME for direct origin health checks..."
-          EB_CNAME=$(aws elasticbeanstalk describe-environments \
-            --environment-names "$EB_ENV_NAME" \
-            --region us-east-1 \
-            --query "Environments[0].CNAME" \
-            --output text)
-
-          echo "Cooling down 30s before endpoint probes..."
-          sleep 30
-
-          DIAGNOSTIC_WARNINGS=0
-
-          echo "Verifying direct EB origin health endpoint with low-frequency retries..."
-          if ! curl_with_backoff "http://$EB_CNAME/health" "Direct origin"; then
-            echo "::warning::Direct origin /health did not pass verification retries. Treating as non-blocking diagnostic."
-            DIAGNOSTIC_WARNINGS=$((DIAGNOSTIC_WARNINGS + 1))
-          fi
-
-          echo "Verifying public API endpoint with low-frequency retries..."
-          # CloudFront/custom-domain can briefly return 502 while edge/origin state converges.
-          if ! curl_with_backoff "https://api.justingritten.dev/health" "Public API"; then
-            echo "::warning::Public API /health did not pass verification retries. Treating as non-blocking diagnostic."
-            DIAGNOSTIC_WARNINGS=$((DIAGNOSTIC_WARNINGS + 1))
-          fi
-
-          if [ "$DIAGNOSTIC_WARNINGS" -gt 0 ]; then
-            echo "Post-deploy gate passed based on EB Ready + Ok/Green and no ERROR/FATAL events."
-            echo "Endpoint probes reported $DIAGNOSTIC_WARNINGS warning(s); investigate if persistent."
-          else
-            echo "Post-deploy health verification passed."
-          fi
+          echo "Verifying public API endpoint..."
+          curl -fsS --max-time 20 "https://api.justingritten.dev/health" >/dev/null
+          echo "Post-deploy health verification passed."
