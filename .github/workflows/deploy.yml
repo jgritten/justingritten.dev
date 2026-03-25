@@ -250,6 +250,36 @@ jobs:
           print('No ERROR/FATAL EB events detected during this deploy window.') if not bad else print('Found ERROR/FATAL EB events during this deploy window:\\n' + '\\n'.join([f\"- [{e.get('EventDate')}] {e.get('Severity')}: {e.get('Message', '')}\" for e in bad])); \
           sys.exit(1 if bad else 0)"
 
-          echo "Verifying public API endpoint..."
-          curl -fsS --max-time 20 "https://api.justingritten.dev/health" >/dev/null
+          curl_with_retry() {
+            local url="$1"
+            local max_attempts="$2"
+            local sleep_seconds="$3"
+            local label="$4"
+
+            for i in $(seq 1 "$max_attempts"); do
+              if curl -fsS --max-time 20 "$url" >/dev/null; then
+                echo "$label check passed on attempt $i/$max_attempts."
+                return 0
+              fi
+              echo "$label check failed on attempt $i/$max_attempts; retrying in ${sleep_seconds}s..."
+              sleep "$sleep_seconds"
+            done
+
+            echo "$label check failed after $max_attempts attempts."
+            return 1
+          }
+
+          echo "Resolving EB environment CNAME for direct origin health checks..."
+          EB_CNAME=$(aws elasticbeanstalk describe-environments \
+            --environment-names "$EB_ENV_NAME" \
+            --region us-east-1 \
+            --query "Environments[0].CNAME" \
+            --output text)
+
+          echo "Verifying direct EB origin health endpoint with retries..."
+          curl_with_retry "http://$EB_CNAME/health" 12 10 "Direct origin"
+
+          echo "Verifying public API endpoint with retries..."
+          # CloudFront/custom-domain can briefly return 502 while edge/origin state converges.
+          curl_with_retry "https://api.justingritten.dev/health" 18 10 "Public API"
           echo "Post-deploy health verification passed."
