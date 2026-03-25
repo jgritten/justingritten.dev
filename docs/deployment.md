@@ -20,7 +20,8 @@ How the portfolio site is built and published.
    - **Static files** – Rest of `client/dist` (excluding `assets/*` and `index.html`) with `max-age=86400`.
    - **index.html** – No cache (`no-cache, no-store, must-revalidate`) so new deploys are visible immediately.
 8. **CloudFront** – Invalidation on `/*` (distribution id in workflow).
-9. **API deploy to Elastic Beanstalk** – `dotnet publish` the API, copy **`server/.ebextensions`** (and **`server/.platform`** if present) into the publish folder, zip that bundle, upload to S3 (in **us-east-1**), then create an EB application version and update the environment `justingritten-api-dev`. Version labels are unique per run (`api-<sha>-<run_id>-<run_attempt>`) to avoid collisions on re-runs. Each push to `main` deploys both the client and the API. The S3 bucket for the deployment package defaults to `elasticbeanstalk-us-east-1-305137865693`; override with repo variable **EB_S3_BUCKET** if your EB bucket has a different name.
+9. **API deploy to Elastic Beanstalk** – `dotnet publish` the API, zip the publish output, upload to S3 (in **us-east-1**), then create an EB application version and update the environment `justingritten-api-dev`. Version labels are unique per run (`api-<sha>-<run_id>-<run_attempt>`) to avoid collisions on re-runs. Each push to `main` deploys both the client and the API. The S3 bucket for the deployment package defaults to `elasticbeanstalk-us-east-1-305137865693`; override with repo variable **EB_S3_BUCKET** if your EB bucket has a different name.
+10. **Post-deploy API verification** – after `update-environment`, the workflow waits for EB to report `Status=Ready` and `Health=Green|Ok`, checks EB events for any new **`ERROR`/`FATAL`** messages created during that deploy window, and then verifies `https://api.justingritten.dev/health`. The deploy fails if any of those checks fail.
 
 ## What is deployed
 
@@ -52,7 +53,7 @@ If the API deploy step fails with “Access Denied”, add these permissions to 
 
 Add these permissions to your role's policy in IAM (create or edit the policy in the console or in a private copy; do not commit full policy JSON to the public repo) (e.g. `github-actions-deploy-justingritten-dev`). If the workflow uses a different role name, update the workflow’s `role-to-assume` or ensure the workflow role-to-assume matches your role name.
 
-**EB health check (fix "100% 4xx" / unhealthy):** The API exposes **GET /health** (returns 200). Set the environment **Application health check URL** to **`/health`** (also enforced via `server/.ebextensions/01-healthcheck.config` when the deploy bundle includes `.ebextensions`). For load-balanced environments, use **Configuration** → **Load balancer** → **Processes** → **Health check path** `/health`. For single-instance, use the health check URL in environment configuration so probes do not hit `/` (which returns 404 for this API).
+**EB health check (fix "100% 4xx" / unhealthy):** The API exposes **GET /health** (returns 200). Set the environment **Application health check URL** to **`/health`** in Elastic Beanstalk environment configuration. For load-balanced environments, use **Configuration** → **Load balancer** → **Processes** → **Health check path** `/health`. For single-instance, use the health check URL in environment configuration so probes do not hit `/` (which returns 404 for this API).
 
 **HTTPS for `api.justingritten.dev` (single-instance):** Use **CloudFront + ACM (us-east-1)** and Squarespace DNS as described in **CloudFront + Squarespace checklist** above. An ALB listener is not present after switching to single-instance.
 
@@ -64,3 +65,19 @@ Add these permissions to your role's policy in IAM (create or edit the policy in
 ## Future considerations
 
 - If the API is hosted (e.g. on a separate subdomain), add a separate deploy job or workflow and ensure CORS and `VITE_API_URL` (or runtime config) point to that origin.
+
+## Deploy troubleshooting playbook (rollback first)
+
+When a deploy suddenly fails after a recent workflow/config edit, do this first:
+
+1. **Diff the last working deploy commit vs current** for `.github/workflows/deploy.yml` and any related EB packaging files.
+2. **Rollback the most recent workflow change only** and redeploy once before making broad IAM/network changes.
+3. **Validate behavior at the edge and origin separately**:
+   - `https://api.justingritten.dev/health` (CloudFront/custom-domain path)
+   - `http://<eb-environment-url>/health` (direct EB origin path)
+4. **Then escalate scope** (IAM/service role, VPC endpoint policy, EB service events) only if rollback testing does not restore deploys.
+
+### Known regression check (March 2026)
+
+- A deploy regression was resolved by rolling back a recently-added API packaging step in `.github/workflows/deploy.yml` that staged `server/.ebextensions`/`.platform` into the publish bundle.
+- Keep this as an early diagnostic check before assuming new IAM permissions are required.

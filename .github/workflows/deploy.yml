@@ -153,13 +153,6 @@ jobs:
       - name: Publish API
         run: dotnet publish server/Api.csproj -c Release -o server/bin/Release/net10.0/publish
 
-      # EB applies .ebextensions from the bundle root; `dotnet publish` output alone omits them.
-      # - name: Stage Elastic Beanstalk bundle
-      #   run: |
-      #     PUBLISH="server/bin/Release/net10.0/publish"
-      #     if [ -d server/.ebextensions ]; then cp -r server/.ebextensions "$PUBLISH/"; fi
-      #     if [ -d server/.platform ]; then cp -r server/.platform "$PUBLISH/"; fi
-
       - name: Zip API for EB
         run: |
           cd server/bin/Release/net10.0/publish
@@ -180,6 +173,7 @@ jobs:
           EB_S3_BUCKET: ${{ vars.EB_S3_BUCKET != '' && vars.EB_S3_BUCKET || 'elasticbeanstalk-us-east-1-305137865693' }}
           EB_VERSION_LABEL: api-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
         run: |
+          echo "DEPLOY_START_UTC=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> "$GITHUB_ENV"
           aws elasticbeanstalk create-application-version \
             --application-name justingritten.dev.api \
             --version-label "$EB_VERSION_LABEL" \
@@ -190,3 +184,66 @@ jobs:
             --environment-name justingritten-api-dev \
             --version-label "$EB_VERSION_LABEL" \
             --region us-east-1
+
+      - name: Verify EB deploy health and events
+        env:
+          EB_ENV_NAME: justingritten-api-dev
+        run: |
+          set -euo pipefail
+
+          echo "Waiting for Elastic Beanstalk environment readiness..."
+          MAX_ATTEMPTS=60
+          SLEEP_SECONDS=15
+          READY_SEEN=0
+
+          for i in $(seq 1 "$MAX_ATTEMPTS"); do
+            STATUS=$(aws elasticbeanstalk describe-environments \
+              --environment-names "$EB_ENV_NAME" \
+              --region us-east-1 \
+              --query "Environments[0].Status" \
+              --output text)
+
+            HEALTH=$(aws elasticbeanstalk describe-environments \
+              --environment-names "$EB_ENV_NAME" \
+              --region us-east-1 \
+              --query "Environments[0].Health" \
+              --output text)
+
+            echo "Attempt $i/$MAX_ATTEMPTS -> Status=$STATUS Health=$HEALTH"
+
+            if [ "$STATUS" = "Ready" ] && { [ "$HEALTH" = "Green" ] || [ "$HEALTH" = "Ok" ]; }; then
+              READY_SEEN=1
+              break
+            fi
+
+            sleep "$SLEEP_SECONDS"
+          done
+
+          if [ "$READY_SEEN" -ne 1 ]; then
+            echo "Environment did not become Ready with healthy status in time."
+            aws elasticbeanstalk describe-events \
+              --environment-name "$EB_ENV_NAME" \
+              --region us-east-1 \
+              --max-records 30
+            exit 1
+          fi
+
+          echo "Checking EB events for new ERROR/FATAL entries since deploy start: $DEPLOY_START_UTC"
+          aws elasticbeanstalk describe-events \
+            --environment-name "$EB_ENV_NAME" \
+            --region us-east-1 \
+            --max-records 100 \
+            --output json > eb-events.json
+
+          python3 -c "import json, os, sys; from datetime import datetime, timezone; \
+          start_raw = os.environ.get('DEPLOY_START_UTC'); \
+          start_dt = datetime.strptime(start_raw, '%Y-%m-%dT%H:%M:%SZ').replace(tzinfo=timezone.utc) if start_raw else None; \
+          assert start_dt is not None, 'DEPLOY_START_UTC is missing; failing deploy verification.'; \
+          events = json.load(open('eb-events.json', 'r', encoding='utf-8')).get('Events', []); \
+          bad = [e for e in events if e.get('Severity') in ('ERROR', 'FATAL') and e.get('EventDate') and datetime.fromisoformat(e.get('EventDate').replace('Z', '+00:00')) >= start_dt]; \
+          print('No ERROR/FATAL EB events detected during this deploy window.') if not bad else print('Found ERROR/FATAL EB events during this deploy window:\\n' + '\\n'.join([f\"- [{e.get('EventDate')}] {e.get('Severity')}: {e.get('Message', '')}\" for e in bad])); \
+          sys.exit(1 if bad else 0)"
+
+          echo "Verifying public API endpoint..."
+          curl -fsS --max-time 20 "https://api.justingritten.dev/health" >/dev/null
+          echo "Post-deploy health verification passed."
