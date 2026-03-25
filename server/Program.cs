@@ -6,6 +6,20 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Elastic Beanstalk (.NET on Linux) nginx proxies to port 5000 by default. ASP.NET Core 8+
+// may otherwise listen on 8080 when ASPNETCORE_URLS is unset, which yields 502 from nginx
+// while EB can still report Green. Honor PORT when set; else default to 5000 in Production.
+if (builder.Environment.IsProduction())
+{
+    var urls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS");
+    if (string.IsNullOrWhiteSpace(urls))
+    {
+        var port = Environment.GetEnvironmentVariable("PORT");
+        var listenPort = string.IsNullOrWhiteSpace(port) ? "5000" : port.Trim();
+        builder.WebHost.UseUrls($"http://0.0.0.0:{listenPort}");
+    }
+}
+
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
