@@ -234,6 +234,43 @@ jobs:
             exit 1
           fi
 
+          echo "Waiting for post-deploy health stabilization (avoids transient warm-up 5xx)..."
+          STABLE_POLLS_REQUIRED=6
+          STABLE_POLLS=0
+          for i in $(seq 1 36); do
+            HEALTH=$(aws elasticbeanstalk describe-environments \
+              --environment-names "$EB_ENV_NAME" \
+              --region us-east-1 \
+              --query "Environments[0].Health" \
+              --output text)
+            STATUS=$(aws elasticbeanstalk describe-environments \
+              --environment-names "$EB_ENV_NAME" \
+              --region us-east-1 \
+              --query "Environments[0].Status" \
+              --output text)
+
+            if [ "$STATUS" = "Ready" ] && { [ "$HEALTH" = "Green" ] || [ "$HEALTH" = "Ok" ]; }; then
+              STABLE_POLLS=$((STABLE_POLLS + 1))
+              echo "Stabilization poll $i/36 -> Status=$STATUS Health=$HEALTH (stable $STABLE_POLLS/$STABLE_POLLS_REQUIRED)"
+              if [ "$STABLE_POLLS" -ge "$STABLE_POLLS_REQUIRED" ]; then
+                break
+              fi
+            else
+              STABLE_POLLS=0
+              echo "Stabilization poll $i/36 -> Status=$STATUS Health=$HEALTH (reset stability counter)"
+            fi
+            sleep 10
+          done
+
+          if [ "$STABLE_POLLS" -lt "$STABLE_POLLS_REQUIRED" ]; then
+            echo "Environment never reached sustained Ready/Green|Ok stabilization window."
+            aws elasticbeanstalk describe-events \
+              --environment-name "$EB_ENV_NAME" \
+              --region us-east-1 \
+              --max-records 30
+            exit 1
+          fi
+
           echo "Checking EB events for new ERROR/FATAL entries since deploy start: $DEPLOY_START_UTC"
           aws elasticbeanstalk describe-events \
             --environment-name "$EB_ENV_NAME" \
@@ -277,7 +314,7 @@ jobs:
             --output text)
 
           echo "Verifying direct EB origin health endpoint with retries..."
-          curl_with_retry "http://$EB_CNAME/health" 12 10 "Direct origin"
+          curl_with_retry "http://$EB_CNAME/health" 18 10 "Direct origin"
 
           echo "Verifying public API endpoint with retries..."
           # CloudFront/custom-domain can briefly return 502 while edge/origin state converges.
