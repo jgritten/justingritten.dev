@@ -52,15 +52,12 @@ The GitHub OIDC role **github-deploy-justingritten-dev** must have, in addition 
 
 If the API deploy step fails with “Access Denied”, add these permissions to the role’s policy in IAM.
 
-### SQLite backup/restore during API deploys
+### SQLite persistence path during API deploys
 
-- A predeploy hook (`server/.platform/hooks/predeploy/01_sqlite_backup_restore.sh`) now runs on Elastic Beanstalk deploys.
-- The hook backs up `/var/app/current/justingritten.db` to S3 and then restores the latest backup into `/var/app/staging/justingritten.db` before the new version goes live.
-- Default backup location: `s3://elasticbeanstalk-us-east-1-305137865693/sqlite-backups/justingritten-api-dev/`.
-- Optional EB environment variables:
-  - `SQLITE_BACKUP_BUCKET` – override backup bucket.
-  - `SQLITE_BACKUP_PREFIX` – override backup key prefix.
-- Required permissions for the EC2 instance profile role (not just GitHub OIDC role): `s3:GetObject`, `s3:PutObject`, and `s3:ListBucket` for the backup path.
+- A predeploy hook (`server/.platform/hooks/predeploy/01_sqlite_backup_restore.sh`) now ensures `/var/app/data` exists with app-write permissions.
+- The API connection string points to `Data Source=/var/app/data/justingritten.db`, which is outside `/var/app/current` so deploy bundle replacement does not reset the DB.
+- On the first deploy after this change, the hook attempts a one-time migration copy from `/var/app/current/justingritten.db` to `/var/app/data/justingritten.db` if the new file does not exist yet.
+- This approach avoids S3/AWS calls during startup hooks to reduce deploy-time instability.
 
 Add these permissions to your role's policy in IAM (create or edit the policy in the console or in a private copy; do not commit full policy JSON to the public repo) (e.g. `github-actions-deploy-justingritten-dev`). If the workflow uses a different role name, update the workflow’s `role-to-assume` or ensure the workflow role-to-assume matches your role name.
 

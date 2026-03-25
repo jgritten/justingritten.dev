@@ -34,7 +34,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 
 // Configure SQLite with EF Core and retry strategy for concurrent access (busy/locked)
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? "Data Source=justingritten.db";
+    ?? "Data Source=/var/app/data/justingritten.db";
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseSqlite(connectionString, sqliteOptions =>

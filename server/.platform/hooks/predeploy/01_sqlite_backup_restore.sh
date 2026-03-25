@@ -1,43 +1,35 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Back up the currently running SQLite DB to S3, then restore latest backup
-# into the staging app folder so the next deployed version keeps data.
+# Ensure SQLite lives in a persistent instance path outside /var/app/current
+# so deploy bundle replacement does not reset the database.
 
-BUCKET="${SQLITE_BACKUP_BUCKET:-${EB_S3_BUCKET:-elasticbeanstalk-us-east-1-305137865693}}"
-PREFIX="${SQLITE_BACKUP_PREFIX:-sqlite-backups/justingritten-api-dev}"
+APP_USER="${APP_USER:-webapp}"
+APP_GROUP="${APP_GROUP:-webapp}"
+PERSISTENT_DIR="/var/app/data"
+PERSISTENT_DB="$PERSISTENT_DIR/justingritten.db"
 CURRENT_DB="/var/app/current/justingritten.db"
-STAGING_DB="/var/app/staging/justingritten.db"
-TIMESTAMP="$(date -u +"%Y%m%dT%H%M%SZ")"
 
 log() {
-  echo "[sqlite-backup-restore] $1"
+  echo "[sqlite-persistent-path] $1"
 }
 
-backup_current_db() {
-  if [ ! -f "$CURRENT_DB" ]; then
-    log "No current DB found at $CURRENT_DB; skipping backup."
-    return
-  fi
+log "Ensuring persistent data directory exists at $PERSISTENT_DIR ..."
+mkdir -p "$PERSISTENT_DIR"
+chown "$APP_USER:$APP_GROUP" "$PERSISTENT_DIR" || true
+chmod 775 "$PERSISTENT_DIR" || true
 
-  log "Backing up current DB to s3://$BUCKET/$PREFIX/ ..."
-  aws s3 cp "$CURRENT_DB" "s3://$BUCKET/$PREFIX/history/justingritten-$TIMESTAMP.db" --region us-east-1
-  aws s3 cp "$CURRENT_DB" "s3://$BUCKET/$PREFIX/latest/justingritten.db" --region us-east-1
-}
+# One-time migration path: if old db exists in /var/app/current and new location
+# is empty, copy it so existing data is preserved on the first deploy after switch.
+if [ ! -f "$PERSISTENT_DB" ] && [ -f "$CURRENT_DB" ]; then
+  log "Migrating DB from $CURRENT_DB to $PERSISTENT_DB ..."
+  cp "$CURRENT_DB" "$PERSISTENT_DB"
+fi
 
-restore_latest_db_to_staging() {
-  if [ -f "$STAGING_DB" ]; then
-    log "Staging DB already present at $STAGING_DB; skipping restore."
-    return
-  fi
-
-  log "Attempting restore from s3://$BUCKET/$PREFIX/latest/justingritten.db ..."
-  if aws s3 cp "s3://$BUCKET/$PREFIX/latest/justingritten.db" "$STAGING_DB" --region us-east-1; then
-    log "Restore completed into staging."
-  else
-    log "No latest backup found in S3; continuing without restore."
-  fi
-}
-
-backup_current_db
-restore_latest_db_to_staging
+if [ -f "$PERSISTENT_DB" ]; then
+  chown "$APP_USER:$APP_GROUP" "$PERSISTENT_DB" || true
+  chmod 664 "$PERSISTENT_DB" || true
+  log "Persistent DB ready at $PERSISTENT_DB."
+else
+  log "No existing DB found yet at $PERSISTENT_DB; app will create it on startup."
+fi
