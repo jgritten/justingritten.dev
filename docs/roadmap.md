@@ -164,6 +164,15 @@ Between Phase 0 and the full Phase 1/2 SaaS work, there is an **API‑first slic
 - **Client wiring – Contact form:** Update the portfolio `ContactCard` to send submissions to `POST /api/contact` via a small API client helper. Reflect submission states in the UI (`idle` → `submitting` → `success`/`error`), while keeping the “email me directly” instructions as a fallback when the API is unavailable.
 - **Client wiring – Visitor counter:** Add a small visitor counter on the profile/landing page that calls `POST /api/metrics/visit` on first load (debounced) and displays counts from `GET /api/metrics/summary`. If the API fails, the widget should degrade gracefully (e.g. hide itself or show a subtle “metrics unavailable” message).
 - **Status:** This phase is the **current focus** when prioritising backend/API work. Later phases (auth, tenancy, realtime) build on this API rather than replacing it.
+- **Current checkpoint (March 2026):** Contact form persistence + live email notifications are now working in production using a provider-agnostic email port (`IContactEmailSender`) with `Resend` active and `Ses` scaffolded for future swap.
+
+##### Email follow-up TODOs (capture for next pass)
+
+- Add **Resend template IDs** for contact notifications (move from inline text body to template-driven payload).
+- Add **verification email templates** in Resend for upcoming auth work (email verification and password reset).
+- Implement auth-side **email verification flow** with single-use tokens, expiry, and resend cooldown/rate limits.
+- Add a provider-agnostic **template mapping strategy** so `Resend`/future `Ses` implementations use the same application-level email intents.
+- Add integration tests for provider selection via `EMAIL_PROVIDER` in `Program.cs` composition root.
 
 - **Guest session:** Support **Guest** as an explicit session type (no credentials; optional token or session cookie for “current client = default client”). Guest uses the **default client** for all scoped data; rate limits (e.g. doc gen) by IP. Provide a way to **upgrade** to full user (sign up / log in) when the visitor wants to dig deeper.
 - **Username/password login** (API: login endpoint, JWT or session; client: login page, token storage, protected routes).  

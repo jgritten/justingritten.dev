@@ -19,9 +19,15 @@ const ROADMAP_PHASES = [
   },
   {
     id: 'phase-1',
-    title: 'Phase 1: SaaS - Authentication',
+    title: 'Phase 1: SaaS - Authentication + API-first slice',
     completed: false,
     items: [
+      'Done (Phase 1A): API deployed to Elastic Beanstalk with stable health checks and persistent SQLite path',
+      'Done (Phase 1A): Contact API persists submissions and sends production emails via provider-agnostic email service (Resend active, SES scaffolded)',
+      'Done (Phase 1A): Visitor metrics API wired to route tracking and dashboard summary',
+      'Done (Phase 1A): Site version sync + monitoring shipped for release visibility',
+      'Next (Phase 1A): move contact notifications to Resend template IDs and add verification/reset templates',
+      'Next (Phase 1A): add auth-side verification token flow (single-use, expiry, resend cooldown)',
       'Guest session (explicit type; default client; upgrade path to sign up / log in)',
       'Username/password login (API + client; JWT or session)',
       'Account Settings and Application Settings + Logout in dropdown',
