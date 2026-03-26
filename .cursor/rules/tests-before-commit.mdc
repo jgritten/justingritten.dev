@@ -47,6 +47,7 @@ This rule keeps the repo healthy by ensuring automated tests run before changes 
   - **Major (X.0.0)** – Big portfolio revamp or showcase-ready v1 launch. **Reset:** set minor and patch to 0.
   - **Minor (0.Y.0)** – New sections, notable UX/layout changes, or visible feature additions. **Reset:** set patch to 0.
   - **Patch (0.0.Z)** – Bug fixes, small styling or copy tweaks, **config/deployment/docs** (e.g. API URL, CORS, workflow, deployment docs), and other non–user-facing changes. Increment only the last number.
+- **Ambiguous bump rule:** If a change could reasonably be either **Patch** or **Minor**, ask Justin which version segment to bump before proposing the commit message or committing.
 - After changing the version, re-run client tests and client build before proposing the commit message.
 
 ## Scope

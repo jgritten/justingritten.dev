@@ -23,6 +23,11 @@ On every commit that contains any file changes, **bump** `SITE_VERSION` with no 
 
 **Reset rule:** When you increment **major**, set minor and patch to 0. When you increment **minor**, set patch to 0.
 
+## Ambiguous bump decisions
+
+- If a change could reasonably be interpreted as either **Patch** or **Minor** (for example, a technically-focused change that still causes visible user behavior changes), the agent must **ask Justin which bump to use before proceeding**.
+- Default behavior in ambiguous cases is **not** to auto-select Patch; wait for user confirmation.
+
 ## How to apply during commit prep
 
 1. Before proposing the commit message:
