@@ -39,20 +39,13 @@ export function WelcomeWidget() {
 
   useEffect(() => {
     let cancelled = false
-    const route = '/'
     metricsApi
-      .recordVisit(route)
-      .catch(() => {})
-      .finally(() => {
-        if (cancelled) return
-        metricsApi
-          .getSummary(route)
-          .then((s) => {
-            if (!cancelled) setVisitCount(s.totalCount)
-          })
-          .catch(() => {
-            if (!cancelled) setVisitCount(null)
-          })
+      .getSummary('/')
+      .then((s) => {
+        if (!cancelled) setVisitCount(s.totalCount)
+      })
+      .catch(() => {
+        if (!cancelled) setVisitCount(null)
       })
     return () => {
       cancelled = true

@@ -11,16 +11,13 @@ Security-relevant choices and practices for justingritten.dev.
 - **No secrets in client code:** Do not put API keys or secrets in `client/` or in env vars that are baked into the build (e.g. `VITE_*`). These are visible in the built bundle.
 - **API URL:** `VITE_API_URL` is for pointing at an API base (e.g. localhost or a future public API). It is not a secret.
 
-### Contact form (mailto)
+### Contact form (API + SQLite)
 
-The profile contact form does **not** send data to a server. On submit it opens the visitor’s email client via `mailto:` with a prefilled message. That means:
+The profile contact form **POST**s to the API (`/api/contact`). Submissions are stored in SQLite (`ContactMessages`) and a short summary is logged server-side.
 
-- **No server-side storage or email delivery** from the site; the visitor must send the email from their own client.
-- **Anti-spam and abuse:** Implemented in the client to reduce bots and repeated abuse:
-  - **Honeypot:** A hidden field (`website`) is present in the form. Bots often fill it; if it’s non-empty on submit, the form does nothing and shows a generic error. Real users never see or fill it.
-  - **Validation:** All fields are required; email must match a valid format; all values are length-limited before being used in the `mailto:` URL to avoid huge or malformed payloads.
-  - **Cooldown:** After a successful submit, the form will not open `mailto:` again for 60 seconds from the same browser session, to limit rapid repeated use.
-- **If you later move to a server-backed form** (e.g. an API that sends email via Resend or SMTP), add: server-side validation and length limits, rate limiting by IP (and optionally by email), keep the honeypot and consider a CAPTCHA (e.g. Turnstile, hCaptcha) for stronger bot protection. Document the endpoint and any new secrets in this file and in an ADR.
+- **Anti-spam and abuse (client):** Honeypot field (`website`), validation, length limits, and a post-submit cooldown (see `ContactCard.tsx`). **Server:** validation and length limits in `ContactController`; consider rate limiting by IP and/or email and optional CAPTCHA for stronger bot protection.
+- **Reading submissions:** Operators use **AWS-controlled access** (e.g. Session Manager, SSH, or a local copy of the DB file)—see **Operator access: SSH and the SQLite database** in [deployment.md](./deployment.md). Do not rely on publishing connection details or keys in this repo.
+- **`GET /api/contact`:** The API currently exposes a **recent-messages JSON list without authentication**. Treat that as sensitive until you add auth, remove the endpoint, or restrict it another way (e.g. not routable publicly). Document changes here when you adjust it.
 
 ## Backend (API)
 

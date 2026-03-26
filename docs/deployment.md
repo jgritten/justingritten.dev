@@ -59,6 +59,35 @@ If the API deploy step fails with “Access Denied”, add these permissions to 
 - On the first deploy after this change, the hook attempts a one-time migration copy from `/var/app/current/justingritten.db` to `/var/app/data/justingritten.db` if the new file does not exist yet.
 - This approach avoids S3/AWS calls during startup hooks to reduce deploy-time instability.
 
+### Operator access: SSH and the SQLite database (account owners only)
+
+This is a **runbook for people who already administer your AWS account**. Putting it in a public repo does **not** let arbitrary readers connect to your instances: they still need **your** AWS sign-in, **your** IAM permissions, and (for classic SSH) **your** EC2 key pair’s private key material, plus a security group (or SSM policy) that allows access from **their** session. **Never commit** `.pem` files, passwords, Session Manager activation codes, or one-off connection strings to the repo.
+
+**Database file on the instance:** `/var/app/data/justingritten.db` (table `ContactMessages`; use any SQLite client or the `sqlite3` CLI if installed on the AMI).
+
+**Recommended approaches (pick what matches your environment):**
+
+1. **AWS Systems Manager Session Manager** (no inbound TCP 22 required)  
+   - If the EB instance is managed by SSM (SSM agent + instance profile with `AmazonSSMManagedInstanceCore` or equivalent), use **EC2 → Instances → Connect → Session Manager** in the console, or the AWS CLI `start-session` flow described in [AWS: Start a session](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-sessions-start.html).  
+   - After the shell opens, run `sudo -i` if you need root to read under `/var/app/`.
+
+2. **Elastic Beanstalk CLI** (SSH with your key pair)  
+   - Install the [EB CLI](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-install.html), configure it for **your** application and environment (names are internal; do not paste them into the public repo in issues or PRs if you treat them as sensitive).  
+   - Run `eb ssh` as documented in [AWS: SSH into an Elastic Beanstalk environment](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb3-ssh.html). You must have associated an **EC2 key pair** with the environment and hold the matching private key locally.
+
+3. **EC2 console / standard SSH**  
+   - In **Elastic Beanstalk → your environment → Configuration → Instances**, note the instance or use **EC2 → Instances** filtered by the EB environment.  
+   - Follow [AWS: Connect to your Linux instance using SSH](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AccessingInstancesLinux.html). The instance security group must allow SSH (typically port 22) from **your** IP or a bastion you control—avoid `0.0.0.0/0` on 22 for production.
+
+**Inspecting or copying the database**
+
+- **On-instance:** e.g. `sqlite3 /var/app/data/justingritten.db '.tables'` and `SELECT * FROM ContactMessages ORDER BY CreatedAt DESC LIMIT 20;` (adjust as needed).  
+- **Off-instance:** use `scp` or Session Manager port forwarding to copy `justingritten.db` to a secure machine, then open it locally. Do not store copies in the git repo.
+
+**Logs (no SSH):** Contact submissions are also logged at Information level (id, email, name) in the environment’s log stream (e.g. CloudWatch Logs for the EB log group). That complements the DB but does not replace it for full message bodies.
+
+**Hardening note:** `GET /api/contact` returns recent messages as JSON and is currently **unauthenticated** in the API codebase. Treat that as a **known exposure** until you add auth or remove it; prefer SSH + SQLite or a future authenticated admin path for private review. Track any change in `docs/security.md` and consider an ADR if you introduce auth or remove the public listing.
+
 Add these permissions to your role's policy in IAM (create or edit the policy in the console or in a private copy; do not commit full policy JSON to the public repo) (e.g. `github-actions-deploy-justingritten-dev`). If the workflow uses a different role name, update the workflow’s `role-to-assume` or ensure the workflow role-to-assume matches your role name.
 
 **EB health check (fix "100% 4xx" / unhealthy):** The API exposes **GET /health** (returns 200). Set the environment **Application health check URL** to **`/health`** in Elastic Beanstalk environment configuration. For load-balanced environments, use **Configuration** → **Load balancer** → **Processes** → **Health check path** `/health`. For single-instance, use the health check URL in environment configuration so probes do not hit `/` (which returns 404 for this API).
