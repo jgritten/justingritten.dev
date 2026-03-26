@@ -1,6 +1,7 @@
 using Api.Data;
 using Api.Interfaces;
 using Api.Repositories;
+using Api.Services;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 
@@ -46,6 +47,33 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Register repositories
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
+
+var emailProvider = (builder.Configuration["EMAIL_PROVIDER"] ?? "Resend").Trim();
+if (emailProvider.Equals("Resend", StringComparison.OrdinalIgnoreCase))
+{
+    builder.Services.AddHttpClient(nameof(ResendContactEmailSender));
+    builder.Services.Configure<ResendEmailOptions>(options =>
+    {
+        options.ApiKey = builder.Configuration["RESEND_API_KEY"] ?? string.Empty;
+        options.FromEmail = builder.Configuration["RESEND_FROM_EMAIL"] ?? string.Empty;
+        options.ToEmail = builder.Configuration["CONTACT_TO_EMAIL"] ?? string.Empty;
+    });
+    builder.Services.AddScoped<IContactEmailSender, ResendContactEmailSender>();
+}
+else if (emailProvider.Equals("Ses", StringComparison.OrdinalIgnoreCase))
+{
+    builder.Services.Configure<SesEmailOptions>(options =>
+    {
+        options.Region = builder.Configuration["SES_REGION"] ?? builder.Configuration["AWS_REGION"] ?? string.Empty;
+        options.FromEmail = builder.Configuration["SES_FROM_EMAIL"] ?? string.Empty;
+        options.ToEmail = builder.Configuration["CONTACT_TO_EMAIL"] ?? string.Empty;
+    });
+    builder.Services.AddScoped<IContactEmailSender, SesContactEmailSender>();
+}
+else
+{
+    builder.Services.AddScoped<IContactEmailSender, NoOpContactEmailSender>();
+}
 
 // Configure CORS for React frontend (local and production)
 builder.Services.AddCors(options =>

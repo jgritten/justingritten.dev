@@ -99,6 +99,20 @@ Add these permissions to your role's policy in IAM (create or edit the policy in
 - **Local:** `npm run dev` in `client/` (e.g. http://localhost:5173). API URL defaults to http://localhost:5237 (see `client/.env.example`).
 - **Production:** Static files on S3/CloudFront. The production build uses `VITE_API_URL` (recommended: `https://api.justingritten.dev`). When the site is served over HTTPS, the API URL must also be HTTPS.
 
+## Contact email provider configuration (API)
+
+Contact notification delivery is provider-agnostic and selected at runtime using `EMAIL_PROVIDER` in the API environment.
+
+- `EMAIL_PROVIDER=Resend` (current production choice)
+  - `RESEND_API_KEY`
+  - `RESEND_FROM_EMAIL`
+  - `CONTACT_TO_EMAIL`
+- `EMAIL_PROVIDER=Ses` (scaffolded; AWS SDK send logic can be added later)
+  - `SES_REGION` (or `AWS_REGION`)
+  - `SES_FROM_EMAIL`
+  - `CONTACT_TO_EMAIL`
+- Any other `EMAIL_PROVIDER` value falls back to `NoOp` (no email send, logs only).
+
 ## Future considerations
 
 - If the API is hosted (e.g. on a separate subdomain), add a separate deploy job or workflow and ensure CORS and `VITE_API_URL` (or runtime config) point to that origin.

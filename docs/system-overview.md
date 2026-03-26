@@ -38,7 +38,9 @@ What the site is and how it’s structured.
   - `Interfaces/` – e.g. `IProductRepository`
   - `Models/` – Domain entities (e.g. `Product`)
   - `Repositories/` – Implementations (e.g. `ProductRepository`)
+  - `Services/` – Infrastructure services (e.g. email provider adapters implementing `IContactEmailSender`)
 - **API base:** `/api/Products` (and related routes). OpenAPI available in Development.
+- **Provider port pattern:** Contact notification delivery uses an interface-first provider pattern. `Program.cs` selects `Resend`, `Ses` (scaffold), or `NoOp` via `EMAIL_PROVIDER`, so provider changes do not require controller changes.
 
 ## Deployment
 

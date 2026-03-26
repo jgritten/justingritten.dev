@@ -61,7 +61,7 @@ For a human-readable map of pages and navigation (including a tree-style flow), 
 | Layer | Technology | Purpose |
 |-------|------------|---------|
 | **Frontend** | React 19, TypeScript, Vite, Radix UI | Portfolio content + demo components (see [system-overview](./system-overview.md#demos)) |
-| **Backend** | .NET 10 Web API, EF Core, SQLite | Template/foundation for future API-backed features |
+| **Backend** | .NET 10 Web API, EF Core, SQLite | API-backed features, including contact persistence and pluggable email notifications |
 | **Hosting** | AWS S3 + CloudFront | Static site; client-only in production |
 
 ## Data flow
@@ -75,12 +75,13 @@ For a human-readable map of pages and navigation (including a tree-style flow), 
 - **API base URL:** Client uses `VITE_API_URL` (default `http://localhost:5237`); see `client/src/api/client.ts`.
 - **CORS:** API allows the React dev origins (`localhost:5173`, `localhost:3000`). If the API is later hosted on a different origin (e.g. `api.justingritten.dev`), CORS must include the frontend origin.
 - **Testing:** Client tests use Vitest and React Testing Library (see [ADR 0003](decisions/0003-testing-approach.md)); server tests will use xUnit when added.
+- **Email provider abstraction:** Contact email delivery is behind `IContactEmailSender` with provider-specific infrastructure implementations (`Resend`, `Ses`, `NoOp`) selected via `EMAIL_PROVIDER` in `Program.cs`. This keeps controller/application flow provider-agnostic and supports future provider swaps with DI/config changes only.
 
 ## Repo layout
 
 ```
 client/     → React SPA (src: api, components, hooks, types, styles, utils)
-server/     → .NET API (Controllers, Data, DTOs, Interfaces, Models, Repositories)
+server/     → .NET API (Controllers, Data, DTOs, Interfaces, Models, Repositories, Services)
 docs/       → Design and intention (this folder)
 .github/    → CI/CD (deploy workflow)
 ```

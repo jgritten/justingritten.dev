@@ -1,4 +1,5 @@
 using Api.Data;
+using Api.Interfaces;
 using Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,11 +11,16 @@ namespace Api.Controllers;
 public class ContactController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly IContactEmailSender _contactEmailSender;
     private readonly ILogger<ContactController> _logger;
 
-    public ContactController(AppDbContext context, ILogger<ContactController> logger)
+    public ContactController(
+        AppDbContext context,
+        IContactEmailSender contactEmailSender,
+        ILogger<ContactController> logger)
     {
         _context = context;
+        _contactEmailSender = contactEmailSender;
         _logger = logger;
     }
 
@@ -66,6 +72,22 @@ public class ContactController : ControllerBase
 
         await _context.ContactMessages.AddAsync(entity, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
+
+        var notification = new ContactNotificationEmail
+        {
+            ContactId = entity.Id,
+            CreatedAtUtc = entity.CreatedAt,
+            FirstName = entity.FirstName,
+            LastName = entity.LastName,
+            Email = entity.Email,
+            CompanyOrProject = entity.CompanyOrProject,
+            Message = entity.Message,
+            Source = entity.Source
+        };
+
+        await _contactEmailSender.SendContactNotificationAsync(
+            notification,
+            cancellationToken);
 
         _logger.LogInformation(
             "Stored contact message {ContactId} from {Email} ({FirstName} {LastName})",
