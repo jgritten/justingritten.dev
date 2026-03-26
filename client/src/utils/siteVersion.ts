@@ -1,4 +1,4 @@
-export const SITE_VERSION = '0.4.6' as const
+export const SITE_VERSION = '0.4.7' as const
 
 export type SemVer = {
   major: number
