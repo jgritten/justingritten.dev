@@ -107,6 +107,7 @@ Contact notification delivery is provider-agnostic and selected at runtime using
   - `RESEND_API_KEY`
   - `RESEND_FROM_EMAIL`
   - `CONTACT_TO_EMAIL`
+  - `RESEND_CONTACT_TEMPLATE_ID` (published Resend template UUID for contact notifications; must match template variables in `docs/resend/templates/contact-email-template.resend.html`)
 - `EMAIL_PROVIDER=Ses` (scaffolded; AWS SDK send logic can be added later)
   - `SES_REGION` (or `AWS_REGION`)
   - `SES_FROM_EMAIL`

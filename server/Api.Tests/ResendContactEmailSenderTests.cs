@@ -26,7 +26,8 @@ public class ResendContactEmailSenderTests
         {
             ApiKey = "re_test_key",
             FromEmail = "noreply@contact.justingritten.dev",
-            ToEmail = "justin.gritten@gmail.com"
+            ToEmail = "justin.gritten@gmail.com",
+            ContactTemplateId = "7be39e79-7dc0-4ff0-92ed-1845f996fc32"
         });
         var sender = new ResendContactEmailSender(clientFactory, options, NullLogger<ResendContactEmailSender>.Instance);
         var notification = BuildNotification();
@@ -47,8 +48,15 @@ public class ResendContactEmailSenderTests
         Assert.Equal("noreply@contact.justingritten.dev", root.GetProperty("from").GetString());
         Assert.Equal("justin.gritten@gmail.com", root.GetProperty("to")[0].GetString());
         Assert.Equal("jane@example.com", root.GetProperty("reply_to").GetString());
-        Assert.Contains("New contact request from Jane Doe", root.GetProperty("subject").GetString());
-        Assert.Contains("Contact ID: 42", root.GetProperty("text").GetString());
+        Assert.False(root.TryGetProperty("subject", out _));
+        Assert.False(root.TryGetProperty("text", out _));
+        var template = root.GetProperty("template");
+        Assert.Equal("7be39e79-7dc0-4ff0-92ed-1845f996fc32", template.GetProperty("id").GetString());
+        var variables = template.GetProperty("variables");
+        Assert.Equal("42", variables.GetProperty("CONTACT_ID").GetString());
+        Assert.Equal("jane@example.com", variables.GetProperty("EMAIL").GetString());
+        Assert.Equal("Hello", variables.GetProperty("MESSAGE").GetString());
+        Assert.Equal("portfolio-contact", variables.GetProperty("SOURCE").GetString());
     }
 
     [Fact]
@@ -79,7 +87,8 @@ public class ResendContactEmailSenderTests
         {
             ApiKey = "re_test_key",
             FromEmail = "noreply@contact.justingritten.dev",
-            ToEmail = "justin.gritten@gmail.com"
+            ToEmail = "justin.gritten@gmail.com",
+            ContactTemplateId = "7be39e79-7dc0-4ff0-92ed-1845f996fc32"
         });
         var sender = new ResendContactEmailSender(clientFactory, options, NullLogger<ResendContactEmailSender>.Instance);
 

@@ -29,7 +29,8 @@ public class ResendContactEmailSender : IContactEmailSender
     {
         if (string.IsNullOrWhiteSpace(_options.ApiKey) ||
             string.IsNullOrWhiteSpace(_options.FromEmail) ||
-            string.IsNullOrWhiteSpace(_options.ToEmail))
+            string.IsNullOrWhiteSpace(_options.ToEmail) ||
+            string.IsNullOrWhiteSpace(_options.ContactTemplateId))
         {
             _logger.LogWarning(
                 "Skipping contact email send because Resend is not fully configured. ContactId: {ContactId}",
@@ -37,16 +38,16 @@ public class ResendContactEmailSender : IContactEmailSender
             return;
         }
 
-        var subject = $"New contact request from {notification.FirstName} {notification.LastName}";
-        var textBody = BuildTextBody(notification);
-
         var payload = new
         {
             from = _options.FromEmail,
             to = new[] { _options.ToEmail },
-            subject,
-            text = textBody,
-            reply_to = notification.Email.Trim()
+            reply_to = notification.Email.Trim(),
+            template = new
+            {
+                id = _options.ContactTemplateId.Trim(),
+                variables = BuildTemplateVariables(notification)
+            }
         };
 
         var json = JsonSerializer.Serialize(payload);
@@ -73,24 +74,21 @@ public class ResendContactEmailSender : IContactEmailSender
         _logger.LogInformation("Sent contact notification email for ContactId {ContactId}", notification.ContactId);
     }
 
-    private static string BuildTextBody(ContactNotificationEmail notification)
+    private static Dictionary<string, string> BuildTemplateVariables(ContactNotificationEmail notification)
     {
         var source = string.IsNullOrWhiteSpace(notification.Source) ? "portfolio-contact" : notification.Source.Trim();
 
-        return $"""
-               New contact request
-
-               Contact ID: {notification.ContactId}
-               Received (UTC): {notification.CreatedAtUtc:O}
-               Source: {source}
-
-               Name: {notification.FirstName.Trim()} {notification.LastName.Trim()}
-               Email: {notification.Email.Trim()}
-               Company/Project: {notification.CompanyOrProject.Trim()}
-
-               Message:
-               {notification.Message.Trim()}
-               """;
+        return new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["CONTACT_ID"] = notification.ContactId.ToString(),
+            ["RECEIVED_UTC"] = notification.CreatedAtUtc.ToString("O"),
+            ["SOURCE"] = source,
+            ["FIRST_NAME"] = notification.FirstName.Trim(),
+            ["LAST_NAME"] = notification.LastName.Trim(),
+            ["EMAIL"] = notification.Email.Trim(),
+            ["COMPANY_OR_PROJECT"] = notification.CompanyOrProject.Trim(),
+            ["MESSAGE"] = notification.Message.Trim()
+        };
     }
 }
 
@@ -99,4 +97,9 @@ public class ResendEmailOptions
     public string ApiKey { get; set; } = string.Empty;
     public string FromEmail { get; set; } = string.Empty;
     public string ToEmail { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Published Resend template id (UUID) for contact notifications; variables must match the template.
+    /// </summary>
+    public string ContactTemplateId { get; set; } = string.Empty;
 }

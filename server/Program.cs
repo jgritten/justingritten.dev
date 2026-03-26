@@ -57,6 +57,7 @@ if (emailProvider.Equals("Resend", StringComparison.OrdinalIgnoreCase))
         options.ApiKey = builder.Configuration["RESEND_API_KEY"] ?? string.Empty;
         options.FromEmail = builder.Configuration["RESEND_FROM_EMAIL"] ?? string.Empty;
         options.ToEmail = builder.Configuration["CONTACT_TO_EMAIL"] ?? string.Empty;
+        options.ContactTemplateId = builder.Configuration["RESEND_CONTACT_TEMPLATE_ID"] ?? string.Empty;
     });
     builder.Services.AddScoped<IContactEmailSender, ResendContactEmailSender>();
 }
