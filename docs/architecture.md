@@ -76,6 +76,10 @@ For a human-readable map of pages and navigation (including a tree-style flow), 
 - **CORS:** API allows the React dev origins (`localhost:5173`, `localhost:3000`). If the API is later hosted on a different origin (e.g. `api.justingritten.dev`), CORS must include the frontend origin.
 - **Testing:** Client tests use Vitest and React Testing Library (see [ADR 0003](decisions/0003-testing-approach.md)); server tests will use xUnit when added.
 - **Email provider abstraction:** Contact email delivery is behind `IContactEmailSender` with provider-specific infrastructure implementations (`Resend`, `Ses`, `NoOp`) selected via `EMAIL_PROVIDER` in `Program.cs`. This keeps controller/application flow provider-agnostic and supports future provider swaps with DI/config changes only.
+- **Backend boundary pattern:** API controllers are thin and own only HTTP concerns (routing, input validation, status codes). Persistence and query logic lives in repository interfaces/implementations, and API contracts use DTOs instead of EF entities (see [ADR 0007](decisions/0007-thin-controllers-repository-and-dto-boundary.md)).
+- **API as product:** Treat the API as a reusable backend for multiple first-party clients (web SPA, future iOS app, future Android/desktop). API contracts should be client-agnostic, stable, and documented so new frontends can integrate without backend rewrites.
+- **Contract-first evolution:** Prefer explicit API versioning and consistent request/response and error envelopes to reduce client breakage as endpoints evolve.
+- **OpenAPI as integration artifact:** Keep OpenAPI accurate and publishable so typed client generation is possible for future frontends.
 
 ## Repo layout
 

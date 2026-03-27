@@ -1,8 +1,7 @@
-using Api.Data;
+using Api.DTOs;
 using Api.Interfaces;
 using Api.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Api.Controllers;
 
@@ -10,31 +9,22 @@ namespace Api.Controllers;
 [Route("api/[controller]")]
 public class ContactController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly IContactRepository _contactRepository;
     private readonly IContactEmailSender _contactEmailSender;
     private readonly ILogger<ContactController> _logger;
 
     public ContactController(
-        AppDbContext context,
+        IContactRepository contactRepository,
         IContactEmailSender contactEmailSender,
         ILogger<ContactController> logger)
     {
-        _context = context;
+        _contactRepository = contactRepository;
         _contactEmailSender = contactEmailSender;
         _logger = logger;
     }
 
-    public record ContactRequest(
-        string FirstName,
-        string LastName,
-        string Email,
-        string CompanyOrProject,
-        string Message,
-        string? Source
-    );
-
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] ContactRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> Create([FromBody] ContactCreateRequestDto request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
         {
@@ -70,8 +60,7 @@ public class ContactController : ControllerBase
             CreatedAt = DateTime.UtcNow
         };
 
-        await _context.ContactMessages.AddAsync(entity, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _contactRepository.CreateAsync(entity, cancellationToken);
 
         var notification = new ContactNotificationEmail
         {
@@ -100,20 +89,27 @@ public class ContactController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ContactMessage>>> GetRecent([FromQuery] int limit = 20, CancellationToken cancellationToken = default)
+    public async Task<ActionResult<IEnumerable<ContactMessageDto>>> GetRecent([FromQuery] int limit = 20, CancellationToken cancellationToken = default)
     {
         if (limit <= 0 || limit > 100)
         {
             limit = 20;
         }
 
-        var messages = await _context.ContactMessages
-            .OrderByDescending(m => m.CreatedAt)
-            .Take(limit)
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
+        var messages = await _contactRepository.GetRecentAsync(limit, cancellationToken);
 
-        return Ok(messages);
+        return Ok(messages.Select(MapToDto));
     }
+
+    private static ContactMessageDto MapToDto(ContactMessage message) => new(
+        message.Id,
+        message.FirstName,
+        message.LastName,
+        message.Email,
+        message.CompanyOrProject,
+        message.Message,
+        message.Source,
+        message.CreatedAt
+    );
 }
 

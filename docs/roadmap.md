@@ -153,6 +153,19 @@ Order is driven by **dependencies** and **portfolio impact**, not your original 
 
 Between Phase 0 and the full Phase 1/2 SaaS work, there is an **API‑first slice** that stands up the backend and wires portfolio‑visible features to it.
 
+#### Phase 1A.5: API productization baseline (multi-client frontend readiness)
+
+- **Goal:** Ensure the API can be consumed by multiple frontends (current web client + future iOS/other clients) without backend redesign.
+- **Versioning strategy:** Introduce and document API versioning (for example `/api/v1/...`) with a clear deprecation policy for breaking changes.
+- **Contract consistency:** Standardize response envelopes and error contracts across endpoints (code, message, optional details, correlation/request id).
+- **OpenAPI lifecycle:** Keep OpenAPI current, publish the generated spec as an artifact, and use it as the source for client integration and typed client generation.
+- **Auth foundation:** Implement token-based auth/authorization suitable for native and web clients; define role/permission scopes for protected endpoints.
+- **Operational guardrails:** Add request correlation IDs, rate limiting policy, and baseline API observability (structured logs, health/readiness checks, and error-rate visibility).
+- **Write resiliency:** Add idempotency guidance for retry-prone writes where duplicate submissions are possible from unstable networks.
+- **Idempotency keys (client + server):** Standardize idempotency key handling for non-idempotent writes (for example `POST /api/contact` and future create/generate actions). Frontends should generate and send an idempotency key per user intent; backend should persist key + request fingerprint + response metadata with a TTL window and return the original successful response for safe retries.
+- **List endpoint conventions:** Standardize pagination/filter/sort patterns so mobile and web clients can consume lists predictably.
+- **Definition of done for new endpoints:** DTO contract, repository-backed persistence, validation, tests, docs update, and OpenAPI update in the same change.
+
 #### Phase 1A: Core API + contact + visitor metrics
 
 - **Backend API (existing `server/Api` project):** Use the existing .NET Web API project as the primary backend surface. Extend the SQLite‑backed `AppDbContext` with entities for **contact messages** and **visitor metrics** so this phase reuses infrastructure that will later grow into tenancy and SaaS features.
@@ -243,6 +256,23 @@ Between Phase 0 and the full Phase 1/2 SaaS work, there is an **API‑first slic
 - **2FA:** Optional two-factor authentication; nice to have for later. Not in scope for current phases.
 - **Configurable fields:** Revisit once objects are defined; client-defined custom fields on objects.
 - **API keys:** Not planned at this stage; possibly never. Omit from implementation unless you decide otherwise.
+
+---
+
+## API multi-client readiness checklist (living)
+
+Use this checklist when evaluating if a new frontend client can integrate quickly:
+
+- [ ] Endpoint contracts are DTO-based and documented.
+- [ ] No EF entities are exposed directly in API responses.
+- [ ] Versioning/deprecation impact is considered before changing contracts.
+- [ ] Error responses follow one shared schema.
+- [ ] OpenAPI is updated and available for client teams.
+- [ ] Auth/authorization requirements are explicit per endpoint.
+- [ ] Rate limiting and abuse controls are defined for write endpoints.
+- [ ] Non-idempotent write endpoints define idempotency key behavior (header name, TTL window, conflict semantics, replay response behavior).
+- [ ] Pagination/filter/sort behavior is consistent for list endpoints.
+- [ ] Endpoint has automated tests for success + validation + failure paths.
 
 ---
 

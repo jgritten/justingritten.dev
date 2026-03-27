@@ -39,8 +39,10 @@ What the site is and how it’s structured.
   - `Models/` – Domain entities (e.g. `Product`)
   - `Repositories/` – Implementations (e.g. `ProductRepository`)
   - `Services/` – Infrastructure services (e.g. email provider adapters implementing `IContactEmailSender`)
+- **Controller and data-access policy:** Keep controllers thin. Controllers handle HTTP concerns only; all EF Core and transaction/retry behavior belongs in repositories behind interfaces. API endpoints should accept/return DTOs (not EF models) to keep front-end/back-end contracts stable.
 - **API base:** `/api/Products` (and related routes). OpenAPI available in Development.
 - **Provider port pattern:** Contact notification delivery uses an interface-first provider pattern. `Program.cs` selects `Resend`, `Ses` (scaffold), or `NoOp` via `EMAIL_PROVIDER`, so provider changes do not require controller changes.
+- **Multi-client frontend readiness:** The API should be designed so future clients (for example an iOS app) can reuse the same backend contracts with minimal backend changes. That means stable DTO contracts, predictable error handling, and backward-compatible endpoint evolution.
 
 ## Deployment
 
@@ -53,5 +55,5 @@ Only the **client** is deployed: GitHub Actions builds the Vite app and syncs to
 ## Where to extend
 
 - **New UI/features:** Add components under `client/src/components/`, hooks under `client/src/hooks/`, and types under `client/src/types/`. Follow existing patterns (Radix UI, path alias).
-- **New API surface:** Add controllers, DTOs, and repository interfaces in `server/` following the Products example.
+- **New API surface:** Add controllers, DTOs, and repository interfaces in `server/` following the thin-controller pattern (see ADR 0007).
 - **Design and decisions:** Update docs in `docs/` and add ADRs in `docs/decisions/`.
