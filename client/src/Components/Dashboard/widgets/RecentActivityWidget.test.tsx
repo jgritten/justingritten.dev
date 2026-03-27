@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import { RecentActivityWidget } from './RecentActivityWidget'
 
@@ -29,7 +29,53 @@ function RecentActivityWidgetWithTheme() {
 
 describe('RecentActivityWidget', () => {
   beforeEach(() => {
-    vi.stubGlobal('fetch', vi.fn())
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((input: RequestInfo | URL) => {
+        const url = String(input)
+
+        if (url.includes('api.github.com')) {
+          const page = new URL(url).searchParams.get('page')
+          if (page === '1' || page === null) {
+            return Promise.resolve({
+              ok: true,
+              json: () => Promise.resolve(mockCommits),
+            } as Response)
+          }
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve([]),
+          } as Response)
+        }
+
+        if (url.includes('/api/metrics/summary')) {
+          const route = new URL(url).searchParams.get('route') ?? '/'
+          const routeCount: Record<string, number> = {
+            '/': 20,
+            '/build': 7,
+            '/saas': 6,
+            '/saas/dashboard': 11,
+            '/saas/settings': 9,
+            '/saas/settings/account': 5,
+            '/saas/settings/application': 4,
+            '/saas/settings/client': 3,
+          }
+          return Promise.resolve({
+            ok: true,
+            json: () =>
+              Promise.resolve({
+                route,
+                totalCount: routeCount[route] ?? 0,
+              }),
+          } as Response)
+        }
+
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([]),
+        } as Response)
+      }),
+    )
   })
 
   afterEach(() => {
@@ -37,28 +83,27 @@ describe('RecentActivityWidget', () => {
   })
 
   it('renders Recent Activity heading and subtitle', () => {
-    ;(fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) })
     render(<RecentActivityWidgetWithTheme />)
     expect(screen.getByRole('heading', { name: 'Recent Activity', level: 2 })).toBeTruthy()
-    expect(screen.getByText('Latest commits from the repository')).toBeTruthy()
+    expect(screen.getByText('User activity trends and repository history')).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'User Activity', level: 3 })).toBeTruthy()
   })
 
   it('shows loading state initially then commits when fetch succeeds', async () => {
-    ;(fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve(mockCommits),
-    })
     render(<RecentActivityWidgetWithTheme />)
     expect(screen.getByText('Loading…')).toBeTruthy()
     await waitFor(() => {
       expect(screen.getByText('feat: add Recent Activity widget')).toBeTruthy()
     })
+    expect(screen.getByRole('heading', { name: 'Recent Git Commit History', level: 3 })).toBeTruthy()
     expect(screen.getByRole('link', { name: 'feat: add Recent Activity widget' })).toBeTruthy()
     expect(screen.getByRole('link', { name: 'jgritten' })).toBeTruthy()
   })
 
   it('shows error message when fetch fails', async () => {
-    ;(fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ ok: false, status: 500 })
+    ;(fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(() =>
+      Promise.resolve({ ok: false, status: 500 } as Response),
+    )
     render(<RecentActivityWidgetWithTheme />)
     await waitFor(() => {
       expect(screen.getByText(/Could not load recent commits/)).toBeTruthy()
@@ -75,7 +120,9 @@ describe('RecentActivityWidget', () => {
         author: { ...mockCommits[0].commit.author, date: `2026-03-0${9 - i}T12:00:00Z` },
       },
     }))
-    ;(fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(five) })
+    ;(fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(() =>
+      Promise.resolve({ ok: true, json: () => Promise.resolve(five) } as Response),
+    )
     render(<RecentActivityWidgetWithTheme />)
     await waitFor(() => {
       expect(screen.getByText('Commit 0')).toBeTruthy()
@@ -84,5 +131,26 @@ describe('RecentActivityWidget', () => {
     expect(screen.getByRole('list')).toBeTruthy()
     const items = screen.getAllByRole('listitem')
     expect(items.length).toBe(5)
+  })
+
+  it('supports hiding both metric series via toggles', async () => {
+    render(<RecentActivityWidgetWithTheme />)
+    await waitFor(() => {
+      expect(screen.getByText('feat: add Recent Activity widget')).toBeTruthy()
+    })
+
+    fireEvent.click(screen.getByText('User Visits', { selector: 'button' }))
+    fireEvent.click(screen.getByText('Deployments', { selector: 'button' }))
+
+    expect(screen.getByText(/No metrics selected/)).toBeTruthy()
+  })
+
+  it('shows explicit saas settings routes in route coverage list', async () => {
+    render(<RecentActivityWidgetWithTheme />)
+    await waitFor(() => {
+      expect(screen.getByText('/saas/settings/account')).toBeTruthy()
+    })
+    expect(screen.getByText('/saas/settings/application')).toBeTruthy()
+    expect(screen.getByText('/saas/settings/client')).toBeTruthy()
   })
 })

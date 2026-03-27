@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { GitHubCommitItem } from '@/types/github'
 
-const GITHUB_COMMITS_URL =
-  'https://api.github.com/repos/jgritten/justingritten.dev/commits?per_page=5'
+const GITHUB_COMMITS_BASE_URL = 'https://api.github.com/repos/jgritten/justingritten.dev/commits'
+const COMMITS_PER_PAGE = 100
+const MAX_PAGES = 3
+const LOOKBACK_DAYS = 35
 
 export interface RecentCommit {
   id: string
@@ -36,6 +38,39 @@ function mapCommit(item: GitHubCommitItem): RecentCommit {
   }
 }
 
+function getCommitsUrl(page: number): string {
+  return `${GITHUB_COMMITS_BASE_URL}?per_page=${COMMITS_PER_PAGE}&page=${page}`
+}
+
+async function fetchRecentHistory(): Promise<RecentCommit[]> {
+  const headers = { Accept: 'application/vnd.github.v3+json' }
+  const lookbackStart = Date.now() - LOOKBACK_DAYS * 24 * 60 * 60 * 1000
+  const results: RecentCommit[] = []
+
+  for (let page = 1; page <= MAX_PAGES; page += 1) {
+    const res = await fetch(getCommitsUrl(page), { headers })
+    if (!res.ok) throw new Error(`GitHub API ${res.status}`)
+
+    const data = (await res.json()) as GitHubCommitItem[]
+    if (data.length === 0) break
+
+    const mapped = data.map(mapCommit)
+    results.push(...mapped)
+
+    const oldest = mapped[mapped.length - 1]
+    const oldestTime = oldest ? new Date(oldest.date).getTime() : Number.NaN
+    if (data.length < COMMITS_PER_PAGE) break
+    if (!Number.isNaN(oldestTime) && oldestTime < lookbackStart) break
+  }
+
+  return results
+    .filter((commit) => {
+      const timestamp = new Date(commit.date).getTime()
+      return !Number.isNaN(timestamp) && timestamp >= lookbackStart
+    })
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+}
+
 /** Fetch recent commits from the public repo (GitHub API, no auth required). */
 export function useRecentCommits(): UseRecentCommitsResult {
   const [commits, setCommits] = useState<RecentCommit[]>([])
@@ -45,15 +80,9 @@ export function useRecentCommits(): UseRecentCommitsResult {
   const fetchCommits = useCallback(() => {
     setIsLoading(true)
     setError(null)
-    fetch(GITHUB_COMMITS_URL, {
-      headers: { Accept: 'application/vnd.github.v3+json' },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`GitHub API ${res.status}`)
-        return res.json()
-      })
-      .then((data: GitHubCommitItem[]) => {
-        setCommits(data.map(mapCommit))
+    fetchRecentHistory()
+      .then((data) => {
+        setCommits(data)
       })
       .catch(setError)
       .finally(() => setIsLoading(false))

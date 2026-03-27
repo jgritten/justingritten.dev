@@ -29,6 +29,223 @@
   text-align: center;
 }
 
+.recent-activity-widget__section-title {
+  margin: 0 0 0.65rem;
+  color: var(--gray-12);
+}
+
+.recent-activity-widget__chart-section {
+  margin-bottom: 1.25rem;
+  border: 1px solid var(--gray-5);
+  border-radius: var(--radius-3);
+  background: var(--gray-2);
+  padding: 0.75rem;
+}
+
+.recent-activity-widget__timeframe {
+  display: inline-flex;
+  gap: 0.25rem;
+  background: var(--gray-3);
+  border: 1px solid var(--gray-6);
+  border-radius: 999px;
+  padding: 0.2rem;
+}
+
+.recent-activity-widget__timeframe-button {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--gray-11);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+}
+
+.recent-activity-widget__timeframe-button:hover {
+  color: var(--gray-12);
+}
+
+.recent-activity-widget__timeframe-button--active {
+  background: var(--accent-9);
+  color: white;
+}
+
+.recent-activity-widget__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.65rem;
+  margin-bottom: 0.5rem;
+}
+
+.recent-activity-widget__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  color: var(--gray-11);
+}
+
+.recent-activity-widget__legend-toggle {
+  border: 1px solid var(--gray-6);
+  background: var(--gray-3);
+  color: var(--gray-11);
+  border-radius: 999px;
+  padding: 0.22rem 0.5rem;
+  font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+}
+
+.recent-activity-widget__legend-toggle--active {
+  border-color: var(--gray-8);
+  color: var(--gray-12);
+}
+
+.recent-activity-widget__legend-dot {
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 999px;
+}
+
+.recent-activity-widget__legend-dot--visits {
+  background: var(--accent-9);
+}
+
+.recent-activity-widget__legend-dot--deployments {
+  background: var(--iris-9);
+}
+
+.recent-activity-widget__chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 9rem;
+}
+
+.recent-activity-widget__chart-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+  margin-bottom: 0.35rem;
+}
+
+.recent-activity-widget__area {
+  stroke-width: 1.5;
+}
+
+.recent-activity-widget__area--visits {
+  fill: color-mix(in srgb, var(--accent-9) 32%, transparent);
+  stroke: var(--accent-9);
+}
+
+.recent-activity-widget__area--deployments {
+  fill: color-mix(in srgb, var(--iris-9) 25%, transparent);
+  stroke: var(--iris-9);
+}
+
+.recent-activity-widget__point {
+  pointer-events: none;
+}
+
+.recent-activity-widget__point--visits {
+  fill: var(--accent-10);
+}
+
+.recent-activity-widget__point--deployments {
+  fill: var(--iris-10);
+}
+
+.recent-activity-widget__hover-zone {
+  fill: transparent;
+  cursor: pointer;
+}
+
+.recent-activity-widget__hover-line {
+  stroke: var(--gray-8);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.recent-activity-widget__x-axis {
+  margin-top: 0.25rem;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--gray-10);
+}
+
+.recent-activity-widget__no-metrics {
+  border: 1px dashed var(--gray-6);
+  border-radius: var(--radius-2);
+  padding: 1rem 0.75rem;
+  text-align: center;
+}
+
+.recent-activity-widget__bar-section {
+  margin-top: 0.75rem;
+  border-top: 1px solid var(--gray-5);
+  padding-top: 0.6rem;
+}
+
+.recent-activity-widget__bar-title {
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.recent-activity-widget__bar-list {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.recent-activity-widget__bar-row {
+  display: grid;
+  grid-template-columns: minmax(8.5rem, 12.5rem) 1fr auto;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.recent-activity-widget__bar-label {
+  color: var(--gray-11);
+  font-size: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-activity-widget__bar-track {
+  height: 0.66rem;
+  background: var(--gray-4);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.recent-activity-widget__bar-fill {
+  height: 100%;
+  min-width: 0.3rem;
+  background: linear-gradient(90deg, var(--teal-8), var(--accent-9));
+  border-radius: 999px;
+}
+
+.recent-activity-widget__bar-value {
+  color: var(--gray-12);
+  font-size: 0.75rem;
+  min-width: 1.8rem;
+  text-align: right;
+}
+
+.recent-activity-widget__commit-section {
+  margin-top: 0.6rem;
+}
+
 /* Timeline: vertical flow, same pattern as Roadmap/CICD */
 .recent-activity-widget__timeline {
   list-style: none;
@@ -172,5 +389,18 @@
 
   .recent-activity-widget__message {
     font-size: 0.875rem;
+  }
+
+  .recent-activity-widget__chart-section {
+    padding: 0.625rem;
+  }
+
+  .recent-activity-widget__timeframe {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .recent-activity-widget__x-axis {
+    font-size: 0.68rem;
   }
 }
