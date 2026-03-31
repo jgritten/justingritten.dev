@@ -175,6 +175,8 @@ describe('RecentActivityWidget', () => {
     expect(screen.getByText('Resume')).toBeTruthy()
     expect(screen.getByText('LinkedIn')).toBeTruthy()
     expect(screen.getByText('Email')).toBeTruthy()
-    expect(screen.getByText('12')).toBeTruthy()
+    await waitFor(() => {
+      expect(screen.getByText('12')).toBeTruthy()
+    })
   })
 })
