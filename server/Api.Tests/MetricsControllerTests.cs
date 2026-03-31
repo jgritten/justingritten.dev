@@ -57,6 +57,40 @@ public class MetricsControllerTests : IClassFixture<ApiWebApplicationFactory>
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    [Fact]
+    public async Task GetOverview_Week_ReturnsAggregatedDataWithDates()
+    {
+        var client = _factory.CreateClient();
+
+        await client.PostAsJsonAsync("/api/metrics/visit", new { route = "/" });
+        await client.PostAsJsonAsync("/api/metrics/visit", new { route = "/build" });
+        await client.PostAsJsonAsync("/api/metrics/visit", new { route = "/outbound/resume" });
+
+        var response = await client.GetAsync("/api/metrics/overview?period=week");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var overview = await response.Content.ReadFromJsonAsync<MetricsOverviewDto>();
+        Assert.NotNull(overview);
+        Assert.Equal("week", overview.Period);
+        Assert.NotEmpty(overview.RouteTotals);
+        Assert.NotEmpty(overview.OutboundTotals);
+        Assert.NotEmpty(overview.BucketTotals);
+        Assert.NotEmpty(overview.RouteBucketTotals);
+        Assert.Contains(overview.RouteTotals, x => x.Route == "/");
+        Assert.Contains(overview.RouteTotals, x => x.Route == "/build");
+        Assert.Contains(overview.OutboundTotals, x => x.Route == "/outbound/resume");
+    }
+
+    [Fact]
+    public async Task GetOverview_InvalidPeriod_ReturnsBadRequest()
+    {
+        var client = _factory.CreateClient();
+
+        var response = await client.GetAsync("/api/metrics/overview?period=year");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
     private sealed class VisitSummaryDto
     {
         [JsonPropertyName("route")]
@@ -64,5 +98,59 @@ public class MetricsControllerTests : IClassFixture<ApiWebApplicationFactory>
 
         [JsonPropertyName("totalCount")]
         public int TotalCount { get; set; }
+    }
+
+    private sealed class MetricRouteTotalDto
+    {
+        [JsonPropertyName("route")]
+        public string Route { get; set; } = "";
+
+        [JsonPropertyName("totalCount")]
+        public int TotalCount { get; set; }
+    }
+
+    private sealed class MetricBucketTotalDto
+    {
+        [JsonPropertyName("bucketStartUtc")]
+        public string BucketStartUtc { get; set; } = "";
+
+        [JsonPropertyName("totalCount")]
+        public int TotalCount { get; set; }
+    }
+
+    private sealed class MetricBucketRouteTotalDto
+    {
+        [JsonPropertyName("bucketStartUtc")]
+        public string BucketStartUtc { get; set; } = "";
+
+        [JsonPropertyName("route")]
+        public string Route { get; set; } = "";
+
+        [JsonPropertyName("totalCount")]
+        public int TotalCount { get; set; }
+    }
+
+    private sealed class MetricsOverviewDto
+    {
+        [JsonPropertyName("period")]
+        public string Period { get; set; } = "";
+
+        [JsonPropertyName("fromUtc")]
+        public string FromUtc { get; set; } = "";
+
+        [JsonPropertyName("toUtc")]
+        public string ToUtc { get; set; } = "";
+
+        [JsonPropertyName("routeTotals")]
+        public List<MetricRouteTotalDto> RouteTotals { get; set; } = [];
+
+        [JsonPropertyName("outboundTotals")]
+        public List<MetricRouteTotalDto> OutboundTotals { get; set; } = [];
+
+        [JsonPropertyName("bucketTotals")]
+        public List<MetricBucketTotalDto> BucketTotals { get; set; } = [];
+
+        [JsonPropertyName("routeBucketTotals")]
+        public List<MetricBucketRouteTotalDto> RouteBucketTotals { get; set; } = [];
     }
 }

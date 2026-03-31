@@ -49,6 +49,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IContactRepository, ContactRepository>();
 builder.Services.AddScoped<IMetricRepository, MetricRepository>();
+builder.Services.AddScoped<IMetricsService, MetricsService>();
 
 var emailProvider = (builder.Configuration["EMAIL_PROVIDER"] ?? "Resend").Trim();
 if (emailProvider.Equals("Resend", StringComparison.OrdinalIgnoreCase))

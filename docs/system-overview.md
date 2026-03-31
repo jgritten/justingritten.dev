@@ -41,6 +41,7 @@ What the site is and how it’s structured.
   - `Services/` – Infrastructure services (e.g. email provider adapters implementing `IContactEmailSender`)
 - **Controller and data-access policy:** Keep controllers thin. Controllers handle HTTP concerns only; all EF Core and transaction/retry behavior belongs in repositories behind interfaces. API endpoints should accept/return DTOs (not EF models) to keep front-end/back-end contracts stable.
 - **API base:** `/api/Products` (and related routes). OpenAPI available in Development.
+- **Metrics endpoints:** Route tracking writes with `POST /api/metrics/visit`. Use `GET /api/metrics/summary?route=...` for single-route totals and `GET /api/metrics/overview?period=hour|day|week|month` for one-call period-scoped dashboard hydration (routes, outbound CTA totals, and daily totals).
 - **Provider port pattern:** Contact notification delivery uses an interface-first provider pattern. `Program.cs` selects `Resend`, `Ses` (scaffold), or `NoOp` via `EMAIL_PROVIDER`, so provider changes do not require controller changes.
 - **Multi-client frontend readiness:** The API should be designed so future clients (for example an iOS app) can reuse the same backend contracts with minimal backend changes. That means stable DTO contracts, predictable error handling, and backward-compatible endpoint evolution.
 

@@ -45,9 +45,10 @@ namespace Api.Data;
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Route).IsRequired().HasMaxLength(200);
-                entity.Property(e => e.Date);
+                entity.Property(e => e.OccurredAtUtc);
                 entity.Property(e => e.Count);
-                entity.HasIndex(e => new { e.Route, e.Date }).IsUnique();
+                entity.HasIndex(e => e.OccurredAtUtc);
+                entity.HasIndex(e => new { e.Route, e.OccurredAtUtc });
             });
 
             SeedData(modelBuilder);

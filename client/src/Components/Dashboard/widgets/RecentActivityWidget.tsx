@@ -19,18 +19,24 @@ type MetricKey = 'visits' | 'deployments'
 interface RouteConfig {
   key: string
   label: string
-  path: string
+  route: string
 }
 
 const ROUTE_COVERAGE_CONFIG: RouteConfig[] = [
-  { key: 'home', label: '/', path: '/' },
-  { key: 'build', label: '/build', path: '/build' },
-  { key: 'saas-entry', label: '/saas', path: '/saas' },
-  { key: 'saas-dashboard', label: '/saas/dashboard', path: '/saas/dashboard' },
-  { key: 'saas-settings', label: '/saas/settings', path: '/saas/settings' },
-  { key: 'saas-settings-account', label: '/saas/settings/account', path: '/saas/settings/account' },
-  { key: 'saas-settings-application', label: '/saas/settings/application', path: '/saas/settings/application' },
-  { key: 'saas-settings-client', label: '/saas/settings/client', path: '/saas/settings/client' },
+  { key: 'home', label: '/', route: '/' },
+  { key: 'build', label: '/build', route: '/build' },
+  { key: 'saas-entry', label: '/saas', route: '/saas' },
+  { key: 'saas-dashboard', label: '/saas/dashboard', route: '/saas/dashboard' },
+  { key: 'saas-settings', label: '/saas/settings', route: '/saas/settings' },
+  { key: 'saas-settings-account', label: '/saas/settings/account', route: '/saas/settings/account' },
+  { key: 'saas-settings-application', label: '/saas/settings/application', route: '/saas/settings/application' },
+  { key: 'saas-settings-client', label: '/saas/settings/client', route: '/saas/settings/client' },
+]
+
+const OUTBOUND_METRIC_CONFIG: RouteConfig[] = [
+  { key: 'outbound-resume', label: 'Resume', route: '/outbound/resume' },
+  { key: 'outbound-linkedin', label: 'LinkedIn', route: '/outbound/linkedin' },
+  { key: 'outbound-email', label: 'Email', route: '/outbound/email' },
 ]
 
 const TIMEFRAME_CONFIG: Array<{ key: TimeframeKey; label: string; buckets: number; bucketMs: number }> = [
@@ -72,10 +78,25 @@ function getBucketLabel(index: number, timeframe: TimeframeKey, totalBuckets: nu
   return `${ago}d ago`
 }
 
+function normalizeBucketKey(bucketStartUtc: string): string {
+  const timestamp = new Date(bucketStartUtc).getTime()
+  if (Number.isNaN(timestamp)) return bucketStartUtc
+  return new Date(timestamp).toISOString()
+}
+
+function buildExpectedBucketStarts(fromUtc: string, timeframe: TimeframeKey): string[] {
+  const config = TIMEFRAME_CONFIG.find((item) => item.key === timeframe) ?? TIMEFRAME_CONFIG[2]
+  const fromTimestamp = new Date(fromUtc).getTime()
+  if (Number.isNaN(fromTimestamp)) return []
+  return Array.from({ length: config.buckets }, (_, index) =>
+    new Date(fromTimestamp + index * config.bucketMs).toISOString(),
+  )
+}
+
 function bucketDeploymentsByTimeframe(
   commits: Array<{ date: string }>,
   timeframe: TimeframeKey,
-): { deployments: number[]; visits: number[] } {
+): number[] {
   const config = TIMEFRAME_CONFIG.find((item) => item.key === timeframe) ?? TIMEFRAME_CONFIG[2]
   const deployments = Array.from({ length: config.buckets }, () => 0)
   const now = Date.now()
@@ -90,14 +111,38 @@ function bucketDeploymentsByTimeframe(
     if (index >= 0 && index < deployments.length) deployments[index] += 1
   }
 
-  // Use deployments as signal and generate a smooth visits trend for the UI.
-  const visits = deployments.map((count, index) => {
-    const trend = Math.round(((index + 1) / config.buckets) * 10)
-    const pulse = (index % 4) * 2
-    return count * 8 + trend + pulse
-  })
+  return deployments
+}
 
-  return { deployments, visits }
+function getBucketIndexFromTimestamp(
+  timestamp: number,
+  timeframe: TimeframeKey,
+  now: number,
+): number | null {
+  const config = TIMEFRAME_CONFIG.find((item) => item.key === timeframe) ?? TIMEFRAME_CONFIG[2]
+  const windowStart = now - config.buckets * config.bucketMs
+  if (Number.isNaN(timestamp) || timestamp < windowStart || timestamp > now) return null
+  const diff = now - timestamp
+  const indexFromEnd = Math.floor(diff / config.bucketMs)
+  const index = config.buckets - 1 - indexFromEnd
+  return index >= 0 && index < config.buckets ? index : null
+}
+
+function buildVisitSeriesFromBucketTotals(
+  bucketTotals: Array<{ bucketStartUtc: string; totalCount: number }>,
+  timeframe: TimeframeKey,
+): number[] {
+  const config = TIMEFRAME_CONFIG.find((item) => item.key === timeframe) ?? TIMEFRAME_CONFIG[2]
+  const visits = Array.from({ length: config.buckets }, () => 0)
+  const sorted = [...bucketTotals].sort(
+    (a, b) => new Date(a.bucketStartUtc).getTime() - new Date(b.bucketStartUtc).getTime(),
+  )
+  const startIndex = Math.max(0, sorted.length - config.buckets)
+  const aligned = sorted.slice(startIndex)
+  aligned.forEach((bucket, idx) => {
+    visits[idx + (config.buckets - aligned.length)] = bucket.totalCount
+  })
+  return visits
 }
 
 export function RecentActivityWidget() {
@@ -107,13 +152,16 @@ export function RecentActivityWidget() {
     visits: true,
     deployments: true,
   })
-  const [routeVisits, setRouteVisits] = useState<Record<string, number>>({})
+  const [routeBucketVisitsByStart, setRouteBucketVisitsByStart] = useState<Record<string, Record<string, number>>>({})
+  const [visitBucketTotals, setVisitBucketTotals] = useState<Array<{ bucketStartUtc: string; totalCount: number }>>([])
+  const [outboundClicks, setOutboundClicks] = useState<Record<string, number>>({})
   const { commits, isLoading, error } = useRecentCommits()
   const displayCommits = commits.slice(0, DEFAULT_COMMIT_LIMIT)
-  const chartSeries = useMemo(
-    () => bucketDeploymentsByTimeframe(commits, timeframe),
-    [commits, timeframe],
-  )
+  const chartSeries = useMemo(() => {
+    const deployments = bucketDeploymentsByTimeframe(commits, timeframe)
+    const visits = buildVisitSeriesFromBucketTotals(visitBucketTotals, timeframe)
+    return { deployments, visits }
+  }, [commits, timeframe, visitBucketTotals])
 
   const maxValue = Math.max(
     1,
@@ -132,39 +180,82 @@ export function RecentActivityWidget() {
     new Set([0, Math.floor((chartSeries.visits.length - 1) / 2), chartSeries.visits.length - 1]),
   ).filter((i) => i >= 0)
   const hasVisibleMetric = visibleMetrics.visits || visibleMetrics.deployments
-  const totalRouteVisits = Object.values(routeVisits).reduce((sum, value) => sum + value, 0)
-  const activeRouteVisits = Object.fromEntries(
-    ROUTE_COVERAGE_CONFIG.map((routeConfig) => {
-      const total = routeVisits[routeConfig.key] ?? 0
-      const active = totalRouteVisits > 0 ? Math.round((total / totalRouteVisits) * activeVisits) : 0
-      return [routeConfig.key, active]
-    }),
-  ) as Record<string, number>
-  const maxRouteVisits = Math.max(1, ...Object.values(activeRouteVisits))
+  const activeBucketStart = visitBucketTotals[activeIndex]?.bucketStartUtc
+  const hoveredRouteCounts = activeBucketStart ? routeBucketVisitsByStart[activeBucketStart] : undefined
+  const zeroRouteVisits = useMemo(
+    () => Object.fromEntries(ROUTE_COVERAGE_CONFIG.map((routeConfig) => [routeConfig.key, 0])),
+    [],
+  )
+  const displayedRouteVisits = hoveredRouteCounts ?? zeroRouteVisits
+  const maxRouteVisits = Math.max(1, ...Object.values(displayedRouteVisits))
+  const scopedDeployments = useMemo(() => {
+    const now = Date.now()
+    return commits
+      .filter((commit) => {
+        const timestamp = new Date(commit.date).getTime()
+        const bucketIndex = getBucketIndexFromTimestamp(timestamp, timeframe, now)
+        return bucketIndex === activeIndex
+      })
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  }, [activeIndex, commits, timeframe])
+  const deploymentRows = useMemo(
+    () =>
+      scopedDeployments.length >= 5
+        ? scopedDeployments
+        : [...scopedDeployments, ...Array.from({ length: 5 - scopedDeployments.length }, () => null)],
+    [scopedDeployments],
+  )
 
   useEffect(() => {
     let cancelled = false
 
-    Promise.all(
-      ROUTE_COVERAGE_CONFIG.map(async (routeConfig) => {
-        const summary = await metricsApi.getSummary(routeConfig.path)
-        return [routeConfig.key, summary.totalCount] as const
-      }),
-    )
-      .then((results) => {
+    metricsApi
+      .getOverview(timeframe)
+      .then((overview) => {
         if (cancelled) return
-        setRouteVisits(Object.fromEntries(results))
+        const outboundByPath = new Map(overview.outboundTotals.map((item) => [item.route, item.totalCount]))
+        const routeBucketsByStart: Record<string, Record<string, number>> = {}
+        const expectedBucketStarts = buildExpectedBucketStarts(overview.fromUtc, timeframe)
+        const bucketTotalsByStart = new Map(
+          overview.bucketTotals.map((bucket) => [normalizeBucketKey(bucket.bucketStartUtc), bucket.totalCount]),
+        )
+        const normalizedBuckets = (
+          expectedBucketStarts.length > 0
+            ? expectedBucketStarts
+            : [...bucketTotalsByStart.keys()].sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
+        ).map((bucketStartUtc) => ({
+          bucketStartUtc,
+          totalCount: bucketTotalsByStart.get(bucketStartUtc) ?? 0,
+        }))
+
+        for (const bucket of overview.routeBucketTotals) {
+          const bucketStart = normalizeBucketKey(bucket.bucketStartUtc)
+          routeBucketsByStart[bucketStart] ??= {}
+          const routeKey = ROUTE_COVERAGE_CONFIG.find((routeConfig) => routeConfig.route === bucket.route)?.key
+          if (!routeKey) continue
+          routeBucketsByStart[bucketStart][routeKey] = bucket.totalCount
+        }
+
+        setRouteBucketVisitsByStart(routeBucketsByStart)
+        setVisitBucketTotals(normalizedBuckets)
+        setOutboundClicks(
+          Object.fromEntries(
+            OUTBOUND_METRIC_CONFIG.map((routeConfig) => [routeConfig.key, outboundByPath.get(routeConfig.route) ?? 0]),
+          ),
+        )
       })
       .catch(() => {
         if (!cancelled) {
-          setRouteVisits({})
+          setRouteBucketVisitsByStart({})
+          setVisitBucketTotals([])
+          setOutboundClicks({})
         }
       })
 
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [timeframe])
 
   const toggleMetric = (metric: MetricKey) => {
     setVisibleMetrics((current) => ({ ...current, [metric]: !current[metric] }))
@@ -330,20 +421,90 @@ export function RecentActivityWidget() {
           <Text as="p" size="1" color="gray" className="recent-activity-widget__bar-title">
             User Visits by route ({activeLabel})
           </Text>
-          <div className="recent-activity-widget__bar-list">
-            {ROUTE_COVERAGE_CONFIG.map((routeConfig) => {
-              const count = activeRouteVisits[routeConfig.key] ?? 0
-              const width = `${Math.max(6, Math.round((count / maxRouteVisits) * 100))}%`
-              return (
-                <div className="recent-activity-widget__bar-row" key={routeConfig.key}>
-                  <span className="recent-activity-widget__bar-label">{routeConfig.label}</span>
-                  <div className="recent-activity-widget__bar-track">
-                    <div className="recent-activity-widget__bar-fill" style={{ width }} />
+          {visibleMetrics.visits ? (
+            <div className="recent-activity-widget__bar-list">
+              {ROUTE_COVERAGE_CONFIG.map((routeConfig) => {
+                const count = displayedRouteVisits[routeConfig.key] ?? 0
+                const width = `${Math.max(6, Math.round((count / maxRouteVisits) * 100))}%`
+                return (
+                  <div className="recent-activity-widget__bar-row" key={routeConfig.key}>
+                    <span className="recent-activity-widget__bar-label">{routeConfig.label}</span>
+                    <div className="recent-activity-widget__bar-track">
+                      <div className="recent-activity-widget__bar-fill" style={{ width }} />
+                    </div>
+                    <span className="recent-activity-widget__bar-value">{count}</span>
                   </div>
-                  <span className="recent-activity-widget__bar-value">{count}</span>
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
+          ) : (
+            <div className="recent-activity-widget__warning-box">
+              <Text as="p" size="1" color="gray">
+                User Visits is hidden. Enable it above to view route totals.
+              </Text>
+            </div>
+          )}
+        </div>
+
+        <div className="recent-activity-widget__bar-section" aria-label="Deployments for active time slot">
+          <Text as="p" size="1" color="gray" className="recent-activity-widget__bar-title" weight="bold">
+            Deployments ({activeLabel}: {activeDeployments} total)
+          </Text>
+          {visibleMetrics.deployments ? (
+            <div className="recent-activity-widget__deployments-list">
+              {deploymentRows.map((deployment, index) =>
+                deployment ? (
+                  <div className="recent-activity-widget__deployments-row" key={`deployment-row-${deployment.id}`}>
+                    <span className="recent-activity-widget__deployments-message">
+                      <a
+                        href={deployment.htmlUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="recent-activity-widget__deployments-link"
+                      >
+                        {deployment.message}
+                      </a>
+                    </span>
+                    <Text as="span" size="1" color="gray" className="recent-activity-widget__deployments-age">
+                      {formatRelativeTime(deployment.date)}
+                    </Text>
+                  </div>
+                ) : (
+                  <div className="recent-activity-widget__deployments-row" key={`deployment-row-empty-${index}`}>
+                    <span className="recent-activity-widget__deployments-message recent-activity-widget__deployments-message--empty">
+                      No deployment in this period
+                    </span>
+                    <Text as="span" size="1" color="gray" className="recent-activity-widget__deployments-age">
+                      -
+                    </Text>
+                  </div>
+                ),
+              )}
+            </div>
+          ) : (
+            <div className="recent-activity-widget__warning-box">
+              <Text as="p" size="1" color="gray">
+                Deployments is hidden. Enable it above to view this list.
+              </Text>
+            </div>
+          )}
+        </div>
+
+        <div className="recent-activity-widget__outbound-section" aria-label="Outbound cta clicks">
+          <Text as="p" size="1" color="gray" className="recent-activity-widget__bar-title">
+            Outbound CTA Clicks ({timeframe})
+          </Text>
+          <div className="recent-activity-widget__outbound-grid">
+            {OUTBOUND_METRIC_CONFIG.map((metric) => (
+              <div key={metric.key} className="recent-activity-widget__outbound-card">
+                <Text as="p" size="1" color="gray">
+                  {metric.label}
+                </Text>
+                <Text as="p" size="4" weight="bold">
+                  {(outboundClicks[metric.key] ?? 0).toLocaleString()}
+                </Text>
+              </div>
+            ))}
           </div>
         </div>
       </section>

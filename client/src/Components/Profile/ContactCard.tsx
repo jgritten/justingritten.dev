@@ -154,7 +154,7 @@ export function ContactCard() {
                   >
                     justin.gritten@gmail.com
                   </a>
-                  , or use the &quot;Book a 30-minute call&quot; button above.
+                  , or use the &quot;Book a 30-minute call&quot; button and pick a time that works for you.
                 </Text>
               </div>
               <div className="contact-card__row contact-card__row--split">

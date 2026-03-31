@@ -14,51 +14,15 @@ public class MetricRepository : IMetricRepository
         _context = context;
     }
 
-    public async Task<int> RecordVisitAsync(string route, DateOnly date, CancellationToken cancellationToken = default)
+    public async Task RecordVisitAsync(string route, DateTime occurredAtUtc, CancellationToken cancellationToken = default)
     {
-        var metric = await _context.VisitMetrics
-            .SingleOrDefaultAsync(x => x.Route == route && x.Date == date, cancellationToken);
-
-        if (metric is null)
+        await _context.VisitMetrics.AddAsync(new VisitMetric
         {
-            metric = new VisitMetric
-            {
-                Route = route,
-                Date = date,
-                Count = 1
-            };
-            await _context.VisitMetrics.AddAsync(metric, cancellationToken);
-        }
-        else
-        {
-            metric.Count += 1;
-        }
-
-        // Concurrent requests can race on unique (Route, Date); retry once after reload.
-        for (var attempt = 0; ; attempt++)
-        {
-            try
-            {
-                await _context.SaveChangesAsync(cancellationToken);
-                return metric.Count;
-            }
-            catch (DbUpdateException) when (attempt == 0)
-            {
-                _context.ChangeTracker.Clear();
-                metric = await _context.VisitMetrics
-                    .SingleOrDefaultAsync(x => x.Route == route && x.Date == date, cancellationToken);
-
-                if (metric is null)
-                {
-                    metric = new VisitMetric { Route = route, Date = date, Count = 1 };
-                    await _context.VisitMetrics.AddAsync(metric, cancellationToken);
-                }
-                else
-                {
-                    metric.Count += 1;
-                }
-            }
-        }
+            Route = route,
+            OccurredAtUtc = occurredAtUtc,
+            Count = 1
+        }, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<int> GetTotalForRouteAsync(string route, CancellationToken cancellationToken = default)
@@ -66,5 +30,30 @@ public class MetricRepository : IMetricRepository
         return await _context.VisitMetrics
             .Where(x => x.Route == route)
             .SumAsync(x => (int?)x.Count, cancellationToken) ?? 0;
+    }
+
+    public async Task<IReadOnlyList<(string Route, int TotalCount)>> GetTotalsByRouteAsync(
+        DateTime fromUtc,
+        DateTime toUtc,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await _context.VisitMetrics
+            .Where(x => x.OccurredAtUtc >= fromUtc && x.OccurredAtUtc <= toUtc)
+            .GroupBy(x => x.Route)
+            .Select(g => new ValueTuple<string, int>(g.Key, g.Sum(x => x.Count)))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<(DateTime OccurredAtUtc, string Route, int Count)>> GetEventsInRangeAsync(
+        DateTime fromUtc,
+        DateTime toUtc,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await _context.VisitMetrics
+            .Where(x => x.OccurredAtUtc >= fromUtc && x.OccurredAtUtc <= toUtc)
+            .Select(x => new ValueTuple<DateTime, string, int>(x.OccurredAtUtc, x.Route, x.Count))
+            .ToListAsync(cancellationToken);
     }
 }

@@ -48,24 +48,37 @@ describe('RecentActivityWidget', () => {
           } as Response)
         }
 
-        if (url.includes('/api/metrics/summary')) {
-          const route = new URL(url).searchParams.get('route') ?? '/'
-          const routeCount: Record<string, number> = {
-            '/': 20,
-            '/build': 7,
-            '/saas': 6,
-            '/saas/dashboard': 11,
-            '/saas/settings': 9,
-            '/saas/settings/account': 5,
-            '/saas/settings/application': 4,
-            '/saas/settings/client': 3,
-          }
+        if (url.includes('/api/metrics/overview')) {
           return Promise.resolve({
             ok: true,
             json: () =>
               Promise.resolve({
-                route,
-                totalCount: routeCount[route] ?? 0,
+                period: 'week',
+                fromUtc: '2026-03-03T00:00:00Z',
+                toUtc: '2026-03-09T23:59:59Z',
+                routeTotals: [
+                  { route: '/', totalCount: 20 },
+                  { route: '/build', totalCount: 7 },
+                  { route: '/saas', totalCount: 6 },
+                  { route: '/saas/dashboard', totalCount: 11 },
+                  { route: '/saas/settings', totalCount: 9 },
+                  { route: '/saas/settings/account', totalCount: 5 },
+                  { route: '/saas/settings/application', totalCount: 4 },
+                  { route: '/saas/settings/client', totalCount: 3 },
+                ],
+                outboundTotals: [
+                  { route: '/outbound/resume', totalCount: 12 },
+                  { route: '/outbound/linkedin', totalCount: 8 },
+                  { route: '/outbound/email', totalCount: 6 },
+                ],
+                bucketTotals: [
+                  { bucketStartUtc: '2026-03-03T00:00:00Z', totalCount: 5 },
+                  { bucketStartUtc: '2026-03-04T00:00:00Z', totalCount: 8 },
+                ],
+                routeBucketTotals: [
+                  { bucketStartUtc: '2026-03-04T00:00:00Z', route: '/build', totalCount: 3 },
+                  { bucketStartUtc: '2026-03-04T00:00:00Z', route: '/saas', totalCount: 2 },
+                ],
               }),
           } as Response)
         }
@@ -152,5 +165,16 @@ describe('RecentActivityWidget', () => {
     })
     expect(screen.getByText('/saas/settings/application')).toBeTruthy()
     expect(screen.getByText('/saas/settings/client')).toBeTruthy()
+  })
+
+  it('shows outbound cta click totals', async () => {
+    render(<RecentActivityWidgetWithTheme />)
+    await waitFor(() => {
+      expect(screen.getByText('Outbound CTA Clicks (week)')).toBeTruthy()
+    })
+    expect(screen.getByText('Resume')).toBeTruthy()
+    expect(screen.getByText('LinkedIn')).toBeTruthy()
+    expect(screen.getByText('Email')).toBeTruthy()
+    expect(screen.getByText('12')).toBeTruthy()
   })
 })

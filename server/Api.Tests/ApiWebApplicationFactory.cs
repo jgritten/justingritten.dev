@@ -4,16 +4,22 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
 namespace Api.Tests;
 
 /// <summary>
-/// Integration test host that uses a dedicated SQLite test database and applies migrations.
+/// Integration test host that uses a dedicated SQLite file per fixture instance and applies migrations via <c>Program</c>.
+/// Each fixture gets its own temp file so parallel test classes (xUnit default) do not contend on one database.
 /// </summary>
 public class ApiWebApplicationFactory : WebApplicationFactory<Program>
 {
-    private const string TestConnectionString = "Data Source=justingritten-test.db";
+    private readonly string _dbPath = Path.Combine(Path.GetTempPath(), $"justingritten-test-{Guid.NewGuid():N}.db");
+    private readonly string _connectionString;
+
+    public ApiWebApplicationFactory()
+    {
+        _connectionString = $"Data Source={_dbPath}";
+    }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -25,18 +31,21 @@ public class ApiWebApplicationFactory : WebApplicationFactory<Program>
                 services.Remove(descriptor);
 
             services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlite(TestConnectionString));
+                options.UseSqlite(_connectionString));
         });
     }
 
-    protected override IHost CreateHost(IHostBuilder builder)
+    public new void Dispose()
     {
-        var host = base.CreateHost(builder);
-        using (var scope = host.Services.CreateScope())
+        base.Dispose();
+        try
         {
-            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            context.Database.Migrate();
+            if (File.Exists(_dbPath))
+                File.Delete(_dbPath);
         }
-        return host;
+        catch
+        {
+            // best-effort temp file cleanup
+        }
     }
 }

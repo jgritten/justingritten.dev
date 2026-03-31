@@ -14,12 +14,12 @@ public class VisitMetric
     public required string Route { get; set; }
 
     /// <summary>
-    /// Date portion for aggregating visits (UTC).
+    /// UTC timestamp when the visit event was recorded.
     /// </summary>
-    public DateOnly Date { get; set; }
+    public DateTime OccurredAtUtc { get; set; }
 
     /// <summary>
-    /// Number of visits for the given route and date.
+    /// Number of visits represented by this event row.
     /// </summary>
     public int Count { get; set; }
 }

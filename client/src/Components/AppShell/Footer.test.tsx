@@ -1,7 +1,15 @@
-import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import { Footer } from './Footer'
+
+vi.mock('@/api', () => ({
+  metricsApi: {
+    recordVisit: vi.fn().mockResolvedValue({ message: 'ok' }),
+  },
+}))
+
+const { metricsApi } = await import('@/api')
 
 function FooterWithTheme() {
   return (
@@ -12,6 +20,10 @@ function FooterWithTheme() {
 }
 
 describe('Footer', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
   it('renders footer with contentinfo role', () => {
     render(<FooterWithTheme />)
     expect(screen.getByRole('contentinfo')).toBeTruthy()
@@ -35,5 +47,23 @@ describe('Footer', () => {
     render(<FooterWithTheme />)
     const email = screen.getByRole('link', { name: /email/i })
     expect(email.getAttribute('href')).toBe('mailto:justin.gritten@gmail.com')
+  })
+
+  it('records metric when Resume is clicked', () => {
+    render(<FooterWithTheme />)
+    fireEvent.click(screen.getByRole('link', { name: /resume/i }))
+    expect(metricsApi.recordVisit).toHaveBeenCalledWith('/outbound/resume')
+  })
+
+  it('records metric when LinkedIn is clicked', () => {
+    render(<FooterWithTheme />)
+    fireEvent.click(screen.getByRole('link', { name: /linkedin/i }))
+    expect(metricsApi.recordVisit).toHaveBeenCalledWith('/outbound/linkedin')
+  })
+
+  it('records metric when Email is clicked', () => {
+    render(<FooterWithTheme />)
+    fireEvent.click(screen.getByRole('link', { name: /email/i }))
+    expect(metricsApi.recordVisit).toHaveBeenCalledWith('/outbound/email')
   })
 })
