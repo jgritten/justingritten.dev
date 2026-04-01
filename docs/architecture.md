@@ -4,7 +4,7 @@ High-level technical architecture for justingritten.dev.
 
 ## Overview
 
-The site is a **static React SPA** (deployed to S3/CloudFront) with an optional **.NET Web API** used as a foundation for future backend features. The live production site currently serves only the frontend; the API is for local development and future hosting.
+The site is a **static React SPA** (deployed to S3/CloudFront) with a **.NET Web API** deployed alongside it (see [deployment.md](./deployment.md)). The SPA is the primary visitor surface; the API backs contact, metrics, and future authenticated features.
 
 ## Architecture diagram
 
@@ -62,7 +62,7 @@ For a human-readable map of pages and navigation (including a tree-style flow), 
 |-------|------------|---------|
 | **Frontend** | React 19, TypeScript, Vite, Radix UI | Portfolio content + demo components (see [system-overview](./system-overview.md#demos)) |
 | **Backend** | .NET 10 Web API, EF Core, SQLite | API-backed features, including contact persistence and pluggable email notifications |
-| **Hosting** | AWS S3 + CloudFront | Static site; client-only in production |
+| **Hosting** | AWS S3 + CloudFront (SPA); Elastic Beanstalk (API) | Static site + .NET API in production (see [deployment.md](./deployment.md)) |
 
 ## Data flow
 
@@ -76,11 +76,15 @@ For a human-readable map of pages and navigation (including a tree-style flow), 
 - **CORS:** API allows the React dev origins (`localhost:5173`, `localhost:3000`). If the API is later hosted on a different origin (e.g. `api.justingritten.dev`), CORS must include the frontend origin.
 - **Testing:** Client tests use Vitest and React Testing Library (see [ADR 0003](decisions/0003-testing-approach.md)); server tests will use xUnit when added.
 - **Email provider abstraction:** Contact email delivery is behind `IContactEmailSender` with provider-specific infrastructure implementations (`Resend`, `Ses`, `NoOp`) selected via `EMAIL_PROVIDER` in `Program.cs`. This keeps controller/application flow provider-agnostic and supports future provider swaps with DI/config changes only.
-- **Backend boundary pattern:** API controllers are thin and own only HTTP concerns (routing, input validation, status codes). Persistence and query logic lives in repository interfaces/implementations, and API contracts use DTOs instead of EF entities (see [ADR 0007](decisions/0007-thin-controllers-repository-and-dto-boundary.md)).
+- **Backend layering (controller → service → repository):** Controllers stay thin (HTTP only). **Application and orchestration logic** (aggregations, use-case steps, calling multiple dependencies) lives in **services** under `server/Services/` behind interfaces in `server/Interfaces/` (e.g. `IMetricsService` coordinating `IMetricRepository`). **Repositories** own persistence and EF Core only. **Infrastructure ports** (e.g. `IContactEmailSender`) are injected into whichever layer needs them—typically a **service** when a flow combines persistence and outbound calls; controllers should not accumulate business rules. New endpoints should follow this pattern; older controllers may still call a repository directly until refactored (see [ADR 0007](decisions/0007-thin-controllers-repository-and-dto-boundary.md)).
 - **Metrics API shape:** Metrics keeps focused single-route summaries (`GET /api/metrics/summary?route=...`) and also exposes an aggregate period endpoint (`GET /api/metrics/overview?period=hour|day|week|month`) so dashboard views can hydrate date-scoped route/outbound totals in one call (see [ADR 0008](decisions/0008-metrics-overview-period-endpoint.md)).
 - **API as product:** Treat the API as a reusable backend for multiple first-party clients (web SPA, future iOS app, future Android/desktop). API contracts should be client-agnostic, stable, and documented so new frontends can integrate without backend rewrites.
 - **Contract-first evolution:** Prefer explicit API versioning and consistent request/response and error envelopes to reduce client breakage as endpoints evolve.
 - **OpenAPI as integration artifact:** Keep OpenAPI accurate and publishable so typed client generation is possible for future frontends.
+- **Authentication (planned):** **Clerk** as primary hosted auth; **Supabase Auth** as documented alternative. API validates provider-issued tokens and maps to local user/tenant records (see [ADR 0009](decisions/0009-auth-observability-and-infra-choices.md)).
+- **Observability:** **AWS structured logging** (e.g. CloudWatch on EB) with correlation IDs—not a paid third-party error/APM product at portfolio scope (ADR 0009).
+- **Product metrics:** **First-party** metrics API only ([ADR 0008](decisions/0008-metrics-overview-period-endpoint.md)); no requirement for external analytics SDKs for the portfolio phase.
+- **Caching / Redis:** **Deferred**—no Upstash, ElastiCache, or Redis until multi-instance, heavy rate limiting, or similar need (ADR 0009).
 
 ## Repo layout
 

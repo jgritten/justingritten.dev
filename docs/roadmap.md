@@ -197,6 +197,7 @@ Between Phase 0 and the full Phase 1/2 SaaS work, there is an **API‑first slic
 - **Login path trigger (post-login):** After successful login, check whether the user’s email has **no client** or is **tied to a client invitation**. This branch drives the next UX (wizard vs accept-invitation); full flows implemented in Phase 2 once tenancy exists.
 - **Email verification** (optional): e.g. “Verify email” flow with token in link; document in ADR.
 - **Third-party login** (Google, then optionally Facebook): OAuth/OpenID; document in ADR and security.
+- **Hosted auth vendors (locked):** Implement **Clerk** first; keep **Supabase Auth** as the documented fallback—see [ADR 0009](decisions/0009-auth-observability-and-infra-choices.md).
 
 **Why this order:** Auth is required for “per user” and “per client” features; roles early so tenancy and support features can gate correctly; dropdown and theme make the app feel complete.
 
@@ -361,6 +362,17 @@ Prioritized in the same “later” area; add to feature list and phases when yo
 - **When you change order:** Adjust Section 3 and briefly note why (e.g. “Moved X before Y so we can demo Z”).
 - **When you lock in a decision:** Add an ADR in `docs/decisions/` and point to it from here if it affects the roadmap (e.g. “See 0004-authentication-approach.md”).
 
+## 7. Locked stack choices (reference)
+
+These are decided for the portfolio phase; details and rationale live in [ADR 0009: Authentication, observability, metrics, and deferred infra](decisions/0009-auth-observability-and-infra-choices.md).
+
+| Topic | Choice |
+|-------|--------|
+| **Hosted authentication** | **Clerk** (primary); **Supabase Auth** (backup if Clerk is replaced) |
+| **Error / APM monitoring** | **AWS structured logging + CloudWatch** on EB; no Sentry (or similar paid SaaS) at current scope |
+| **Visitor / product metrics** | **First-party** `/api/metrics/...` only ([ADR 0008](decisions/0008-metrics-overview-period-endpoint.md)) |
+| **Redis / Upstash** | **Not used** until a concrete need (e.g. multi-instance, shared rate limits, realtime scale-out) |
+
 ---
 
-*Last updated: 2025-03-06. This roadmap is a living document; implementation order may change as you iterate.*
+*Last updated: 2026-04-01. This roadmap is a living document; implementation order may change as you iterate.*

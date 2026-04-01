@@ -1,11 +1,16 @@
 ---
-description: Keep client site version in sync with every change; bump major, minor, or patch and reset lower segments when needed.
+description: Bump site version only during commit prep (one bump per commit); major, minor, or patch with reset rules.
 alwaysApply: true
 ---
 
 # Site versioning on commit
 
-If files change, the site version **must** be updated; the only question is **which** segment to bump (major, minor, or patch).
+When a commit is prepared, the site version **must** be updated **once** for that commit; the only question is **which** segment to bump (major, minor, or patch).
+
+## When agents must NOT bump the version
+
+- **Do not** change `SITE_VERSION` during ordinary implementation: features, fixes, refactors, docs, rules, or multi-step tasks—**unless** the user has explicitly asked you to **prepare a commit**, **create a commit**, or **prepare a PR** (same trigger as the `tests-before-commit` rule).
+- Avoid **stacked bumps** across a branch where nothing was committed yet: the version should advance **one step** from whatever is **currently in the repo** at commit-prep time, reflecting the **full** set of changes going into that single commit (or the PR’s intended final state).
 
 ## Where the version lives
 
@@ -13,9 +18,9 @@ If files change, the site version **must** be updated; the only question is **wh
   - `SITE_VERSION` – current semantic version as `major.minor.patch`
   - `parseSiteVersion` – helper to break it into numeric parts
 
-## When to bump (every commit)
+## When to bump (at commit prep only)
 
-On every commit that contains any file changes, **bump** `SITE_VERSION` with no exceptions (including docs-only, infra-only, workflow-only, and config-only commits). Choose exactly one:
+When the user asks for commit prep / a commit / a PR, and the change set is non-empty, **bump** `SITE_VERSION` exactly **once** for that commit. Choose exactly one segment (including docs-only, infra-only, workflow-only, and config-only commits):
 
 - **Major (X.0.0)** – Big portfolio revamp or a showcase‑ready “v1” launch. When you bump major, set minor and patch to **0** (e.g. `1.0.0`).
 - **Minor (0.Y.0)** – New sections, notable UX/layout changes, or visible feature additions. When you bump minor, set patch to **0** (e.g. `0.5.0`).

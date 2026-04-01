@@ -1,5 +1,5 @@
 ---
-description: Run client and server tests, builds, site version check (Major.Minor.Patch), and coverage evaluation before preparing commit messages or committing changes.
+description: Run client and server tests, builds, bump site version once at commit prep only, and coverage evaluation before preparing commit messages or committing changes.
 alwaysApply: true
 ---
 
@@ -10,12 +10,13 @@ This rule keeps the repo healthy by ensuring automated tests run before changes 
 ## When the user asks for a commit message or to commit changes
 
 - **Always** do the following **before** proposing a commit message or running any git commit:
-  - **Bump the site version** (see “Site version” below). If files changed, update `SITE_VERSION` in `client/src/utils/siteVersion.ts`. Choose one: **Major (X.0.0)** = big revamp or v1 launch (then set minor and patch to 0); **Minor (0.Y.0)** = new sections, notable UX, or visible features (then set patch to 0); **Patch (0.0.Z)** = bug fixes, config, deployment, docs, or other small changes—increment only the last number. After bumping, re-run client tests and client build.
+  - **Bump the site version once** (see “Site version” below)—**only in this commit-prep flow**, not during earlier implementation turns on the same uncommitted work. If files changed, update `SITE_VERSION` in `client/src/utils/siteVersion.ts` from the **current repo value** by exactly one segment: **Major (X.0.0)** = big revamp or v1 launch (then set minor and patch to 0); **Minor (0.Y.0)** = new sections, notable UX, or visible features (then set patch to 0); **Patch (0.0.Z)** = bug fixes, config, deployment, docs, or other small changes—increment only the last number. After bumping, re-run client tests and client build.
   - Run the **client** test suite (e.g. `npm test` in `client/`). All client tests must pass.
   - Run the **server** test suite (e.g. `dotnet test server/Api.Tests/Api.Tests.csproj` from repo root). All API tests must pass.
   - Run the **client** build (e.g. `npm run build` in `client/`) to ensure the app still builds.
   - Run the **server** build (e.g. `dotnet build server` from repo root) to ensure the API still builds.
   - **Evaluate changes for test coverage:** Review the set of changed/staged files (client and server). If new or modified production code was added (e.g. new API endpoints, new components, new services), consider whether corresponding tests exist or are needed. If coverage gaps are obvious, call them out and suggest adding tests before commit (or note the gap in the commit message so it can be addressed later).
+  - **Evaluate metrics capture opportunities:** The site uses **first-party** visitor and product metrics (`POST /api/metrics/visit`, overview/summary endpoints—not a third-party analytics SDK). When reviewing changes, consider whether new **meaningful user or system actions** (e.g. new routes, CTAs, auth milestones, errors worth counting) should emit or aggregate metrics. If a gap is obvious, call it out or note it in the commit message for a follow-up—same spirit as the test-coverage check, without requiring metrics on every change.
 
 ## How to respond based on test results
 
@@ -24,6 +25,7 @@ This rule keeps the repo healthy by ensuring automated tests run before changes 
   - Briefly note that client and server tests passed and builds succeeded.
   - If `SITE_VERSION` was bumped, include the version change in the commit message (e.g. in the body: “Site version X.Y.Z → X.Y.Z”); for **major** or **minor** bumps, mention the version in the commit body.
   - If the coverage evaluation identified likely gaps (e.g. new code without tests), mention them and suggest adding tests or noting the gap in the commit message.
+  - If the metrics evaluation identified worthwhile capture points that were not implemented, mention them briefly (or note follow-up in the commit message).
 
 - **If the build fails:**
   - Do **not** suggest committing until the build failure is understood.
@@ -42,7 +44,7 @@ This rule keeps the repo healthy by ensuring automated tests run before changes 
 ## Site version
 
 - **Where:** `client/src/utils/siteVersion.ts` → `SITE_VERSION` (e.g. `'0.4.0'`).
-- **When to bump:** Whenever there are relevant file changes—always bump something; choose which segment (major, minor, or patch).
+- **When to bump:** **Only** when the user asks for a commit message, a commit, or PR prep—not during other tasks. If the change set is non-empty, bump **exactly once** by one segment (major, minor, or patch) from the version **already in the file** when commit prep starts.
 - **How to bump (Major.Minor.Patch):**
   - **Major (X.0.0)** – Big portfolio revamp or showcase-ready v1 launch. **Reset:** set minor and patch to 0.
   - **Minor (0.Y.0)** – New sections, notable UX/layout changes, or visible feature additions. **Reset:** set patch to 0.

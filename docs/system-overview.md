@@ -32,14 +32,14 @@ What the site is and how it’s structured.
 
 - **Entry:** `server/Program.cs` – configures EF Core (SQLite), CORS, controllers.
 - **Structure:**
-  - `Controllers/` – Web API (e.g. `ProductsController`)
+  - `Controllers/` – Web API (e.g. `MetricsController`); HTTP routing, validation, and response mapping only
+  - `Services/` – Application services (e.g. `MetricsService`): orchestration and use-case logic between controllers and repositories; infrastructure adapters (e.g. email senders implementing `IContactEmailSender`)
   - `Data/` – `AppDbContext`
   - `DTOs/` – Request/response DTOs
-  - `Interfaces/` – e.g. `IProductRepository`
+  - `Interfaces/` – Repository contracts (e.g. `IProductRepository`), service contracts (e.g. `IMetricsService`), and other ports (e.g. `IContactEmailSender`)
   - `Models/` – Domain entities (e.g. `Product`)
-  - `Repositories/` – Implementations (e.g. `ProductRepository`)
-  - `Services/` – Infrastructure services (e.g. email provider adapters implementing `IContactEmailSender`)
-- **Controller and data-access policy:** Keep controllers thin. Controllers handle HTTP concerns only; all EF Core and transaction/retry behavior belongs in repositories behind interfaces. API endpoints should accept/return DTOs (not EF models) to keep front-end/back-end contracts stable.
+  - `Repositories/` – Persistence only (e.g. `ProductRepository`, `MetricRepository`)
+- **Layering:** Prefer **controller → service → repository**. Controllers should delegate orchestration to services; repositories should not be called from controllers for multi-step or multi-dependency flows (metrics follow this pattern). **EF Core and transaction/retry behavior** stay in repositories. API endpoints accept/return **DTOs** (not EF models). See [ADR 0007](decisions/0007-thin-controllers-repository-and-dto-boundary.md).
 - **API base:** `/api/Products` (and related routes). OpenAPI available in Development.
 - **Metrics endpoints:** Route tracking writes with `POST /api/metrics/visit`. Use `GET /api/metrics/summary?route=...` for single-route totals and `GET /api/metrics/overview?period=hour|day|week|month` for one-call period-scoped dashboard hydration (routes, outbound CTA totals, and daily totals).
 - **Provider port pattern:** Contact notification delivery uses an interface-first provider pattern. `Program.cs` selects `Resend`, `Ses` (scaffold), or `NoOp` via `EMAIL_PROVIDER`, so provider changes do not require controller changes.
@@ -47,7 +47,7 @@ What the site is and how it’s structured.
 
 ## Deployment
 
-Only the **client** is deployed: GitHub Actions builds the Vite app and syncs to S3; CloudFront serves the site. The server is not deployed to production today. See [deployment.md](./deployment.md).
+GitHub Actions deploys **both** the client (S3/CloudFront) and the **API** (Elastic Beanstalk). See [deployment.md](./deployment.md).
 
 ## Roadmap and planning
 

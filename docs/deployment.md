@@ -89,7 +89,10 @@ This is a **runbook for people who already administer your AWS account**. Puttin
 
 **Hardening note:** `GET /api/contact` returns recent messages as JSON and is currently **unauthenticated** in the API codebase. Treat that as a **known exposure** until you add auth or remove it; prefer SSH + SQLite or a future authenticated admin path for private review. Track any change in `docs/security.md` and consider an ADR if you introduce auth or remove the public listing.
 
-Add these permissions to your role's policy in IAM (create or edit the policy in the console or in a private copy; do not commit full policy JSON to the public repo) (e.g. `github-actions-deploy-justingritten-dev`). If the workflow uses a different role name, update the workflow’s `role-to-assume` or ensure the workflow role-to-assume matches your role name.
+## Observability (API)
+
+- **Approach:** Rely on **structured logging** from the .NET API and **CloudWatch Logs** log streams for the Elastic Beanstalk environment (search/filter by level, request path, and **correlation ID** once implemented per roadmap Phase 1A.5).
+- **Out of scope (for now):** Third-party error monitoring (e.g. Sentry) is **not** adopted for this repo at current budget—see [ADR 0009](decisions/0009-auth-observability-and-infra-choices.md).
 
 **EB health check (fix "100% 4xx" / unhealthy):** The API exposes **GET /health** (returns 200). Set the environment **Application health check URL** to **`/health`** in Elastic Beanstalk environment configuration. For load-balanced environments, use **Configuration** → **Load balancer** → **Processes** → **Health check path** `/health`. For single-instance, use the health check URL in environment configuration so probes do not hit `/` (which returns 404 for this API).
 

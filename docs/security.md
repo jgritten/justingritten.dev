@@ -22,11 +22,12 @@ The profile contact form **POST**s to the API (`/api/contact`). Submissions are 
 ## Backend (API)
 
 - **CORS:** The API allows specific origins (e.g. `http://localhost:5173`, `http://localhost:3000`). If the API is later exposed publicly, restrict to the actual frontend origin(s).
-- **Auth:** The current API has no authentication. When adding authenticated or sensitive endpoints, introduce proper auth (e.g. API keys, OAuth, JWT) and document it here and in [decisions/](./decisions/).
+- **Auth:** **Clerk** is the planned primary hosted identity provider for the SPA; **Supabase Auth** is the documented backup ([ADR 0009](decisions/0009-auth-observability-and-infra-choices.md)). Most routes are **unauthenticated today**; the API will validate provider-issued tokens and map identity to local users/roles when Phase 1 auth ships. **Clerk publishable keys** may appear in the client bundle by design; **Clerk secret keys** and any Supabase **service** keys belong only in server/CI config, never in `VITE_*` or committed `.env` files.
 - **Data:** SQLite (and future MSSQL) may hold user or sensitive data later; treat connection strings and credentials as secrets (config, not repo).
 - **Consistent error contracts:** Keep one standard error response shape across endpoints so different frontends (web/mobile) can handle failures consistently.
 - **Rate limiting:** Add and tune endpoint-level rate limits (especially write endpoints) to protect shared public APIs from abuse and accidental client retry storms.
 - **Request tracing:** Include request/correlation IDs in logs and error responses where appropriate to support debugging across clients.
+- **Error monitoring:** Rely on **structured logging** and **CloudWatch Logs** on the hosted API (see [ADR 0009](decisions/0009-auth-observability-and-infra-choices.md)); no third-party error SaaS at current portfolio scope.
 
 ## Deployment
 
