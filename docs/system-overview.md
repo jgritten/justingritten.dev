@@ -16,11 +16,11 @@ What the site is and how it’s structured.
 
 ## Frontend (client/)
 
-- **Entry:** `client/index.html` → `client/src/main.tsx` → `App.tsx` (React Router) → **AppShell** (menu bar, sidebar, content area) with **Dashboard** as the default view. Visitors land in the app as **Guest** with no login required (Phase 0 foundation; see [roadmap](roadmap.md)).
-- **Shell (Phase 0):** Three-section layout: (1) **Menu bar** – favicon (desktop) or hamburger (mobile) left, app name (“justingritten.dev”) centered, user dropdown (Guest / Theme settings / Sign in placeholder / GitHub link) right; (2) **Sidebar** – Dashboard, divider, Create New, Search, Settings (stickied to bottom); Create New and Search open placeholder modals; Settings opens a sub-menu (Account, Application, Client) with placeholder pages; (3) **Content** – main area driven by sidebar/route; default is Dashboard (portfolio hero + GitHub link). **Theme:** Appearance, accent, gray, radius configurable via user dropdown → Theme settings; persisted in localStorage. **Footer:** Favicon, Resume, LinkedIn, Email. **Mobile:** Hamburger opens a slide-out sidebar (icon strip + optional settings sub-menu); transitions match desktop two-column behaviour when in Settings.
+- **Entry:** `client/index.html` → `client/src/main.tsx` → `App.tsx` (React Router). **Portfolio** routes (`/`, `/build`) use **`GlobalLayout`** (tabs + content + footer). **SaaS** routes (`/saas/...`) use **`SaasAppShell`** (full menu bar, sidebar, content). Visitors land as **Guest** with no login required on the portfolio (Phase 0 foundation; see [roadmap](roadmap.md)).
+- **Portfolio shell:** **`GlobalMenuBar`** tabs (Profile, SaaS, Build & Activity), main content, **Footer**. **SaaS shell:** Menu bar (including client area placeholder), **Sidebar** (Dashboard, Create New, Search, **Settings** with Account / Application / Client under `client/src/Components/SaaS/Settings/`), modals, theme via user dropdown; persisted in localStorage. **Mobile:** Hamburger + slide-out behaviour on SaaS shell as implemented.
 - **Structure:**
   - `src/api/` – API client and product endpoints
-  - `src/components/` – React components (AppShell, MenuBar, Sidebar, Dashboard, Settings, Footer, FrontPage, ProductList, FileExplorer, etc.)
+  - `src/components/` – React components (`AppShell` legacy barrel export, `GlobalLayout`, `SaasAppShell`, MenuBar, Sidebar, Dashboard, SaaS including `SaaS/Settings`, Footer, FrontPage, ProductList, FileExplorer, etc.)
   - `src/contexts/` – Theme context (theme state + persistence)
   - `src/hooks/` – Custom hooks (e.g. `useFileNodes`, `useProducts`)
   - `src/types/` – TypeScript types

@@ -9,9 +9,11 @@ This site is a **demo hub** for Justin Gritten as a developer, plus focused prod
 
 ## Top-level structure (client SPA)
 
-- **Shell**: `AppShell` with `MenuBar`, `Sidebar`, `Footer`, and routed content.
-- **Landing route**: `/` will be the **Profile** module (showcase Justin, current work, process, roadmap, GitHub activity).
-- **Settings**: `/settings/*` (Account, Application, Client) as internal demo/settings area.
+- **Portfolio shell**: `GlobalLayout` — `GlobalMenuBar` (tabs), main content, `Footer` for `/` and `/build`.
+- **SaaS shell**: `SaasAppShell` — reuses `MenuBar`, `Sidebar`, shared `AppShell.css` for `/saas/*` (dashboard, product settings, etc.).
+- **Legacy**: `AppShell.tsx` (full shell component) is not mounted on a route today; portfolio uses `GlobalLayout` instead.
+- **Landing route**: `/` is the **Profile** module (showcase Justin, current work, process, roadmap, GitHub activity).
+- **SaaS settings**: `/saas/settings/*` (Account, Application, Client) — components under `client/src/Components/SaaS/Settings/`.
 
 ## Modules (conceptual)
 

@@ -6,9 +6,9 @@ import { Settings } from './Settings'
 describe('Settings', () => {
   it('renders nested routed content via Outlet', () => {
     render(
-      <MemoryRouter initialEntries={['/settings']}>
+      <MemoryRouter initialEntries={['/saas/settings']}>
         <Routes>
-          <Route path="/settings" element={<Settings />}>
+          <Route path="/saas/settings" element={<Settings />}>
             <Route index element={<div>Settings index content</div>} />
           </Route>
         </Routes>
@@ -18,4 +18,3 @@ describe('Settings', () => {
     expect(screen.getByText('Settings index content')).toBeTruthy()
   })
 })
-

@@ -18,4 +18,3 @@ describe('ApplicationSettings', () => {
     expect(screen.getByText(/Theme, display, and app preferences/i)).toBeTruthy()
   })
 })
-

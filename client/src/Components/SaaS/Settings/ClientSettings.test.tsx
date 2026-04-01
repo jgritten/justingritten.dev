@@ -18,4 +18,3 @@ describe('ClientSettings', () => {
     expect(screen.getByText(/Client access, affiliations, and user management/i)).toBeTruthy()
   })
 })
-

@@ -1,3 +1,4 @@
+/** Full shell with sidebar + theme modal. Not mounted in `App.tsx` today — portfolio uses `GlobalLayout`; SaaS uses `SaasAppShell`. Kept for barrel export / tests until removed or rewired. */
 import { useState, useRef, useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { MenuBar } from './MenuBar'

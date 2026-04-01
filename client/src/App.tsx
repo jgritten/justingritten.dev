@@ -12,7 +12,7 @@ import {
   AccountSettings,
   ApplicationSettings,
   ClientSettings,
-} from './Components/Settings'
+} from './Components/SaaS/Settings'
 
 function App() {
   return (

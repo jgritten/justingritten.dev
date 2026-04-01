@@ -18,4 +18,3 @@ describe('AccountSettings', () => {
     expect(screen.getByText(/Your account, profile, sign-in, and contact info/i)).toBeTruthy()
   })
 })
-

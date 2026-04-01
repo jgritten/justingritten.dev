@@ -4,9 +4,12 @@ Human-readable map of the current pages in `justingritten.dev`, how they are rea
 
 ## Global shell navigation
 
-- **App shell**
-  - Layout: `AppShell` wraps all pages with menu bar, sidebar, and footer.
-  - Behaviour: The shell is always visible; navigation is primarily via the sidebar, plus header/footer links.
+- **Portfolio shell**
+  - Layout: **`GlobalLayout`** (`GlobalMenuBar` + main content + `Footer`) wraps **`/`** and **`/build`**. No sidebar on these routes.
+- **SaaS shell**
+  - Layout: **`SaasAppShell`** reuses **`MenuBar`**, **`Sidebar`**, and shared **`AppShell.css`** under `/saas/dashboard`, `/saas/settings/*`, etc.
+- **Legacy `AppShell` component**
+  - The **`AppShell.tsx`** file (full menu + sidebar + theme modal) is **not** mounted on any route today; the portfolio moved to **`GlobalLayout`**. It remains exported for tests/barrel compatibility until removed or rewired.
 
 - **Menu bar**
   - Center: Site name (`justingritten.dev`) linking to the home/profile view.
@@ -69,13 +72,12 @@ User opens justingritten.dev
 ### `/` – Profile
 
 - **Primary ways to arrive**
-  - Default landing route (`/` index) inside `AppShell`.
-  - Clicking the site name/logo in the menu bar.
-  - Selecting the Profile/Dashboard entry in the sidebar.
+  - Default landing route (`/` index) inside **`GlobalLayout`**.
+  - Clicking the **Profile** tab in **`GlobalMenuBar`**.
 
 - **From here, you can navigate**
-  - To `/saas/dashboard` via the SaaS/Product entry in the sidebar.
-  - To `/settings/account`, `/settings/application`, or `/settings/client` via the Settings entry and submenu.
+  - To **`/saas`** via the **SaaS** tab in **`GlobalMenuBar`** (then through SaaS entry/shell to dashboard or settings).
+  - To **`/build`** via the **Build & Activity** tab.
   - To external resources (resume, LinkedIn, email, GitHub) via header/footer links.
 
 ### `/saas/dashboard` – SaaS dashboard
@@ -89,17 +91,15 @@ User opens justingritten.dev
   - Into any Settings page via the Settings entry in the sidebar.
   - Out to external links via footer/menu.
 
-### `/settings/*` – Settings pages
+### `/saas/settings/*` – SaaS settings (product)
 
 - **Primary ways to arrive**
-  - Sidebar Settings entry, which takes you to `/settings` → `/settings/account` by default.
-  - Direct deep links to `/settings/account`, `/settings/application`, or `/settings/client`.
+  - Sidebar **Settings** entry inside **`SaasAppShell`**, which takes you to `/saas/settings` → `/saas/settings/account` by default.
+  - Direct deep links to `/saas/settings/account`, `/saas/settings/application`, or `/saas/settings/client`.
 
 - **From here, you can navigate**
-  - Between settings pages using:
-    - The Settings submenu in the sidebar, and/or
-    - Tabs/links within the Settings UI (depending on implementation).
-  - Back to `/` or `/saas/dashboard` via their respective sidebar entries.
+  - Between settings pages using the Settings submenu in the SaaS sidebar and/or tabs/links within the Settings UI.
+  - Back to `/` via **GlobalMenuBar** tabs or to `/saas/dashboard` via the SaaS sidebar.
   - Out to external links via footer/menu.
 
 ## Keeping this sitemap up to date
