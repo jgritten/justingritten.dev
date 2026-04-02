@@ -8,7 +8,7 @@ Security-relevant choices and practices for justingritten.dev.
 
 ## Frontend
 
-- **No secrets in client code:** Do not put API keys or secrets in `client/` or in env vars that are baked into the build (e.g. `VITE_*`). These are visible in the built bundle.
+- **No secrets in client code:** Do not put API keys or secrets in `client/` or in env vars that are baked into the build (e.g. `VITE_*`). These are visible in the built bundle. **Exception:** Clerk’s **publishable** key is intentionally public (`VITE_CLERK_PUBLISHABLE_KEY`); it is not a secret (see [ADR 0010](decisions/0010-clerk-saas-authentication.md)).
 - **API URL:** `VITE_API_URL` is for pointing at an API base (e.g. localhost or a future public API). It is not a secret.
 
 ### Contact form (API + SQLite)
@@ -22,7 +22,7 @@ The profile contact form **POST**s to the API (`/api/contact`). Submissions are 
 ## Backend (API)
 
 - **CORS:** The API allows specific origins (e.g. `http://localhost:5173`, `http://localhost:3000`). If the API is later exposed publicly, restrict to the actual frontend origin(s).
-- **Auth:** **Clerk** is the planned primary hosted identity provider for the SPA; **Supabase Auth** is the documented backup ([ADR 0009](decisions/0009-auth-observability-and-infra-choices.md)). Most routes are **unauthenticated today**; the API will validate provider-issued tokens and map identity to local users/roles when Phase 1 auth ships. **Clerk publishable keys** may appear in the client bundle by design; **Clerk secret keys** and any Supabase **service** keys belong only in server/CI config, never in `VITE_*` or committed `.env` files.
+- **Auth:** **Clerk** backs the **SaaS** area (`/saas`) and **`GET /api/v1/me`** ([ADR 0010](decisions/0010-clerk-saas-authentication.md)); **Supabase Auth** remains the documented backup ([ADR 0009](decisions/0009-auth-observability-and-infra-choices.md)). Contact, metrics, products, and health stay **anonymous** unless separately secured. The API validates Clerk **session JWTs** via **`CLERK_FRONTEND_API`** (issuer); optional **`CLERK_AUTHORIZED_PARTIES`** enforces the **`azp`** claim. **Clerk secret keys** (if used later for Backend API calls) belong only in server/CI config, never in `VITE_*` or committed `.env` files.
 - **Data:** SQLite (and future MSSQL) may hold user or sensitive data later; treat connection strings and credentials as secrets (config, not repo).
 - **Consistent error contracts:** Keep one standard error response shape across endpoints so different frontends (web/mobile) can handle failures consistently.
 - **Rate limiting:** Add and tune endpoint-level rate limits (especially write endpoints) to protect shared public APIs from abuse and accidental client retry storms.

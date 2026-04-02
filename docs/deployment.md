@@ -13,7 +13,7 @@ How the portfolio site is built and published.
 2. **Node** – Setup Node 20 (`actions/setup-node@v6`), npm cache using `client/package-lock.json`.
 3. **Install** – `npm ci` in `client/`.
 4. **Test** – `npm run test` in `client/`. All tests must pass; the job fails and deploy is skipped if any test fails.
-5. **Build** – `npm run build` in `client/` with **`VITE_API_URL`** set to the production API URL (so the deployed site calls your API, not localhost). The workflow defaults to **`https://api.justingritten.dev`**; override via repo variable **Settings → Actions → Variables → VITE_API_URL**.
+5. **Build** – `npm run build` in `client/` with **`VITE_API_URL`** set to the production API URL (so the deployed site calls your API, not localhost). The workflow defaults to **`https://api.justingritten.dev`**; override via repo variable **Settings → Actions → Variables → VITE_API_URL**. Optional **`VITE_CLERK_PUBLISHABLE_KEY`** in the same Variables list bakes the Clerk **publishable** key into the static bundle for SaaS sign-in (see **Clerk (SaaS JWT validation)** below); it is not read from Elastic Beanstalk.
 6. **AWS** – OIDC to assume role `github-deploy-justingritten-dev` (`aws-actions/configure-aws-credentials@v6`) in `us-east-2`.
 7. **S3 upload (three passes):**
    - **Assets** – `client/dist/assets` → `s3://justingritten.dev/assets` with long cache (`max-age=31536000, immutable`).
@@ -117,6 +117,18 @@ Contact notification delivery is provider-agnostic and selected at runtime using
   - `SES_FROM_EMAIL`
   - `CONTACT_TO_EMAIL`
 - Any other `EMAIL_PROVIDER` value falls back to `NoOp` (no email send, logs only).
+
+## Clerk (SaaS JWT validation)
+
+Set on the **Elastic Beanstalk** environment (and mirror in local secrets when developing) so `GET /api/v1/me` accepts Clerk session tokens from the SPA:
+
+- **`CLERK_FRONTEND_API`** – Clerk Frontend API base URL (must match session JWT **`iss`**).
+- **`CLERK_AUTHORIZED_PARTIES`** (recommended in production) – comma-separated SPA origins, e.g. `https://www.justingritten.dev,https://justingritten.dev,http://localhost:5173`, used to validate the **`azp`** claim.
+- **`CLERK_METADATA_ADDRESS`** (optional) – override OIDC discovery URL if the default `{CLERK_FRONTEND_API}/.well-known/openid-configuration` does not work.
+
+The **GitHub Actions** build should continue to pass **`VITE_CLERK_PUBLISHABLE_KEY`** into the client build when you want Clerk enabled in production (repository **Actions variable** or secret, depending on how you inject `VITE_*` today). The publishable key is not a secret but is often set alongside other build-time vars.
+
+Details: [ADR 0010](decisions/0010-clerk-saas-authentication.md).
 
 ## Future considerations
 

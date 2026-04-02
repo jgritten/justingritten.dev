@@ -9,6 +9,9 @@ lerna-debug.log*
 
 node_modules
 client/node_modules
+
+# Vite local overrides (see client/.env.example)
+client/.env
 dist
 dist-ssr
 *.local

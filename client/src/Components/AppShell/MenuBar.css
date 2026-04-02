@@ -21,6 +21,24 @@
   justify-content: center;
   text-decoration: none;
   color: inherit;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  border-radius: var(--radius-2);
+}
+
+.menu-bar__logo:hover {
+  background: var(--gray-3);
+}
+
+.menu-bar__logo:focus-visible {
+  outline: 2px solid var(--accent-9);
+  outline-offset: 2px;
+}
+
+.menu-bar__client-trigger--mobile {
+  display: none;
 }
 
 .menu-bar__logo--desktop {
@@ -59,6 +77,10 @@
     display: none;
   }
 
+  .menu-bar__client-trigger--mobile {
+    display: flex;
+  }
+
   .menu-bar__hamburger--mobile {
     display: flex;
   }
@@ -68,6 +90,19 @@
   display: block;
   object-fit: contain;
   border-radius: 8px;
+}
+
+/* Wide “No client selected” banner asset; keep bar height, allow horizontal space */
+.menu-bar__favicon--client-placeholder-banner {
+  width: auto;
+  max-width: 11rem;
+  height: 28px;
+}
+
+@media (max-width: 768px) {
+  .menu-bar__favicon--client-placeholder-banner {
+    max-width: 7.5rem;
+  }
 }
 
 .menu-bar__center {
@@ -173,4 +208,10 @@
   .menu-bar__label {
     display: none;
   }
+}
+
+.menu-bar__clerk-user {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
 }

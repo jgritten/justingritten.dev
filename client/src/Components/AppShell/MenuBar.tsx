@@ -1,9 +1,61 @@
+import type { ReactNode } from 'react'
 import { DropdownMenu, Avatar, Text } from '@radix-ui/themes'
-import { useIsDarkTheme } from '@/contexts/ThemeContext'
 import { useSaasClient } from '@/contexts/SaasClientContext'
+import { SAAS_GUEST_CLIENT_PLACEHOLDER_LOGO } from '@/utils/saasClientAssets'
 import './MenuBar.css'
 
 const GITHUB_REPO = 'https://github.com/jgritten/justingritten.dev'
+
+function ClientSwitchDropdownContent() {
+  const { activeClient } = useSaasClient()
+  const label = activeClient?.name ?? 'Guest Client'
+
+  return (
+    <>
+      <DropdownMenu.Label>Active client</DropdownMenu.Label>
+      <DropdownMenu.Item disabled>{label}</DropdownMenu.Item>
+      <DropdownMenu.Separator />
+      <DropdownMenu.Item disabled>
+        Switch client — appears when you belong to more than one organization
+      </DropdownMenu.Item>
+    </>
+  )
+}
+
+function ClientLogoMenu({ className }: { className: string }) {
+  const { activeClient } = useSaasClient()
+  const clientLabel = activeClient?.name ?? 'Guest Client'
+  const logoSrc = activeClient?.logoUrl ?? SAAS_GUEST_CLIENT_PLACEHOLDER_LOGO
+  const isPlaceholder = !activeClient?.logoUrl
+
+  return (
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger>
+        <button
+          type="button"
+          className={className}
+          aria-label={`Client menu, ${clientLabel}`}
+        >
+          <img
+            src={logoSrc}
+            alt={isPlaceholder ? 'No client selected' : ''}
+            className={
+              isPlaceholder
+                ? 'menu-bar__favicon menu-bar__favicon--client-placeholder-banner'
+                : 'menu-bar__favicon'
+            }
+            width={isPlaceholder ? undefined : 28}
+            height={28}
+            {...(isPlaceholder ? {} : { 'aria-hidden': true })}
+          />
+        </button>
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Content align="start" className="menu-bar__dropdown">
+        <ClientSwitchDropdownContent />
+      </DropdownMenu.Content>
+    </DropdownMenu.Root>
+  )
+}
 
 function IconMenu() {
   return (
@@ -20,14 +72,13 @@ type MenuBarProps = {
   onOpenSidebar?: () => void
   /** When true (e.g. user has scrolled), menu bar can show a solid background (mobile only). */
   scrolled?: boolean
+  /** Replaces the default Guest user dropdown (e.g. Clerk `<UserButton />` on SaaS). */
+  userMenu?: ReactNode
 }
 
-export function MenuBar({ onOpenThemeSettings, onOpenSidebar, scrolled }: MenuBarProps) {
-  const isDark = useIsDarkTheme()
-  const faviconSrc = isDark ? '/favicon_white.png' : '/favicon.png'
+export function MenuBar({ onOpenThemeSettings, onOpenSidebar, scrolled, userMenu }: MenuBarProps) {
   const { activeClient } = useSaasClient()
 
-  const logoSrc = activeClient?.logoUrl ?? faviconSrc
   const title = activeClient ? `${activeClient.name} – Dashboard` : 'Dashboard'
 
   return (
@@ -36,19 +87,8 @@ export function MenuBar({ onOpenThemeSettings, onOpenSidebar, scrolled }: MenuBa
       role="banner"
     >
       <div className="menu-bar__brand">
-        <button
-          type="button"
-          className="menu-bar__logo menu-bar__logo--desktop"
-          aria-label={activeClient?.name ?? 'SaaS logo'}
-        >
-          <img
-            src={logoSrc}
-            alt={activeClient?.name ?? 'SaaS logo'}
-            className="menu-bar__favicon"
-            width={28}
-            height={28}
-          />
-        </button>
+        <ClientLogoMenu className="menu-bar__logo menu-bar__logo--desktop" />
+        <ClientLogoMenu className="menu-bar__logo menu-bar__client-trigger--mobile" />
         {onOpenSidebar && (
           <button
             type="button"
@@ -64,46 +104,48 @@ export function MenuBar({ onOpenThemeSettings, onOpenSidebar, scrolled }: MenuBa
         <span className="menu-bar__title">{title}</span>
       </div>
       <div className="menu-bar__user">
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger>
-            <button
-              type="button"
-              className="menu-bar__trigger"
-              aria-label="User menu"
-            >
-              <Avatar
-                size="2"
-                radius="full"
-                fallback="G"
-                color="gray"
-              />
-              <Text size="2" color="gray" className="menu-bar__label">
-                Guest
-              </Text>
-            </button>
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Content align="end" className="menu-bar__dropdown">
-            <DropdownMenu.Label>Signed in as Guest</DropdownMenu.Label>
-            <DropdownMenu.Separator />
-            {onOpenThemeSettings && (
-              <DropdownMenu.Item onSelect={onOpenThemeSettings}>
-                Theme settings
-              </DropdownMenu.Item>
-            )}
-            <DropdownMenu.Item disabled>
-              Sign in
-            </DropdownMenu.Item>
-            <DropdownMenu.Item asChild>
-              <a
-                href={GITHUB_REPO}
-                target="_blank"
-                rel="noopener noreferrer"
+        {userMenu ?? (
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger>
+              <button
+                type="button"
+                className="menu-bar__trigger"
+                aria-label="User menu"
               >
-                View source on GitHub
-              </a>
-            </DropdownMenu.Item>
-          </DropdownMenu.Content>
-        </DropdownMenu.Root>
+                <Avatar
+                  size="2"
+                  radius="full"
+                  fallback="G"
+                  color="gray"
+                />
+                <Text size="2" color="gray" className="menu-bar__label">
+                  Guest
+                </Text>
+              </button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content align="end" className="menu-bar__dropdown">
+              <DropdownMenu.Label>Signed in as Guest</DropdownMenu.Label>
+              <DropdownMenu.Separator />
+              {onOpenThemeSettings && (
+                <DropdownMenu.Item onSelect={onOpenThemeSettings}>
+                  Theme settings
+                </DropdownMenu.Item>
+              )}
+              <DropdownMenu.Item disabled>
+                Sign in
+              </DropdownMenu.Item>
+              <DropdownMenu.Item asChild>
+                <a
+                  href={GITHUB_REPO}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View source on GitHub
+                </a>
+              </DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
+        )}
       </div>
     </header>
   )

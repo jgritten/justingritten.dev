@@ -371,7 +371,7 @@ These are decided for the portfolio phase; details and rationale live in [ADR 00
 
 | Topic | Choice |
 |-------|--------|
-| **Hosted authentication** | **Clerk** (primary); **Supabase Auth** (backup if Clerk is replaced) |
+| **Hosted authentication** | **Clerk** (primary; SaaS + `GET /api/v1/me` — see [ADR 0010](decisions/0010-clerk-saas-authentication.md)); **Supabase Auth** (backup if Clerk is replaced) |
 | **Error / APM monitoring** | **AWS structured logging + CloudWatch** on EB; no Sentry (or similar paid SaaS) at current scope |
 | **Visitor / product metrics** | **First-party** `/api/metrics/...` only ([ADR 0008](decisions/0008-metrics-overview-period-endpoint.md)) |
 | **Redis / Upstash** | **Not used** until a concrete need (e.g. multi-instance, shared rate limits, realtime scale-out) |

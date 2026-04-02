@@ -75,6 +75,8 @@ jobs:
           # Production API URL baked into the client at build time (Vite).
           # Set repo variable VITE_API_URL in Settings → Actions → Variables to override.
           VITE_API_URL: ${{ vars.VITE_API_URL != '' && vars.VITE_API_URL || 'https://api.justingritten.dev' }}
+          # Clerk publishable key (SaaS); baked into the bundle. Not a secret. Set in repo Variables.
+          VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.VITE_CLERK_PUBLISHABLE_KEY || '' }}
 
       - name: Upload client build artifact
         uses: actions/upload-artifact@v4

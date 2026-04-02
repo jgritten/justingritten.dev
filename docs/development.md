@@ -25,6 +25,7 @@ npm run dev
 - Copy `client/.env.example` to `client/.env` if you need to override the API URL.
 - `VITE_API_URL` – optional; default is `http://localhost:5237`.
 - For production builds, set `VITE_API_URL` to `https://api.justingritten.dev` (or the active API domain).
+- **`VITE_CLERK_PUBLISHABLE_KEY`** – optional; enables Clerk on **`/saas`** (sign-in, `UserButton`, `GET /api/v1/me` demo on the dashboard). From [Clerk Dashboard](https://dashboard.clerk.com/) → your application → **API keys** → **Publishable key**. Add **`http://localhost:5173`** (and production origins) under the app’s allowed domains in Clerk.
 
 ## Backend (.NET API)
 
@@ -36,6 +37,18 @@ dotnet run --project server
 - API: **http://localhost:5237**.
 - **Solution:** Open `JustingrittenDev.sln` in Visual Studio to work on the API.
 - **OpenAPI:** Available in Development (see `Program.cs`).
+
+### Clerk (JWT validation for `/api/v1/me`)
+
+For local end-to-end checks with the React app, configure the API (user secrets or environment variables):
+
+- **`CLERK_FRONTEND_API`** – Clerk **Frontend API** URL (matches JWT **`iss`**), e.g. `https://your-app.clerk.accounts.dev`. Shown in Clerk Dashboard (often under **API keys** / instance settings).
+- **`CLERK_AUTHORIZED_PARTIES`** (optional) – comma-separated **origins** allowed for the JWT **`azp`** claim, e.g. `http://localhost:5173,https://www.justingritten.dev,https://justingritten.dev`. Recommended when testing from a real browser.
+- **`CLERK_METADATA_ADDRESS`** (optional) – only if OIDC discovery is not at `{CLERK_FRONTEND_API}/.well-known/openid-configuration` for your instance.
+
+If **`CLERK_FRONTEND_API`** is unset, **`GET /api/v1/me`** still returns **401** for any request (tests and clones without Clerk).
+
+See [ADR 0010](decisions/0010-clerk-saas-authentication.md).
 
 ### Database and migrations
 

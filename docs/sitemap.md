@@ -46,9 +46,12 @@ User opens justingritten.dev
    │  └─ Recent Activity widget
    │
    └─ /saas  (SaaS entry)
-      ├─ SaaSEntry (login / continue as guest placeholder)
-      │  ├─ "Log in (placeholder)"    → /saas/dashboard
+      ├─ SaaSEntry (Clerk sign-in when configured, or continue as guest)
+      │  ├─ After Clerk sign-in (or if already signed in) → /saas/post-sign-in
       │  └─ "Continue as Guest"       → /saas/dashboard
+      │
+      ├─ /saas/post-sign-in (post-auth step; future: invites + client picker)
+      │  └─ "Continue to dashboard"   → /saas/dashboard
       │
       └─ SaaS shell (SaasAppShell: SaaS MenuBar, Sidebar, Content)
          ├─ Main routes
@@ -79,6 +82,28 @@ User opens justingritten.dev
   - To **`/saas`** via the **SaaS** tab in **`GlobalMenuBar`** (then through SaaS entry/shell to dashboard or settings).
   - To **`/build`** via the **Build & Activity** tab.
   - To external resources (resume, LinkedIn, email, GitHub) via header/footer links.
+
+### `/saas` – SaaS entry
+
+- **Primary ways to arrive**
+  - **SaaS** tab in **`GlobalMenuBar`**.
+  - Direct link to `/saas`.
+
+- **From here, you can navigate**
+  - Clerk sign-in (when configured) → `/saas/post-sign-in` (forced redirect after OAuth).
+  - **Continue as Guest** → `/saas/dashboard`.
+  - If already signed in with Clerk, you are sent to `/saas/post-sign-in`.
+
+### `/saas/post-sign-in` – Post sign-in (SaaS)
+
+- **Primary ways to arrive**
+  - Clerk redirect after sign-in or sign-up.
+  - Automatic navigation from `/saas` when a session already exists.
+
+- **From here, you can navigate**
+  - **Continue to dashboard** → `/saas/dashboard`.
+  - **Back to SaaS entry** → `/saas`.
+  - Unsigned users are redirected to `/saas`. Without a Clerk publishable key, this route redirects to `/saas`.
 
 ### `/saas/dashboard` – SaaS dashboard
 

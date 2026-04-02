@@ -1,9 +1,13 @@
+using System.IdentityModel.Tokens.Jwt;
 using Api.Data;
 using Api.Interfaces;
 using Api.Repositories;
 using Api.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +28,65 @@ if (builder.Environment.IsProduction())
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+
+// Clerk session JWT (SaaS). When CLERK_FRONTEND_API is unset, JWT validation rejects all tokens so [Authorize] still returns 401 locally without a Clerk instance.
+var clerkFrontend = builder.Configuration["CLERK_FRONTEND_API"]?.Trim();
+var clerkMetadata = builder.Configuration["CLERK_METADATA_ADDRESS"]?.Trim();
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.MapInboundClaims = false;
+        if (string.IsNullOrEmpty(clerkFrontend))
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidateLifetime = false,
+                ValidateIssuerSigningKey = false,
+                SignatureValidator = (_, _) =>
+                    throw new SecurityTokenInvalidSignatureException(
+                        "Set CLERK_FRONTEND_API to your Clerk Frontend API URL (JWT iss) to validate session tokens."),
+            };
+        }
+        else
+        {
+            var authority = clerkFrontend.TrimEnd('/');
+            options.Authority = authority;
+            options.MetadataAddress = string.IsNullOrEmpty(clerkMetadata)
+                ? $"{authority}/.well-known/openid-configuration"
+                : clerkMetadata;
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = authority,
+                ValidateAudience = false,
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.FromMinutes(2),
+                NameClaimType = JwtRegisteredClaimNames.Sub,
+            };
+        }
+
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = context =>
+            {
+                var parties = context.HttpContext.RequestServices.GetRequiredService<IConfiguration>()["CLERK_AUTHORIZED_PARTIES"];
+                if (string.IsNullOrWhiteSpace(parties))
+                    return Task.CompletedTask;
+
+                var azp = context.Principal?.FindFirst("azp")?.Value;
+                if (string.IsNullOrEmpty(azp))
+                    return Task.CompletedTask;
+
+                var allowed = parties.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                if (allowed.Length > 0 && !allowed.Contains(azp, StringComparer.Ordinal))
+                    context.Fail("azp is not listed in CLERK_AUTHORIZED_PARTIES.");
+                return Task.CompletedTask;
+            },
+        };
+    });
+builder.Services.AddAuthorization();
 
 // Behind Nginx (EB) or CloudFront: honor X-Forwarded-Proto / X-Forwarded-For
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
@@ -120,6 +183,7 @@ if (app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

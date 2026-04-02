@@ -16,6 +16,8 @@ export default defineConfig({
     env: {
       // Predictable base URL in tests (no .env required).
       VITE_API_URL: 'http://localhost:5237',
+      // Avoid loading Clerk-dependent UI in unit tests when developer .env has a real key.
+      VITE_CLERK_PUBLISHABLE_KEY: '',
     },
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     coverage: {

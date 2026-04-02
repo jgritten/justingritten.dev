@@ -5,6 +5,8 @@ import { Sidebar } from '../AppShell/Sidebar'
 import { CreateNewModal } from '../AppShell/CreateNewModal'
 import { SearchModal } from '../AppShell/SearchModal'
 import { saasSidebarConfig } from '../AppShell/sidebarConfig'
+import { saasClerkPublishableKey } from '@/utils/saasClerk'
+import { SaasClerkUserMenu } from './SaasClerkUserMenu'
 import '../AppShell/AppShell.css'
 
 const SCROLL_THRESHOLD = 16
@@ -37,6 +39,7 @@ export function SaasAppShell() {
       <MenuBar
         onOpenSidebar={() => setSidebarOpen(true)}
         scrolled={menuBarScrolled}
+        userMenu={saasClerkPublishableKey ? <SaasClerkUserMenu /> : undefined}
       />
       <div className="saas-shell__main">
         {sidebarOpen && (

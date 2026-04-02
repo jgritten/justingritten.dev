@@ -31,3 +31,16 @@ export async function apiPost<T>(path: string, body: unknown): Promise<T> {
   }
   return res.json() as Promise<T>
 }
+
+/** GET with optional Bearer token (Clerk session JWT for protected API routes). */
+export async function apiGetWithBearer<T>(path: string, bearerToken: string | null): Promise<T> {
+  const url = getApiUrl(path)
+  const headers: Record<string, string> = {}
+  if (bearerToken) headers.Authorization = `Bearer ${bearerToken}`
+  const res = await fetch(url, { headers })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`API ${res.status}: ${text || res.statusText}`)
+  }
+  return res.json() as Promise<T>
+}
