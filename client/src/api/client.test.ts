@@ -1,5 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { getApiUrl, apiGet, apiGetWithBearer } from './client'
+import {
+  getApiUrl,
+  apiGet,
+  apiGetWithBearer,
+  apiPostWithBearer,
+  apiPutWithBearer,
+  apiPostWithBearerNoContent,
+} from './client'
 
 // Base URL is set in vitest.config env (VITE_API_URL); API_BASE is read at module load.
 describe('getApiUrl', () => {
@@ -80,6 +87,78 @@ describe('apiGetWithBearer', () => {
       'http://localhost:5237/api/v1/me',
       expect.objectContaining({
         headers: {},
+      })
+    )
+  })
+})
+
+describe('apiPostWithBearer and apiPutWithBearer', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn())
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('apiPostWithBearer sends JSON body and Authorization', async () => {
+    ;(fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      text: () => Promise.resolve('{"clientId":"a","name":"Acme"}'),
+    })
+    const result = await apiPostWithBearer<{ clientId: string; name: string }>(
+      '/api/v1/Tenancy/clients',
+      { name: 'Acme' },
+      'jwt'
+    )
+    expect(result).toEqual({ clientId: 'a', name: 'Acme' })
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:5237/api/v1/Tenancy/clients',
+      expect.objectContaining({
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer jwt',
+        },
+        body: JSON.stringify({ name: 'Acme' }),
+      })
+    )
+  })
+
+  it('apiPutWithBearer sends JSON and resolves on 204', async () => {
+    ;(fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      status: 204,
+      text: () => Promise.resolve(''),
+    })
+    await apiPutWithBearer(
+      '/api/v1/Tenancy/preferences',
+      { defaultClientId: null, skipHubWhenDefaultAvailable: false },
+      'jwt'
+    )
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:5237/api/v1/Tenancy/preferences',
+      expect.objectContaining({
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer jwt',
+        },
+      })
+    )
+  })
+
+  it('apiPostWithBearerNoContent POSTs without body', async () => {
+    ;(fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      text: () => Promise.resolve(''),
+    })
+    await apiPostWithBearerNoContent('/api/v1/Tenancy/invitations/x/accept', 'jwt')
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:5237/api/v1/Tenancy/invitations/x/accept',
+      expect.objectContaining({
+        method: 'POST',
+        headers: { Authorization: 'Bearer jwt' },
       })
     )
   })

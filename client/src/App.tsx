@@ -29,7 +29,7 @@ function SaasRoutesLayout() {
   return (
     <ClerkProvider
       publishableKey={saasClerkPublishableKey}
-      // Post-auth step before dashboard (future: invites + client picker). OAuth otherwise defaults to "/".
+      // Post-auth workspace hub (invites, clients, Create Client) before dashboard; optional default-client skip.
       signInForceRedirectUrl="/saas/post-sign-in"
       signUpForceRedirectUrl="/saas/post-sign-in"
       signInFallbackRedirectUrl="/saas/post-sign-in"

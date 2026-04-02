@@ -13,7 +13,7 @@ The roadmap and [ADR 0009](0009-auth-observability-and-infra-choices.md) lock **
 1. **Client (`/saas`)**  
    - Wrap SaaS routes with **`ClerkProvider`** from `@clerk/react` when `VITE_CLERK_PUBLISHABLE_KEY` is set.  
    - **`SaasEntry`** embeds Clerk `<SignIn />` or offers **Continue as Guest** (placeholder `guest-client` in `SaasClientContext`).  
-   - After Clerk sign-in, **`/saas/post-sign-in`** is the forced redirect target (not the dashboard): it syncs demo **`SaasClientContext`** from the Clerk user and is the planned home for pending invites and multi-client selection (roadmap Phase 2); today it offers an explicit **Continue to dashboard** CTA.  
+   - After Clerk sign-in, **`/saas/post-sign-in`** is the forced redirect target (not the dashboard): it loads the **tenancy workspace** from **`/api/v1/Tenancy/workspace`** and drives **`SaasClientContext`** from the chosen or created client ([ADR 0011](0011-multi-tenant-clients-and-workspace-hub.md)); with API errors it can fall back to a demo **Continue to dashboard** path.  
    - **`SaasAppShell`** passes **`UserButton`** into **`MenuBar`** via an optional `userMenu` slot when Clerk is configured.
 
 2. **API**  

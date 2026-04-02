@@ -18,8 +18,8 @@ This doc is the **single source of truth** for feature planning and “memory”
 - **User login:** Username/password; email verification; optional third-party logins (Google, Facebook, etc.).
 - **Guest login (default entry for now):** To accommodate **recruiters and other quick visitors**, a **Guest** login is available and is the **default way to view the site** initially. Every guest is treated as a user of the **same default client** you set up (a single shared “demo” client). This lets casual users get into the site quickly, see what’s there, and **dig deeper only if they wish** (e.g. sign up or log in for full access). Rate limits and other guest-specific behaviour (e.g. doc gen by IP) apply to this path.
 - **Login path trigger (two cases—not account creation vs returning):**
-  - **First-time / no client (e.g. cold-call or new account):** User has no client. Show modal: would they like to go through the **Client Creation wizard**? Wizard (modal) guides client creation and ends with them **landing on the dashboard of their new client**. If their email is tied to a **pending invitation** instead, ask to **accept the invitation**; accepting grants the **assigned role** and **access** to that client’s data.
-  - **Returning user (already has account):** User simply logs in. Then a **condition check**: Does the user have **multiple clients**? If **yes** → show a **modal: “Please choose a client”** → user picks one → go to that client’s dashboard. If **one client** → go **directly to that client’s dashboard** (no modal). If the returning user has a **new (pending) invitation** to another client, they must have the **opportunity to accept that invitation**; after that, they **choose which client** to use and land on that client’s dashboard (so: accept new invitation if desired, then “choose a client” including the newly accepted one).
+  - **First-time / no client (e.g. cold-call or new account):** User has no client. From the **post-sign-in hub** (`/saas/post-sign-in`), offer **Create Client** (opens the **Client Creation wizard**). The wizard ends with them **landing on the dashboard of their new client**. If their email has a **pending invitation**, show it on the same hub and let them **accept** or **decline**; accepting grants the **assigned role** and **access** to that client’s data.
+  - **Returning user (already has account):** After sign-in, land on the **post-sign-in hub** (workspace launcher), not straight into the dashboard—so first-time and returning users both see **invitations**, **client list**, and **Create Client** before entering a tenant. **Optional acceleration:** If the user has set a **default client** and **“skip hub when default is available”**, they may be sent **directly** to that client’s dashboard (otherwise **even a single membership** stays on the hub until they choose **Open** or change preference). **Multiple clients:** User picks a client (or uses default per preference), can **set or clear default client** from the hub, then opens that client’s dashboard. **New pending invitation:** Same hub surfaces **accept/decline**, then **choose which client** to open (including the newly accepted client).
 - **Current client context and multi-client:** The app treats the user with a clear **current Client** in mind. If the user is in **multiple clients**, they have a **means to switch** (e.g. from menu bar or sidebar). The same user may be e.g. **Manager** for one client and **Associate** for another; **permissions and application access must change accordingly** when switching. A user’s **permissions and access must be validated before any data can be accessed** (authorization on every data access).
 - **Client (tenant) creation:** Users can be grouped under a **Client** with:
   - Shared objects: head office location, user groups, permissions.
@@ -75,15 +75,15 @@ This doc is the **single source of truth** for feature planning and “memory”
 | Area | Feature | Notes |
 |------|---------|------|
 | **Auth** | Guest login (default entry) | Default way to view site; all guests use same default client; recruiters/casual visitors can explore without signing in |
-| **Auth** | Username/password login | Core flow for recruiters to see |
+| **Auth** | Username/password login | Optional later; **Clerk** is the primary SaaS path today ([ADR 0010](decisions/0010-clerk-saas-authentication.md)) |
 | **Auth** | Email verification | Optional; document approach (e.g. token in link, rate limits) |
 | **Auth** | Third-party login | Google, Facebook, etc.; document OAuth/OpenID choice |
-| **Auth** | Login path trigger | After login: first-time/no client (wizard or accept invitation) vs returning (choose client or go straight to dashboard) |
+| **Auth** | Login path trigger | After Clerk sign-in: **post-sign-in hub** (invites, client list, Create Client); optional default client + skip-hub preference; no forced auto-dashboard for single-client users unless they opt in |
 | **Tenancy** | Default client for guests | Single preconfigured client; all Guest users are scoped to this client for demo/exploration |
 | **Tenancy** | Client (tenant) model | Create client; associate users to client |
 | **Tenancy** | Client Creation wizard | Modal wizard for no-client users; create client then land on that client’s dashboard |
 | **Tenancy** | Client invitation flow | Accept invitation → join client with assigned role and permissions (first-time or returning with new invitation) |
-| **Tenancy** | Returning user: choose client | If multiple clients → modal “Please choose a client”; if one client → go directly to that client’s dashboard |
+| **Tenancy** | Returning user: choose client | Hub lists memberships; user opens a client or sets **default client**; optional **skip hub** when default exists—**not** an automatic single-client redirect unless user prefers it |
 | **Tenancy** | Returning user: new invitation | If returning user has pending invitation, opportunity to accept it, then choose which client to open (including newly accepted) |
 | **Tenancy** | Current client context | App always has a “current Client”; all data and UI scoped to current client |
 | **Tenancy** | Switch client (multi-client) | If user is in multiple clients, UI to switch; role and access differ per client |
@@ -176,8 +176,8 @@ Between Phase 0 and the full Phase 1/2 SaaS work, there is an **API‑first slic
 - **Deployment target:** Deploy the existing API project to **AWS Elastic Beanstalk** as the first real backend environment (e.g. `justingritten-api-dev`). Configure environment variables for database and email, and verify that the SPA can reach the EB URL over HTTPS.
 - **Client wiring – Contact form:** Update the portfolio `ContactCard` to send submissions to `POST /api/contact` via a small API client helper. Reflect submission states in the UI (`idle` → `submitting` → `success`/`error`), while keeping the “email me directly” instructions as a fallback when the API is unavailable.
 - **Client wiring – Visitor counter:** Add a small visitor counter on the profile/landing page that calls `POST /api/metrics/visit` on first load (debounced) and displays counts from `GET /api/metrics/summary`. If the API fails, the widget should degrade gracefully (e.g. hide itself or show a subtle “metrics unavailable” message).
-- **Status:** This phase is the **current focus** when prioritising backend/API work. Later phases (auth, tenancy, realtime) build on this API rather than replacing it.
-- **Current checkpoint (March 2026):** Contact form persistence + live email notifications are now working in production using a provider-agnostic email port (`IContactEmailSender`) with `Resend` active and `Ses` scaffolded for future swap.
+- **Status:** Core API slice is **shipped**; **Clerk** for `/saas` + **JWT validation** on protected routes is **shipped** ([ADR 0010](decisions/0010-clerk-saas-authentication.md)). **Phase 2** (tenancy APIs + hub UX) is the **current focus** for SaaS demo depth.
+- **Current checkpoint (April 2026):** Contact + metrics + EB deploy + Clerk + `GET /api/v1/me` + forced redirect to **`/saas/post-sign-in`** (workspace hub shell before dashboard). Tenancy entities and hub wiring are in progress per [ADR 0011](decisions/0011-multi-tenant-clients-and-workspace-hub.md).
 
 ##### Email follow-up TODOs (capture for next pass)
 
@@ -188,29 +188,33 @@ Between Phase 0 and the full Phase 1/2 SaaS work, there is an **API‑first slic
 - Add integration tests for provider selection via `EMAIL_PROVIDER` in `Program.cs` composition root.
 
 - **Guest session:** Support **Guest** as an explicit session type (no credentials; optional token or session cookie for “current client = default client”). Guest uses the **default client** for all scoped data; rate limits (e.g. doc gen) by IP. Provide a way to **upgrade** to full user (sign up / log in) when the visitor wants to dig deeper.
-- **Username/password login** (API: login endpoint, JWT or session; client: login page, token storage, protected routes).  
-  ADR + `docs/security.md` update.
+- **SaaS authentication (done for demo path):** **Clerk** on `/saas` with **`ClerkProvider`**, **`/saas/post-sign-in`** as post-auth hub (not auto-dashboard), and **API JWT** validation for Clerk session tokens — see [ADR 0010](decisions/0010-clerk-saas-authentication.md).
+- **Username/password login** (first-party API login, optional later): Only if you add a non-Clerk path; would need login endpoint, token storage, ADR + `docs/security.md`.
 - **Account Settings** (user info, address) and **Application Settings** (theme) + **Logout** in the username dropdown.  
   Reuse shell from Phase 0.
 - **Theme (Application Settings):** Full Radix theming (dark/light, colours, fonts, etc.) editable and **persisting between sessions** (e.g. CSS variables + localStorage or API). ADR for theme approach.
 - **Roles (foundation):** Introduce **SaaS roles** (e.g. User, Support, Admin) and **client roles** (e.g. per-client roles for permissions). Auth and API must know role for impersonation and support CRUD later.
-- **Login path trigger (post-login):** After successful login, check whether the user’s email has **no client** or is **tied to a client invitation**. This branch drives the next UX (wizard vs accept-invitation); full flows implemented in Phase 2 once tenancy exists.
+- **Login path trigger (post-login):** **Done (shell):** Clerk sign-in always lands on **`/saas/post-sign-in`** first. **In progress (data):** Hub loads **memberships, invitations, preferences** from tenancy API ([ADR 0011](decisions/0011-multi-tenant-clients-and-workspace-hub.md)); Create Client wizard and accept/decline complete the flow.
 - **Email verification** (optional): e.g. “Verify email” flow with token in link; document in ADR.
 - **Third-party login** (Google, then optionally Facebook): OAuth/OpenID; document in ADR and security.
-- **Hosted auth vendors (locked):** Implement **Clerk** first; keep **Supabase Auth** as the documented fallback—see [ADR 0009](decisions/0009-auth-observability-and-infra-choices.md).
+- **Hosted auth vendors (locked):** **Clerk** implemented for SaaS; **Supabase Auth** remains documented fallback—see [ADR 0009](decisions/0009-auth-observability-and-infra-choices.md).
+
+**Phase 1 SaaS auth checkpoint:** Clerk + JWT + post-sign-in hub route are **complete** for the portfolio demo. Remaining Phase 1 items (guest session typing, first-party credentials, email verification, full roles matrix) can proceed in parallel with Phase 2 tenancy or stay queued.
 
 **Why this order:** Auth is required for “per user” and “per client” features; roles early so tenancy and support features can gate correctly; dropdown and theme make the app feel complete.
 
 ### Phase 2: SaaS - Tenancy (clients)
 
-- **Client (tenant) entity** and API (create client, assign users to client).  
-  ADR for multi-tenancy model.
-- **Login path flows:**  
-  - **First-time / no client:** If user has no client, show modal: “Would you like to create a client?” → **Client Creation wizard** (modal) → land on **dashboard of new client**. If user has a **pending invitation**, ask to **accept**; on accept, join that client with **assigned role** and **access**.  
-  - **Returning user:** After login, run a **condition check**. If user has **multiple clients** → show **modal: “Please choose a client”** → user selects one → go to that client’s dashboard. If **one client** → go **directly** to that client’s dashboard (no modal). If returning user has a **new (pending) invitation**, give them the **option to accept it**, then **choose which client** to open (including the newly accepted client if they accepted) and land on that client’s dashboard.
+- **Client (tenant) entity** and API (create client, memberships, invitations, user workspace preferences).  
+  ADR: [0011-multi-tenant-clients-and-workspace-hub.md](decisions/0011-multi-tenant-clients-and-workspace-hub.md).
+- **Post-sign-in workspace hub (`/saas/post-sign-in`):** Full-screen **launcher** (not only a small modal): **pending invitations** (accept/decline), **your clients** (open dashboard, **set/clear default client**), **Create Client** → **Client Creation wizard** (modal or stepped UI). Same hub for first-time and returning users so nothing is “silent auto-enter.”
+- **Default client + optional skip:** Persist per Clerk user (API): **default client id** and **skip hub when default is available**. If skip is on and default resolves, user may go **straight to that client’s dashboard** after sign-in; otherwise **always show the hub** (including when the user has **exactly one** membership—no forced auto-redirect).
+- **Login path flows (aligned with hub):**  
+  - **First-time / no client:** Hub shows **Create Client**; wizard completes → **dashboard of new client**. **Pending invitation** on hub → **accept** or **decline** → then choose client if needed.  
+  - **Returning user:** Hub lists **memberships** and **invitations**; user **opens** a client or relies on **default + skip** preference. **Multiple clients:** pick client or default; **menu bar switch client** when >1 membership (see below).
 - **Current client context:** App always has a **current Client** for the logged-in user. All data and UI (sidebar, dashboard, search, etc.) are **scoped to current client**. Store current client in session/state; APIs receive client context (e.g. header or claim).
 - **Multi-client and switch client:** If user is a member of **multiple clients**, provide a **switch-client** control (e.g. client name/icon in menu bar or sidebar). On switch, **permissions and application access update** to that client and the user’s **role in that client** (e.g. Manager in one, Associate in another).
-- **Multi-client membership — detailed UX (implement with tenancy / post–Clerk sync; not in first auth-only slice):** After a **successful sign-in**, load the user’s **client memberships** and **pending invitations** from the API. Offer **accept/decline** for pending invites; offer **choosing an existing client** when multiple memberships apply. If there are **no pending invites** and the user has **exactly one** client, **skip** the chooser and land on that client’s dashboard. In the **SaaS menu bar**, to the **right of the client logo**, show a **Switch client** control when the user has **more than one** client they can access (replaces or augments the generic “switch” wording above).
+- **Multi-client membership — menu bar:** To the **right of the client logo**, show a **Switch client** control when the user has **more than one** client they can access.
 - **Authorization on data access:** **Validate user permissions for current client and role before any data is returned or action allowed** (API and, where needed, UI). No data access without passing this check.
 - **Shared data per client:** head office, user groups, permissions (model + API + UI where needed). Client roles drive what each user can do within the client.
 - **Client admin:** feature flags per client (enable/disable features); letterhead/footer for document generation.  
@@ -299,10 +303,10 @@ Use this checklist when evaluating if a new frontend client can integrate quickl
 ### 5a. Already reflected above
 
 - **Guest login (default entry)** → Stated goals + Phase 0 (Guest as default; default client) + Phase 1 (Guest session, upgrade path to sign up / log in). All guests use same default client; rate limits e.g. by IP.
-- **Login path trigger** → Stated goals + Phase 1 (post-login check) + Phase 2 (first-time: wizard or accept invitation; returning: choose client or go straight to dashboard).
-- **Client Creation wizard** → Phase 2 (modal for no-client users; land on new client dashboard).
-- **Client invitation flow** → Phase 2 (accept → role + permissions; applies to first-time and returning users with new invitation).
-- **Returning user: choose client** → Phase 2 (multiple clients = “Please choose a client” modal; one client = direct to dashboard).
+- **Login path trigger** → Stated goals + Phase 1 (Clerk → `/saas/post-sign-in` hub shell) + Phase 2 (hub data: memberships, invites, preferences; wizard; optional default + skip).
+- **Client Creation wizard** → Phase 2 (from hub **Create Client**; land on new client dashboard).
+- **Client invitation flow** → Phase 2 (accept/decline on hub → role + permissions).
+- **Returning user: choose client** → Phase 2 (hub + default client preference; optional skip-hub; **not** mandatory auto-redirect for single client).
 - **Returning user: new invitation** → Phase 2 (option to accept pending invitation, then choose which client to open).
 - **Current client context + switch client + per-client role** → Phase 2 (current client in state; switch UI; permissions update by client/role).
 - **Authorization on data access** → Phase 2 (validate permissions before any data/action).
@@ -378,4 +382,4 @@ These are decided for the portfolio phase; details and rationale live in [ADR 00
 
 ---
 
-*Last updated: 2026-04-01. This roadmap is a living document; implementation order may change as you iterate.*
+*Last updated: 2026-04-02. This roadmap is a living document; implementation order may change as you iterate.*

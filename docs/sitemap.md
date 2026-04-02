@@ -50,7 +50,7 @@ User opens justingritten.dev
       │  ├─ After Clerk sign-in (or if already signed in) → /saas/post-sign-in
       │  └─ "Continue as Guest"       → /saas/dashboard
       │
-      ├─ /saas/post-sign-in (post-auth step; future: invites + client picker)
+      ├─ /saas/post-sign-in (post-auth workspace hub: invites, clients, Create Client wizard, default client)
       │  └─ "Continue to dashboard"   → /saas/dashboard
       │
       └─ SaaS shell (SaasAppShell: SaaS MenuBar, Sidebar, Content)
@@ -101,8 +101,12 @@ User opens justingritten.dev
   - Automatic navigation from `/saas` when a session already exists.
 
 - **From here, you can navigate**
-  - **Continue to dashboard** → `/saas/dashboard`.
+  - **Open dashboard** for a chosen client → `/saas/dashboard` (sets current tenant in `SaasClientContext`).
+  - **Create client** (wizard) → creates a tenant via API, then dashboard for the new client.
+  - **Accept / decline invitations** (when the API lists pending invites for your JWT email).
+  - **Set default client** and optional **skip this page next time** when a default is valid (preference stored in API).
   - **Back to SaaS entry** → `/saas`.
+  - If the tenancy API is unavailable: **Retry**, **Continue to dashboard (demo)** with Clerk user as placeholder context, or back to `/saas`.
   - Unsigned users are redirected to `/saas`. Without a Clerk publishable key, this route redirects to `/saas`.
 
 ### `/saas/dashboard` – SaaS dashboard

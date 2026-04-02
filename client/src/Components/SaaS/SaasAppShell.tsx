@@ -40,6 +40,7 @@ export function SaasAppShell() {
         onOpenSidebar={() => setSidebarOpen(true)}
         scrolled={menuBarScrolled}
         userMenu={saasClerkPublishableKey ? <SaasClerkUserMenu /> : undefined}
+        clerkTenancyEnabled={Boolean(saasClerkPublishableKey)}
       />
       <div className="saas-shell__main">
         {sidebarOpen && (

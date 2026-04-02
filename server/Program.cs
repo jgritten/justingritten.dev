@@ -113,6 +113,8 @@ builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IContactRepository, ContactRepository>();
 builder.Services.AddScoped<IMetricRepository, MetricRepository>();
 builder.Services.AddScoped<IMetricsService, MetricsService>();
+builder.Services.AddScoped<ITenantRepository, TenantRepository>();
+builder.Services.AddScoped<ITenancyService, TenancyService>();
 
 var emailProvider = (builder.Configuration["EMAIL_PROVIDER"] ?? "Resend").Trim();
 if (emailProvider.Equals("Resend", StringComparison.OrdinalIgnoreCase))
@@ -177,11 +179,9 @@ app.UseForwardedHeaders();
 
 app.UseCors("AllowReactApp");
 
-// TLS terminates at CloudFront/ALB; Kestrel is HTTP-only on EB — skip redirect to avoid warnings and mis-detection
-if (app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-}
+// Skip UseHttpsRedirection: EB/CloudFront terminate TLS (Kestrel is HTTP-only in prod). Local `http` profile is
+// HTTP-only too — enabling redirect here logs "Failed to determine the https port" and is unnecessary for the SPA
+// calling VITE_API_URL (e.g. http://localhost:5237). Use launch profile `https` if you need local TLS.
 
 app.UseAuthentication();
 app.UseAuthorization();

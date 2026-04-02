@@ -3,6 +3,7 @@ using System;
 using Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260402201656_OneOwnerPerTenantIndex")]
+    partial class OneOwnerPerTenantIndex
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.3");
@@ -57,7 +60,7 @@ namespace Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ContactMessages", (string)null);
+                    b.ToTable("ContactMessages");
                 });
 
             modelBuilder.Entity("Api.Models.Product", b =>
@@ -105,7 +108,7 @@ namespace Api.Migrations
 
                     b.HasIndex("IsActive");
 
-                    b.ToTable("Products", (string)null);
+                    b.ToTable("Products");
 
                     b.HasData(
                         new
@@ -253,7 +256,7 @@ namespace Api.Migrations
 
                     b.HasIndex("IsDeleted");
 
-                    b.ToTable("TenantClients", (string)null);
+                    b.ToTable("TenantClients");
                 });
 
             modelBuilder.Entity("Api.Models.TenantInvitation", b =>
@@ -287,7 +290,7 @@ namespace Api.Migrations
 
                     b.HasIndex("InviteeEmailNormalized", "Status");
 
-                    b.ToTable("TenantInvitations", (string)null);
+                    b.ToTable("TenantInvitations");
                 });
 
             modelBuilder.Entity("Api.Models.TenantMembership", b =>
@@ -316,8 +319,6 @@ namespace Api.Migrations
 
                     b.HasIndex("ClerkUserId");
 
-                    b.HasIndex("TenantClientId");
-
                     b.HasIndex("TenantClientId")
                         .IsUnique()
                         .HasDatabaseName("IX_TenantMemberships_OneOwnerPerClient")
@@ -326,7 +327,7 @@ namespace Api.Migrations
                     b.HasIndex("ClerkUserId", "TenantClientId")
                         .IsUnique();
 
-                    b.ToTable("TenantMemberships", (string)null);
+                    b.ToTable("TenantMemberships");
                 });
 
             modelBuilder.Entity("Api.Models.TenantUserPreference", b =>
@@ -345,7 +346,7 @@ namespace Api.Migrations
 
                     b.HasKey("ClerkUserId");
 
-                    b.ToTable("TenantUserPreferences", (string)null);
+                    b.ToTable("TenantUserPreferences");
                 });
 
             modelBuilder.Entity("Api.Models.VisitMetric", b =>
@@ -371,7 +372,7 @@ namespace Api.Migrations
 
                     b.HasIndex("Route", "OccurredAtUtc");
 
-                    b.ToTable("VisitMetrics", (string)null);
+                    b.ToTable("VisitMetrics");
                 });
 
             modelBuilder.Entity("Api.Models.TenantInvitation", b =>

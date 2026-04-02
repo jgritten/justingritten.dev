@@ -2,11 +2,13 @@ import type { ReactNode } from 'react'
 import { DropdownMenu, Avatar, Text } from '@radix-ui/themes'
 import { useSaasClient } from '@/contexts/SaasClientContext'
 import { SAAS_GUEST_CLIENT_PLACEHOLDER_LOGO } from '@/utils/saasClientAssets'
+import { useTenantWorkspace } from '@/hooks/useTenantWorkspace'
+import { ClerkTenantClientSwitchMenuContent } from '@/Components/SaaS/ClerkTenantClientSwitchMenu'
 import './MenuBar.css'
 
 const GITHUB_REPO = 'https://github.com/jgritten/justingritten.dev'
 
-function ClientSwitchDropdownContent() {
+function GuestClientSwitchDropdownContent() {
   const { activeClient } = useSaasClient()
   const label = activeClient?.name ?? 'Guest Client'
 
@@ -22,7 +24,47 @@ function ClientSwitchDropdownContent() {
   )
 }
 
-function ClientLogoMenu({ className }: { className: string }) {
+function ClientLogoMenuWithClerk({ className }: { className: string }) {
+  const { activeClient } = useSaasClient()
+  const tenant = useTenantWorkspace()
+  const clientLabel = activeClient?.name ?? 'Guest Client'
+  const logoSrc = activeClient?.logoUrl ?? SAAS_GUEST_CLIENT_PLACEHOLDER_LOGO
+  const isPlaceholder = !activeClient?.logoUrl
+
+  return (
+    <DropdownMenu.Root
+      onOpenChange={(open) => {
+        if (open) void tenant.refresh()
+      }}
+    >
+      <DropdownMenu.Trigger>
+        <button
+          type="button"
+          className={className}
+          aria-label={`Client menu, ${clientLabel}`}
+        >
+          <img
+            src={logoSrc}
+            alt={isPlaceholder ? 'No client selected' : ''}
+            className={
+              isPlaceholder
+                ? 'menu-bar__favicon menu-bar__favicon--client-placeholder-banner'
+                : 'menu-bar__favicon'
+            }
+            width={isPlaceholder ? undefined : 28}
+            height={28}
+            {...(isPlaceholder ? {} : { 'aria-hidden': true })}
+          />
+        </button>
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Content align="start" className="menu-bar__dropdown">
+        <ClerkTenantClientSwitchMenuContent {...tenant} />
+      </DropdownMenu.Content>
+    </DropdownMenu.Root>
+  )
+}
+
+function ClientLogoMenuGuest({ className }: { className: string }) {
   const { activeClient } = useSaasClient()
   const clientLabel = activeClient?.name ?? 'Guest Client'
   const logoSrc = activeClient?.logoUrl ?? SAAS_GUEST_CLIENT_PLACEHOLDER_LOGO
@@ -51,10 +93,23 @@ function ClientLogoMenu({ className }: { className: string }) {
         </button>
       </DropdownMenu.Trigger>
       <DropdownMenu.Content align="start" className="menu-bar__dropdown">
-        <ClientSwitchDropdownContent />
+        <GuestClientSwitchDropdownContent />
       </DropdownMenu.Content>
     </DropdownMenu.Root>
   )
+}
+
+function ClientLogoMenu({
+  className,
+  clerkTenancyEnabled,
+}: {
+  className: string
+  clerkTenancyEnabled?: boolean
+}) {
+  if (clerkTenancyEnabled) {
+    return <ClientLogoMenuWithClerk className={className} />
+  }
+  return <ClientLogoMenuGuest className={className} />
 }
 
 function IconMenu() {
@@ -74,9 +129,17 @@ type MenuBarProps = {
   scrolled?: boolean
   /** Replaces the default Guest user dropdown (e.g. Clerk `<UserButton />` on SaaS). */
   userMenu?: ReactNode
+  /** When true, client menu loads tenancy workspace (requires `ClerkProvider`). */
+  clerkTenancyEnabled?: boolean
 }
 
-export function MenuBar({ onOpenThemeSettings, onOpenSidebar, scrolled, userMenu }: MenuBarProps) {
+export function MenuBar({
+  onOpenThemeSettings,
+  onOpenSidebar,
+  scrolled,
+  userMenu,
+  clerkTenancyEnabled,
+}: MenuBarProps) {
   const { activeClient } = useSaasClient()
 
   const title = activeClient ? `${activeClient.name} – Dashboard` : 'Dashboard'
@@ -87,8 +150,14 @@ export function MenuBar({ onOpenThemeSettings, onOpenSidebar, scrolled, userMenu
       role="banner"
     >
       <div className="menu-bar__brand">
-        <ClientLogoMenu className="menu-bar__logo menu-bar__logo--desktop" />
-        <ClientLogoMenu className="menu-bar__logo menu-bar__client-trigger--mobile" />
+        <ClientLogoMenu
+          className="menu-bar__logo menu-bar__logo--desktop"
+          clerkTenancyEnabled={clerkTenancyEnabled}
+        />
+        <ClientLogoMenu
+          className="menu-bar__logo menu-bar__client-trigger--mobile"
+          clerkTenancyEnabled={clerkTenancyEnabled}
+        />
         {onOpenSidebar && (
           <button
             type="button"

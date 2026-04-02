@@ -12,10 +12,63 @@ namespace Api.Data;
         public DbSet<Product> Products => Set<Product>();
         public DbSet<ContactMessage> ContactMessages => Set<ContactMessage>();
         public DbSet<VisitMetric> VisitMetrics => Set<VisitMetric>();
+        public DbSet<TenantClient> TenantClients => Set<TenantClient>();
+        public DbSet<TenantMembership> TenantMemberships => Set<TenantMembership>();
+        public DbSet<TenantInvitation> TenantInvitations => Set<TenantInvitation>();
+        public DbSet<TenantUserPreference> TenantUserPreferences => Set<TenantUserPreference>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<TenantClient>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.CreatedAtUtc);
+                entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+                entity.HasIndex(e => e.IsDeleted);
+            });
+
+            modelBuilder.Entity<TenantMembership>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.ClerkUserId).IsRequired().HasMaxLength(128);
+                entity.Property(e => e.Role).IsRequired().HasMaxLength(64);
+                entity.Property(e => e.CreatedAtUtc);
+                entity.HasIndex(e => e.ClerkUserId);
+                entity.HasIndex(e => new { e.ClerkUserId, e.TenantClientId }).IsUnique();
+                // SQLite: at most one Owner membership per tenant (strict product rule).
+                entity.HasIndex(e => e.TenantClientId)
+                    .IsUnique()
+                    .HasDatabaseName("IX_TenantMemberships_OneOwnerPerClient")
+                    .HasFilter($"\"Role\" = '{TenantRoles.Owner}'");
+                entity.HasOne(e => e.TenantClient)
+                    .WithMany()
+                    .HasForeignKey(e => e.TenantClientId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<TenantInvitation>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.InviteeEmailNormalized).IsRequired().HasMaxLength(254);
+                entity.Property(e => e.Role).IsRequired().HasMaxLength(64);
+                entity.Property(e => e.Status).HasConversion<int>();
+                entity.Property(e => e.CreatedAtUtc);
+                entity.HasIndex(e => new { e.InviteeEmailNormalized, e.Status });
+                entity.HasOne(e => e.TenantClient)
+                    .WithMany()
+                    .HasForeignKey(e => e.TenantClientId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<TenantUserPreference>(entity =>
+            {
+                entity.HasKey(e => e.ClerkUserId);
+                entity.Property(e => e.ClerkUserId).HasMaxLength(128);
+                entity.Property(e => e.SkipHubWhenDefaultAvailable).HasDefaultValue(false);
+            });
 
             modelBuilder.Entity<Product>(entity =>
             {

@@ -44,3 +44,47 @@ export async function apiGetWithBearer<T>(path: string, bearerToken: string | nu
   }
   return res.json() as Promise<T>
 }
+
+export async function apiPostWithBearer<T>(path: string, body: unknown, bearerToken: string | null): Promise<T> {
+  const url = getApiUrl(path)
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (bearerToken) headers.Authorization = `Bearer ${bearerToken}`
+  const res = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`API ${res.status}: ${text || res.statusText}`)
+  }
+  const text = await res.text()
+  if (!text) return undefined as T
+  return JSON.parse(text) as T
+}
+
+export async function apiPutWithBearer(path: string, body: unknown, bearerToken: string | null): Promise<void> {
+  const url = getApiUrl(path)
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (bearerToken) headers.Authorization = `Bearer ${bearerToken}`
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`API ${res.status}: ${text || res.statusText}`)
+  }
+}
+
+export async function apiPostWithBearerNoContent(path: string, bearerToken: string | null): Promise<void> {
+  const url = getApiUrl(path)
+  const headers: Record<string, string> = {}
+  if (bearerToken) headers.Authorization = `Bearer ${bearerToken}`
+  const res = await fetch(url, { method: 'POST', headers })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`API ${res.status}: ${text || res.statusText}`)
+  }
+}

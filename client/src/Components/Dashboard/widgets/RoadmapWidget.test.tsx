@@ -58,7 +58,7 @@ describe('RoadmapWidget', () => {
 
   it('renders sublist items for a later phase', () => {
     render(<RoadmapWidgetWithTheme />)
-    expect(screen.getByText(/Username\/password login/)).toBeTruthy()
+    expect(screen.getByText(/Clerk for \/saas/)).toBeTruthy()
     expect(screen.getByText(/WebSocket/)).toBeTruthy()
   })
 })

@@ -1,0 +1,56 @@
+.saas-prefs-modal__body {
+  display: flex;
+  gap: var(--space-4);
+  margin-top: var(--space-3);
+  min-height: 16rem;
+}
+
+.saas-prefs-modal__sidebar {
+  flex-shrink: 0;
+  width: 10.5rem;
+  padding-right: var(--space-3);
+  border-right: 1px solid var(--gray-6);
+}
+
+.saas-prefs-modal__nav-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: var(--space-2) var(--space-2);
+  margin-bottom: var(--space-1);
+  border: none;
+  border-radius: var(--radius-2);
+  background: transparent;
+  color: var(--gray-12);
+  font-size: var(--font-size-2);
+  cursor: pointer;
+}
+
+.saas-prefs-modal__nav-item:hover {
+  background: var(--gray-3);
+}
+
+.saas-prefs-modal__nav-item--active {
+  background: var(--accent-3);
+  color: var(--accent-11);
+  font-weight: var(--font-weight-medium);
+}
+
+.saas-prefs-modal__content {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 520px) {
+  .saas-prefs-modal__body {
+    flex-direction: column;
+  }
+
+  .saas-prefs-modal__sidebar {
+    width: 100%;
+    padding-right: 0;
+    padding-bottom: var(--space-3);
+    border-right: none;
+    border-bottom: 1px solid var(--gray-6);
+  }
+}
