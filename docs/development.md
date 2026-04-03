@@ -46,9 +46,15 @@ For local end-to-end checks with the React app, configure the API (user secrets 
 - **`CLERK_AUTHORIZED_PARTIES`** (optional) – comma-separated **origins** allowed for the JWT **`azp`** claim, e.g. `http://localhost:5173,https://www.justingritten.dev,https://justingritten.dev`. Recommended when testing from a real browser.
 - **`CLERK_METADATA_ADDRESS`** (optional) – only if OIDC discovery is not at `{CLERK_FRONTEND_API}/.well-known/openid-configuration` for your instance.
 
+- **Session token must include email for tenancy** — `GET /api/v1/Tenancy/workspace` loads pending invitations and ensures the **Northwinds Demo** invite from the **normalized email** on the Clerk session JWT. Clerk’s default session token does **not** include primary email. In [Clerk Dashboard → Sessions](https://dashboard.clerk.com/~/sessions), under **Customize session token**, add a claim, for example:
+  ```json
+  "email": "{{user.primary_email_address}}"
+  ```
+  The API also checks `primaryEmail`, `primary_email_address`, and `email_address` if you use those names instead. After saving, **sign out and sign in** so the session cookie carries the updated JWT.
+
 If **`CLERK_FRONTEND_API`** is unset, **`GET /api/v1/me`** still returns **401** for any request (tests and clones without Clerk).
 
-See [ADR 0010](decisions/0010-clerk-saas-authentication.md).
+See [ADR 0010](decisions/0010-clerk-saas-authentication.md) and [ADR 0012](decisions/0012-northwinds-demo-tenant-and-auto-invite.md).
 
 ### Database and migrations
 

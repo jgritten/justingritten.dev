@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Api.Auth;
 using Api.DTOs;
 using Api.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -28,9 +29,7 @@ public class TenancyController : ControllerBase
         if (!TryGetClerkSubject(out var sub))
             return Unauthorized();
 
-        var email = User.FindFirstValue(JwtRegisteredClaimNames.Email)
-            ?? User.FindFirstValue(ClaimTypes.Email)
-            ?? User.FindFirstValue("email");
+        var email = ClerkSessionEmailClaims.GetEmail(User);
         var dto = await _tenancyService.GetWorkspaceAsync(sub, email, cancellationToken);
         return Ok(dto);
     }
@@ -90,9 +89,7 @@ public class TenancyController : ControllerBase
         if (!TryGetClerkSubject(out var sub))
             return Unauthorized();
 
-        var email = User.FindFirstValue(JwtRegisteredClaimNames.Email)
-            ?? User.FindFirstValue(ClaimTypes.Email)
-            ?? User.FindFirstValue("email");
+        var email = ClerkSessionEmailClaims.GetEmail(User);
         var ok = await _tenancyService.TryAcceptInvitationAsync(sub, email, invitationId, cancellationToken);
         if (!ok)
             return NotFound();
@@ -109,9 +106,7 @@ public class TenancyController : ControllerBase
         if (!TryGetClerkSubject(out var sub))
             return Unauthorized();
 
-        var email = User.FindFirstValue(JwtRegisteredClaimNames.Email)
-            ?? User.FindFirstValue(ClaimTypes.Email)
-            ?? User.FindFirstValue("email");
+        var email = ClerkSessionEmailClaims.GetEmail(User);
         var ok = await _tenancyService.TryDeclineInvitationAsync(sub, email, invitationId, cancellationToken);
         if (!ok)
             return NotFound();

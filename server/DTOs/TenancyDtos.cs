@@ -8,14 +8,17 @@ public record TenantInvitationResponseDto(
     string ClientName,
     string InviteeEmail,
     string Role,
-    string Status);
+    string Status,
+    bool IsDemoWorkspace);
 
 public record TenantPreferencesResponseDto(string? DefaultClientId, bool SkipHubWhenDefaultAvailable);
 
+/// <summary>Post-sign-in hub payload. <see cref="HasEmailClaim"/> is false when the session JWT had no email claim (invites require it).</summary>
 public record TenantWorkspaceResponseDto(
     IReadOnlyList<TenantMembershipResponseDto> Memberships,
     IReadOnlyList<TenantInvitationResponseDto> Invitations,
-    TenantPreferencesResponseDto Preferences);
+    TenantPreferencesResponseDto Preferences,
+    bool HasEmailClaim);
 
 public record CreateTenantClientRequestDto(string Name);
 

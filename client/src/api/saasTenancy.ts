@@ -18,6 +18,8 @@ export type TenantInvitation = {
   inviteeEmail: string
   role: string
   status: string
+  /** True for the seeded Northwinds Demo tenant (pre-filled demo workspace). */
+  isDemoWorkspace?: boolean
 }
 
 export type TenantPreferences = {
@@ -29,6 +31,8 @@ export type TenantWorkspace = {
   memberships: TenantMembership[]
   invitations: TenantInvitation[]
   preferences: TenantPreferences
+  /** False if the API could not read an email from the Clerk session JWT (no invitation list / Northwinds auto-invite). */
+  hasEmailClaim: boolean
 }
 
 export type CreateTenantClientResponse = {

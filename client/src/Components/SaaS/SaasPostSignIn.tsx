@@ -245,6 +245,18 @@ function SaasPostSignInWithClerk() {
             dashboard.
           </Text>
 
+          {!workspace.hasEmailClaim ? (
+            <Text as="p" size="2" color="amber">
+              Your Clerk session token does not include an email claim the API recognizes, so pending invitations
+              (including the <strong>Northwinds Demo</strong> invite) will not appear. In the Clerk Dashboard, open{' '}
+              <strong>Sessions</strong> → <strong>Customize session token</strong> and add something like{' '}
+              <code className="saas-entry__code">
+                {`"email": "{{user.primary_email_address}}"`}
+              </code>{' '}
+              (see <code className="saas-entry__code">docs/development.md</code>). Sign out and back in after saving.
+            </Text>
+          ) : null}
+
           {workspace.invitations.length > 0 ? (
             <>
               <Heading as="h2" size="4">
@@ -260,6 +272,12 @@ function SaasPostSignInWithClerk() {
                       <Text size="1" color="gray">
                         {inv.inviteeEmail}
                       </Text>
+                      {inv.isDemoWorkspace ? (
+                        <Text size="1" color="gray">
+                          Pre-filled demo workspace — explore the app with shared sample data, or decline and create your
+                          own client.
+                        </Text>
+                      ) : null}
                       <Flex gap="2" wrap="wrap">
                         <Button
                           size="2"

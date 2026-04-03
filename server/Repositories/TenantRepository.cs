@@ -108,6 +108,24 @@ public class TenantRepository : ITenantRepository
                 cancellationToken);
     }
 
+    public async Task<bool> InvitationExistsForClientAndEmailAsync(
+        Guid tenantClientId,
+        string inviteeEmailNormalized,
+        CancellationToken cancellationToken)
+    {
+        return await _db.TenantInvitations.AnyAsync(
+            i =>
+                i.TenantClientId == tenantClientId &&
+                i.InviteeEmailNormalized == inviteeEmailNormalized,
+            cancellationToken);
+    }
+
+    public async Task AddInvitationAsync(TenantInvitation invitation, CancellationToken cancellationToken)
+    {
+        _db.TenantInvitations.Add(invitation);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task AcceptInvitationAsync(TenantInvitation invitation, string clerkUserId, CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;

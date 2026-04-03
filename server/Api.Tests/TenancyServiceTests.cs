@@ -120,4 +120,73 @@ public sealed class TenancyServiceTests : IDisposable
         Assert.Single(ws.Memberships);
         Assert.Equal(TenantRoles.User, ws.Memberships[0].Role);
     }
+
+    [Fact]
+    public async Task NorthwindsDemoInvitation_CreatedOnFirstWorkspaceLoad_WithEmail()
+    {
+        var ws = await _sut.GetWorkspaceAsync("clerk_demo_user", "visitor@example.com", CancellationToken.None);
+
+        var demo = Assert.Single(ws.Invitations, i => i.ClientId == NorthwindsDemoTenant.ClientId.ToString());
+        Assert.Equal(NorthwindsDemoTenant.DisplayName, demo.ClientName);
+        Assert.True(demo.IsDemoWorkspace);
+        Assert.Equal(TenantRoles.User, demo.Role);
+        Assert.True(ws.HasEmailClaim);
+    }
+
+    [Fact]
+    public async Task NorthwindsDemoInvitation_NotDuplicated_OnSecondWorkspaceLoad()
+    {
+        _ = await _sut.GetWorkspaceAsync("clerk_demo_user_2", "twice@example.com", CancellationToken.None);
+        var ws2 = await _sut.GetWorkspaceAsync("clerk_demo_user_2", "twice@example.com", CancellationToken.None);
+
+        Assert.Single(ws2.Invitations, i => i.ClientId == NorthwindsDemoTenant.ClientId.ToString());
+    }
+
+    [Fact]
+    public async Task NorthwindsDemoInvitation_SkippedWhenAlreadyMember()
+    {
+        _db.TenantMemberships.Add(
+            new TenantMembership
+            {
+                Id = Guid.NewGuid(),
+                ClerkUserId = "clerk_member_demo",
+                TenantClientId = NorthwindsDemoTenant.ClientId,
+                Role = TenantRoles.User,
+                CreatedAtUtc = DateTime.UtcNow,
+            });
+        await _db.SaveChangesAsync();
+
+        var ws = await _sut.GetWorkspaceAsync("clerk_member_demo", "member@example.com", CancellationToken.None);
+
+        Assert.Empty(ws.Invitations);
+    }
+
+    [Fact]
+    public async Task NorthwindsDemoInvitation_SkippedWithoutEmail()
+    {
+        var ws = await _sut.GetWorkspaceAsync("clerk_no_email", null, CancellationToken.None);
+
+        Assert.Empty(ws.Invitations);
+        Assert.False(ws.HasEmailClaim);
+    }
+
+    [Fact]
+    public async Task NorthwindsDemoInvitation_NotRecreated_AfterDecline()
+    {
+        var ws1 = await _sut.GetWorkspaceAsync("clerk_decline_demo", "decliner@example.com", CancellationToken.None);
+        var invId = Guid.Parse(Assert.Single(ws1.Invitations).Id);
+
+        var declined = await _sut.TryDeclineInvitationAsync(
+            "clerk_decline_demo",
+            "decliner@example.com",
+            invId,
+            CancellationToken.None);
+        Assert.True(declined);
+
+        var ws2 = await _sut.GetWorkspaceAsync("clerk_decline_demo", "decliner@example.com", CancellationToken.None);
+        Assert.Empty(ws2.Invitations);
+
+        var ws3 = await _sut.GetWorkspaceAsync("clerk_decline_demo", "decliner@example.com", CancellationToken.None);
+        Assert.Empty(ws3.Invitations);
+    }
 }

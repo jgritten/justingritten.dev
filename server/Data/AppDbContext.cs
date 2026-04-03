@@ -28,6 +28,14 @@ namespace Api.Data;
                 entity.Property(e => e.CreatedAtUtc);
                 entity.Property(e => e.IsDeleted).HasDefaultValue(false);
                 entity.HasIndex(e => e.IsDeleted);
+                entity.HasData(
+                    new TenantClient
+                    {
+                        Id = NorthwindsDemoTenant.ClientId,
+                        Name = NorthwindsDemoTenant.DisplayName,
+                        CreatedAtUtc = new DateTime(2026, 4, 2, 12, 0, 0, DateTimeKind.Utc),
+                        IsDeleted = false,
+                    });
             });
 
             modelBuilder.Entity<TenantMembership>(entity =>
@@ -57,6 +65,11 @@ namespace Api.Data;
                 entity.Property(e => e.Status).HasConversion<int>();
                 entity.Property(e => e.CreatedAtUtc);
                 entity.HasIndex(e => new { e.InviteeEmailNormalized, e.Status });
+                // At most one pending invite per (tenant, email) — avoids duplicate demo invites under concurrency.
+                entity.HasIndex(e => new { e.TenantClientId, e.InviteeEmailNormalized })
+                    .IsUnique()
+                    .HasDatabaseName("IX_TenantInvitations_Pending_UniqueTenantEmail")
+                    .HasFilter($"\"Status\" = {(int)InvitationStatus.Pending}");
                 entity.HasOne(e => e.TenantClient)
                     .WithMany()
                     .HasForeignKey(e => e.TenantClientId)

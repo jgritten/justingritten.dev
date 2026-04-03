@@ -1,6 +1,7 @@
 using Api.DTOs;
 using Api.Interfaces;
 using Api.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Api.Services;
 
@@ -27,6 +28,9 @@ public class TenancyService : ITenancyService
             .ToList();
 
         var emailNorm = NormalizeEmail(email);
+        if (!string.IsNullOrEmpty(emailNorm))
+            await EnsureNorthwindsDemoInvitationAsync(clerkUserId, emailNorm, cancellationToken);
+
         IReadOnlyList<TenantInvitation> invitations;
         if (string.IsNullOrEmpty(emailNorm))
             invitations = Array.Empty<TenantInvitation>();
@@ -40,7 +44,8 @@ public class TenancyService : ITenancyService
                 i.TenantClient.Name,
                 i.InviteeEmailNormalized,
                 i.Role,
-                i.Status.ToString()))
+                i.Status.ToString(),
+                i.TenantClientId == NorthwindsDemoTenant.ClientId))
             .ToList();
 
         var pref = await _tenantRepository.GetPreferencesAsync(clerkUserId, cancellationToken);
@@ -50,7 +55,11 @@ public class TenancyService : ITenancyService
                 pref.DefaultTenantClientId?.ToString(),
                 pref.SkipHubWhenDefaultAvailable);
 
-        return new TenantWorkspaceResponseDto(membershipDtos, invitationDtos, prefDto);
+        return new TenantWorkspaceResponseDto(
+            membershipDtos,
+            invitationDtos,
+            prefDto,
+            !string.IsNullOrEmpty(emailNorm));
     }
 
     public async Task<CreateTenantClientResponseDto?> CreateClientAsync(
@@ -138,6 +147,40 @@ public class TenancyService : ITenancyService
 
         await _tenantRepository.DeclineInvitationAsync(invitation, cancellationToken);
         return true;
+    }
+
+    private async Task EnsureNorthwindsDemoInvitationAsync(
+        string clerkUserId,
+        string emailNorm,
+        CancellationToken cancellationToken)
+    {
+        if (await _tenantRepository.UserHasMembershipAsync(clerkUserId, NorthwindsDemoTenant.ClientId, cancellationToken))
+            return;
+
+        if (await _tenantRepository.InvitationExistsForClientAndEmailAsync(
+                NorthwindsDemoTenant.ClientId,
+                emailNorm,
+                cancellationToken))
+            return;
+
+        var invitation = new TenantInvitation
+        {
+            Id = Guid.NewGuid(),
+            TenantClientId = NorthwindsDemoTenant.ClientId,
+            InviteeEmailNormalized = emailNorm,
+            Role = TenantRoles.User,
+            Status = InvitationStatus.Pending,
+            CreatedAtUtc = DateTime.UtcNow,
+        };
+
+        try
+        {
+            await _tenantRepository.AddInvitationAsync(invitation, cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            // Concurrent GET workspace: unique index IX_TenantInvitations_Pending_UniqueTenantEmail.
+        }
     }
 
     private static string NormalizeEmail(string? email)

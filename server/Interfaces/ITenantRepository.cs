@@ -23,6 +23,14 @@ public interface ITenantRepository
 
     Task<bool> UserHasMembershipAsync(string clerkUserId, Guid tenantClientId, CancellationToken cancellationToken);
 
+    /// <summary>True if any invitation row exists for this tenant and normalized email (any status).</summary>
+    Task<bool> InvitationExistsForClientAndEmailAsync(
+        Guid tenantClientId,
+        string inviteeEmailNormalized,
+        CancellationToken cancellationToken);
+
+    Task AddInvitationAsync(TenantInvitation invitation, CancellationToken cancellationToken);
+
     Task AcceptInvitationAsync(TenantInvitation invitation, string clerkUserId, CancellationToken cancellationToken);
 
     Task DeclineInvitationAsync(TenantInvitation invitation, CancellationToken cancellationToken);
