@@ -27,24 +27,26 @@ function SaasEntryWithoutClerk() {
   }
 
   return (
-    <div className="content-card">
-      <Card size="3" style={{ maxWidth: 560, margin: '0 auto' }}>
-        <Flex direction="column" gap="4">
-          <Heading as="h1" size="6">
-            SaaS Demo
-          </Heading>
-          <Text as="p" size="3" color="gray">
-            Add <code className="saas-entry__code">VITE_CLERK_PUBLISHABLE_KEY</code> in{' '}
-            <code className="saas-entry__code">client/.env</code> to enable Clerk sign-in. Until then,
-            continue as a guest to explore the shell.
-          </Text>
-          <Flex gap="3" justify="start" wrap="wrap">
-            <Button size="3" variant="soft" onClick={enterAsGuest}>
-              Continue as Guest
-            </Button>
+    <div className="saas-entry__layout">
+      <div className="content-card saas-entry__panel">
+        <Card size="3" style={{ width: '100%', maxWidth: 560, minWidth: 0, margin: '0 auto' }}>
+          <Flex direction="column" gap="4" style={{ minWidth: 0 }}>
+            <Heading as="h1" size="6">
+              SaaS Demo
+            </Heading>
+            <Text as="p" size="3" color="gray">
+              Add <code className="saas-entry__code">VITE_CLERK_PUBLISHABLE_KEY</code> in{' '}
+              <code className="saas-entry__code">client/.env</code> to enable Clerk sign-in. Until then,
+              continue as a guest to explore the shell.
+            </Text>
+            <Flex gap="3" justify="start" wrap="wrap">
+              <Button size="3" variant="soft" onClick={enterAsGuest}>
+                Continue as Guest
+              </Button>
+            </Flex>
           </Flex>
-        </Flex>
-      </Card>
+        </Card>
+      </div>
     </div>
   )
 }
@@ -81,47 +83,59 @@ function SaasEntryWithClerk() {
 
   if (!isLoaded) {
     return (
-      <div className="content-card">
-        <Text as="p" size="3" color="gray">
-          Loading…
-        </Text>
+      <div className="saas-entry__layout">
+        <div className="content-card saas-entry__panel">
+          <Text as="p" size="3" color="gray">
+            Loading…
+          </Text>
+        </div>
       </div>
     )
   }
 
   if (isSignedIn) {
     return (
-      <div className="content-card">
-        <Text as="p" size="3" color="gray">
-          Redirecting…
-        </Text>
+      <div className="saas-entry__layout">
+        <div className="content-card saas-entry__panel">
+          <Text as="p" size="3" color="gray">
+            Redirecting…
+          </Text>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="content-card">
-      <Card size="3" style={{ maxWidth: 480, margin: '0 auto' }}>
-        <Flex direction="column" gap="4">
-          <Heading as="h1" size="6">
-            SaaS Demo
-          </Heading>
-          <Text as="p" size="3" color="gray">
-            Sign in with Clerk to exercise the protected API, or continue as a guest.
-          </Text>
-          <div className="saas-entry__sign-in">
-            <SignIn
-              forceRedirectUrl="/saas/post-sign-in"
-              fallbackRedirectUrl="/saas/post-sign-in"
-              signUpForceRedirectUrl="/saas/post-sign-in"
-              signUpFallbackRedirectUrl="/saas/post-sign-in"
-            />
-          </div>
-          <Button size="3" variant="soft" onClick={continueAsGuest}>
-            Continue as Guest
-          </Button>
-        </Flex>
-      </Card>
+    <div className="saas-entry__layout">
+      <div className="content-card saas-entry__panel">
+        <Card size="3" style={{ width: '100%', maxWidth: 480, minWidth: 0, margin: '0 auto' }}>
+          <Flex direction="column" gap="4" style={{ minWidth: 0 }}>
+            <Heading as="h1" size="6">
+              SaaS Demo
+            </Heading>
+            <Text as="p" size="3" color="gray">
+              Sign in with Clerk to exercise the protected API, or continue as a guest.
+            </Text>
+            <div className="saas-entry__sign-in">
+              <SignIn
+                appearance={{
+                  elements: {
+                    rootBox: 'saas-entry__clerk-root',
+                    card: 'saas-entry__clerk-card',
+                  },
+                }}
+                forceRedirectUrl="/saas/post-sign-in"
+                fallbackRedirectUrl="/saas/post-sign-in"
+                signUpForceRedirectUrl="/saas/post-sign-in"
+                signUpFallbackRedirectUrl="/saas/post-sign-in"
+              />
+            </div>
+            <Button size="3" variant="soft" onClick={continueAsGuest}>
+              Continue as Guest
+            </Button>
+          </Flex>
+        </Card>
+      </div>
     </div>
   )
 }
