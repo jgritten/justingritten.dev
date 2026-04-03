@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="200" height="200">
+  <g fill="none" stroke="#5a6a7a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    
+    <!-- Left building -->
+    <path d="M15 75 V45 L25 35 L35 45 V75" />
+    
+    <!-- Center building (narrowed) -->
+    <path d="M37 75 V35 L50 20 L63 35 V75" />
+    
+    <!-- Right building -->
+    <path d="M65 75 V45 L75 35 L85 45 V75" />
+    
+    <!-- Base line -->
+    <line x1="15" y1="75" x2="85" y2="75" />
+    
+  </g>
+</svg>
