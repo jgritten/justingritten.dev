@@ -9,7 +9,7 @@ This doc is the **single source of truth** for feature planning and “memory”
 ### Purpose of the site
 
 - **Portfolio / landing page (primary):** Present you as a **full‑stack engineer** who can join a team and ship reliably. The `/` route (Profile) should quickly answer “Who is Justin?”, “What does he do well?”, and “How do I book time with him?”.
-- **Commercial SaaS MVP demo (secondary):** Provide a reusable, **2–4 week SaaS starter** demo under `/saas` that shows how you design multi‑tenant, production‑grade products. Recruiters and potential buyers should be able to click through a believable dashboard + settings flow.
+- **Commercial SaaS MVP demo (secondary):** Provide a reusable **SaaS template** under `/saas` that shows how you design multi‑tenant, production‑grade products, then demonstrate it through a **Permit & Compliance Management** product slice (workflow, roles, attachments, audit). Recruiters and potential buyers should be able to click through a believable shell + settings flow and a credible domain workflow. See working notes in `temp/saas-template-and-permit-planner-complete.md` for template cutoff vs product scope.
 - **Ideas and experiments (tertiary):** Offer a home for **personal product ideas and demos** (e.g. a **municipality community hub** with maps, event pins, construction notices, and evacuation routes) without diluting the main portfolio story.
 - **Public repo:** Design and docs should be recruiter-friendly; no secrets in code.
 
@@ -118,6 +118,8 @@ This doc is the **single source of truth** for feature planning and “memory”
 | **Audit** | Version / revision history | Object changes auditable; clear revision history visible (view previous, diff) |
 | **Dashboard** | Activity + “Ready at a Glance” | Recently edited matters; metrics e.g. Matters Opened/Closed (day/week/month/year), Docs Generated |
 | **Dashboard** | Test results visualization | One of the dashboard widgets: show **test results** (pass/fail count, coverage %) and **when** the last run was (e.g. last deploy/merge). Data from a CI-generated summary file the app fetches; see "Test results dashboard widget" (Section 5b). |
+| **Files** | Platform (global) file library | Uploads readable across the product for appropriate users (e.g. shared templates, reference assets); **not** tenant-private. Restrict who can upload (e.g. SaaS Admin / operator roles); enforce download authorization without mixing into another tenant’s private store. |
+| **Files** | Tenant-scoped private storage | Uploads tied to **current client**; list/metadata/download/delete APIs **must** enforce tenant isolation so no other tenant can see another tenant’s files. Supports linking files to domain entities (e.g. permit applications) via metadata. |
 | **Data** | File validation | Type, size, optional scan when applicable (templates, uploads) |
 | **Doc gen** | Document packages (scheduled/bulk) | Package = group of docs to generate in bulk (e.g. on Matter Closed); Admin/Manager define; available in Doc Gen |
 | **Notifications** | Email + user preferences | Emails sent for events; preferences per user, options templated by Client Admin/Managers |
@@ -205,6 +207,8 @@ Between Phase 0 and the full Phase 1/2 SaaS work, there is an **API‑first slic
 
 ### Phase 2: SaaS - Tenancy (clients)
 
+**Product direction (within this phase):** The `/saas` demo is converging on a **Permit & Compliance Management** platform (first use case: a narrow permit workflow). The **reusable template** should reach a **stop‑gap** before the domain UI grows: **permissions enforced end‑to‑end**, **file storage (global + tenant-private)**, and **minimal audit logging**. Notification delivery, billing, and workflow builders stay out of the template cutoff (see `temp/saas-template-and-permit-planner-complete.md`).
+
 - **Client (tenant) entity** and API (create client, memberships, invitations, user workspace preferences).  
   ADR: [0011-multi-tenant-clients-and-workspace-hub.md](decisions/0011-multi-tenant-clients-and-workspace-hub.md).
 - **Post-sign-in workspace hub (`/saas/post-sign-in`):** Full-screen **launcher** (not only a small modal): **pending invitations** (accept/decline), **your clients** (open dashboard, **set/clear default client**), **Create Client** → **Client Creation wizard** (modal or stepped UI). Same hub for first-time and returning users so nothing is “silent auto-enter.”
@@ -215,7 +219,11 @@ Between Phase 0 and the full Phase 1/2 SaaS work, there is an **API‑first slic
 - **Current client context:** App always has a **current Client** for the logged-in user. All data and UI (sidebar, dashboard, search, etc.) are **scoped to current client**. Store current client in session/state; APIs receive client context (e.g. header or claim).
 - **Multi-client and switch client:** If user is a member of **multiple clients**, provide a **switch-client** control (e.g. client name/icon in menu bar or sidebar). On switch, **permissions and application access update** to that client and the user’s **role in that client** (e.g. Manager in one, Associate in another).
 - **Multi-client membership — menu bar:** To the **right of the client logo**, show a **Switch client** control when the user has **more than one** client they can access.
-- **Authorization on data access:** **Validate user permissions for current client and role before any data is returned or action allowed** (API and, where needed, UI). No data access without passing this check.
+- **Authorization on data access:** **Validate user permissions for current client and role before any data is returned or action allowed** (API and, where needed, UI). No data access without passing this check. Treat this as **template-complete** only when permission names are defined, assigned to roles, enforced on the API, and reflected in the UI (hide/disable unauthorized actions)—required before the permit workflow demo relies on Applicant vs Reviewer behavior.
+- **File / document storage (template foundation):** One abstraction used by future products, with two visibility levels:
+  - **Platform (global) library:** Files meant for **cross-tenant** use (e.g. shared templates, operator-published reference documents). Model with an explicit scope (e.g. `TenantId` null + `Scope=Global` or equivalent); **upload** gated to trusted roles (e.g. SaaS Admin); **read** gated by authentication and policy, **without** exposing other tenants’ private objects.
+  - **Tenant-private storage:** Every record tied to a **tenant id**; upload, list, metadata, download, and delete run only in **current client** context and **must** reject cross-tenant access. Support optional **link to domain entity** (`LinkedEntityType` / `LinkedEntityId`) for permit attachments later. Minimum API surface: upload, metadata, delete/archive, list (filtered by scope + tenant). Storage backend can stay simple (e.g. local disk or S3) behind a small provider interface.
+- **Minimal audit logging (pattern only):** Append-only events (who, action, entity, tenant, when, short summary, optional metadata JSON)—enough for timelines and compliance-style demos; avoid full event sourcing until the permit UI needs it.
 - **Shared data per client:** head office, user groups, permissions (model + API + UI where needed). Client roles drive what each user can do within the client.
 - **Client admin:** feature flags per client (enable/disable features); letterhead/footer for document generation.  
   Can start with DB + API; doc gen UI can follow in a later phase.
@@ -223,14 +231,16 @@ Between Phase 0 and the full Phase 1/2 SaaS work, there is an **API‑first slic
 - **Support impersonation (emulate user):** Support staff can “become” a specific user (session/context switch) to reproduce issues and assist. Audit this action.
 - **Support data manipulation:** Support-only API surfaces (or elevated permissions) for CRUD on entities that normal client users cannot access (e.g. fix bad data, restore records). Document in ADR and security.
 - **Soft delete (data model):** All relevant entities use **IsDeleted** boolean; no physical delete. APIs and search exclude deleted unless **IncludeDeleted** (or equivalent) is passed. Support/Admin can see or restore deleted when needed.
-- **Audit log (within client):** When data is manipulated, append to a **client-accessible audit log** (e.g. “12:34 Aug 1st – Shanda updated Matter 56. Added new item 123”). Expose via API and UI so client users can view activity for their client.
+- **Audit log (within client):** When data is manipulated, append to a **client-accessible audit log** (e.g. “12:34 Aug 1st – Shanda updated Matter 56. Added new item 123”). Expose via API and UI so client users can view activity for their client. (The **minimal audit pattern** above is the prerequisite “plumbing”; richer timeline UI can follow the first permit workflow slice.)
 - **Document generation (template + microserver):** Upload template PDF with placeholders (e.g. [DATE], [NAME], [ADDRESS]); **microserver** fills data on Generate; client letterhead/footer apply. Rate limit: e.g. **3 generations per day** per User (or per IP for Guest). Nice-to-have: “Request additional generations” → email for approval (refine when realized).
 - **Document packages (scheduled / bulk):** Client **Admin/Manager** can define a **package** of documents to generate in one go (e.g. on **Matter Closed**). Package available to client users from within Doc Gen; runs as **scheduled/background job** so user doesn’t generate each doc individually.
 - **Version / revision history:** Object changes **auditable**; **revision history** visible (view previous versions, diff where useful). Implement for key entities as they’re defined.
 - **File validation:** When applicable (template uploads, document uploads)—type, size, optional virus scan.
 - **Email notifications:** Ability to send emails for events. **User notification preferences** templated by **Client Admin/Managers** (client defines which notification types/options exist; each user sets their own choices).
 
-**Why after auth:** You need users and roles before “users under a client,” impersonation, support-only CRUD, client-scoped audit, and doc packages.
+- **Permit Management MVP (after template stop‑gap):** Narrow vertical slice: e.g. `PermitApplication` with statuses (Draft → Submitted → InReview → Approved/Rejected), applicant vs reviewer flows, **tenant-scoped** data only. **Attachments on applications** consume **tenant-private** files first; global library is optional for shared templates. Deeper phases (revision loops, notifications, generated letters) follow the order in `temp/saas-template-and-permit-planner-complete.md`.
+
+**Why after auth:** You need users and roles before “users under a client,” impersonation, support-only CRUD, client-scoped audit, doc packages, and isolated file access.
 
 ### Phase 3: SaaS - Realtime and notifications
 
@@ -321,6 +331,7 @@ Use this checklist when evaluating if a new frontend client can integrate quickl
 - **Dashboard activity + “Ready at a Glance”** → Phase 3 (recent matters, metrics: Matters Opened/Closed, Docs Generated, etc.).
 - **Configurable dashboard** → Phase 3 (client default + toggle components; user can edit own).
 - **File validation** → When applicable in doc gen and upload flows.
+- **Platform (global) + tenant-private file storage** → Phase 2 (template foundation: upload, metadata, delete, list; strict tenant isolation for private scope); feature list rows under **Files**.
 - **Email notifications** → Phase 2 (emails sent; user preferences templated by Client Admin/Managers).
 - **Offline / graceful degradation** → Phase 3 (banner or theme + header/text for status).
 - **Configurable fields** → Revisit when objects defined; Phase 5 / when relevant.
@@ -382,4 +393,4 @@ These are decided for the portfolio phase; details and rationale live in [ADR 00
 
 ---
 
-*Last updated: 2026-04-02. This roadmap is a living document; implementation order may change as you iterate.*
+*Last updated: 2026-04-06. This roadmap is a living document; implementation order may change as you iterate.*
