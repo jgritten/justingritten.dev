@@ -15,6 +15,6 @@ describe('ClientSettings', () => {
   it('renders Client heading and descriptive text', () => {
     render(<ClientSettingsWithTheme />)
     expect(screen.getByRole('heading', { name: /Client/i, level: 2 })).toBeTruthy()
-    expect(screen.getByText(/Client access, affiliations, and user management/i)).toBeTruthy()
+    expect(screen.getByText(/Tenant profile for the client you have selected/i)).toBeTruthy()
   })
 })

@@ -16,6 +16,13 @@
   width: 100%;
 }
 
+/* Square trailing corners so a flush-right slide panel (e.g. CrudSlidePanel) meets without a gap */
+@media (min-width: 769px) {
+  .content-card--adjoin-right {
+    border-radius: 12px 0 0 12px;
+  }
+}
+
 /* Light theme: almost opaque, slightly darker for contrast over light background */
 html[data-theme='light'] .content-card {
   background-color: rgba(255, 255, 255, 0.5);

@@ -25,3 +25,58 @@ public record CreateTenantClientRequestDto(string Name);
 public record CreateTenantClientResponseDto(string ClientId, string Name);
 
 public record UpdateTenantPreferencesRequestDto(string? DefaultClientId, bool SkipHubWhenDefaultAvailable);
+
+public record TenantClientMemberResponseDto(
+    string MembershipId,
+    string ClerkUserId,
+    string? Email,
+    string Role,
+    DateTime CreatedAtUtc,
+    bool IsCurrentUser);
+
+/// <summary>Pending invitation for a tenant client (for Users roster).</summary>
+public record TenantClientPendingInvitationDto(
+    string InvitationId,
+    string InviteeEmail,
+    string Role,
+    string Status);
+
+public record TenantClientRosterResponseDto(
+    IReadOnlyList<TenantClientMemberResponseDto> Members,
+    IReadOnlyList<TenantClientPendingInvitationDto> PendingInvitations);
+
+public record CreateTenantInvitationRequestDto(string InviteeEmail, string Role);
+
+public record CreateTenantInvitationResponseDto(string InvitationId, string InviteeEmail, string Role);
+
+public enum TenantInvitationCreateOutcome
+{
+    Created,
+    Forbidden,
+    InvalidEmail,
+    InvalidRole,
+    CannotInviteSelf,
+    PendingExists,
+    AlreadyMember,
+    Conflict,
+    InvitationEmailMisconfigured,
+    InvitationEmailRejected,
+}
+
+public record UpdateTenantMemberRoleRequestDto(string Role);
+
+public enum TenantMemberRoleUpdateOutcome
+{
+    Success,
+    Forbidden,
+    NotFound,
+    InvalidRole,
+}
+
+/// <summary>Outcome when an Owner or Admin removes a pending invitation for the active tenant client.</summary>
+public enum TenantInvitationRevokeOutcome
+{
+    Revoked,
+    Forbidden,
+    NotFound,
+}

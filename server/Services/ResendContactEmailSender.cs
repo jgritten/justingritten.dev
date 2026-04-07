@@ -102,4 +102,10 @@ public class ResendEmailOptions
     /// Published Resend template id (UUID) for contact notifications; variables must match the template.
     /// </summary>
     public string ContactTemplateId { get; set; } = string.Empty;
+
+    /// <summary>Optional Resend template UUID for tenant invitation emails to invitees. If empty, a built-in HTML body is used.</summary>
+    public string InviteTemplateId { get; set; } = string.Empty;
+
+    /// <summary>SPA origin without trailing slash (e.g. https://www.justingritten.dev). Used to build SIGN_IN_URL ({origin}/saas) for invite emails; if empty, see <see cref="ResendTenantInvitationEmailSender"/> default.</summary>
+    public string PublicAppOrigin { get; set; } = string.Empty;
 }

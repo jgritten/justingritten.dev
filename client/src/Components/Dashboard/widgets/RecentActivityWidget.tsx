@@ -31,6 +31,7 @@ const ROUTE_COVERAGE_CONFIG: RouteConfig[] = [
   { key: 'saas-settings-account', label: '/saas/settings/account', route: '/saas/settings/account' },
   { key: 'saas-settings-application', label: '/saas/settings/application', route: '/saas/settings/application' },
   { key: 'saas-settings-client', label: '/saas/settings/client', route: '/saas/settings/client' },
+  { key: 'saas-settings-users', label: '/saas/settings/users', route: '/saas/settings/users' },
 ]
 
 const OUTBOUND_METRIC_CONFIG: RouteConfig[] = [

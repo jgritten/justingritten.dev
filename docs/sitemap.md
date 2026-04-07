@@ -59,7 +59,8 @@ User opens justingritten.dev
          │  └─ /saas/settings
          │        ├─ /saas/settings/account
          │        ├─ /saas/settings/application
-         │        └─ /saas/settings/client
+         │        ├─ /saas/settings/client
+         │        └─ /saas/settings/users
          │
          ├─ Actions via Sidebar buttons
          │  ├─ Create New → opens Create New modal (overlay)
@@ -124,7 +125,7 @@ User opens justingritten.dev
 
 - **Primary ways to arrive**
   - Sidebar **Settings** entry inside **`SaasAppShell`**, which takes you to `/saas/settings` → `/saas/settings/account` by default.
-  - Direct deep links to `/saas/settings/account`, `/saas/settings/application`, or `/saas/settings/client`.
+  - Direct deep links to `/saas/settings/account`, `/saas/settings/application`, `/saas/settings/client`, or `/saas/settings/users`.
 
 - **From here, you can navigate**
   - Between settings pages using the Settings submenu in the SaaS sidebar and/or tabs/links within the Settings UI.

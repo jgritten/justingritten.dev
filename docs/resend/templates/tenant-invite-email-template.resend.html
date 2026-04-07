@@ -1,0 +1,100 @@
+<!doctype html>
+<!--
+  Required Resend template for tenant invitation emails when EMAIL_PROVIDER=Resend
+  (set RESEND_INVITE_TEMPLATE_ID on the API).
+
+  Suggested name in the Resend dashboard: tenant_invite (display only; the API uses the template UUID).
+
+  Template variables (must match ResendTenantInvitationEmailSender.BuildTemplateVariables):
+  - INVITATION_ID   — Guid string
+  - CLIENT_NAME     — Tenant / client display name
+  - ROLE            — Admin or User (string from API)
+  - INVITEE_EMAIL   — Address the invitee should use to sign in
+  - SIGN_IN_URL     — HTTPS URL to the workspace hub: {APP_PUBLIC_ORIGIN}/saas (API sets this). If APP_PUBLIC_ORIGIN is unset, the API falls back to https://www.justingritten.dev/saas for this site.
+
+  Resend dashboard preview: the editor does not call your API. To see SIGN_IN_URL in preview, either use “Send test” with sample variables, or define variable SIGN_IN_URL in the template with a fallback (e.g. https://www.justingritten.dev/saas). Variable key must match exactly: SIGN_IN_URL (same as JSON the API sends).
+
+  Resend publish warning "Preview text is not set":
+  In the template editor, set Preview text (preheader), e.g. "You've been invited to join a workspace."
+  That field is separate from this HTML.
+
+  Use triple braces {{{VAR}}} for values so special characters render safely (same as contact template).
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Workspace invitation</title>
+  </head>
+  <body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: Arial, Helvetica, sans-serif; color: #111827;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f3f4f6; padding: 24px 12px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0" style="max-width: 640px; width: 100%; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px;">
+            <tr>
+              <td style="padding: 24px 24px 16px 24px;">
+                <h1 style="margin: 0; font-size: 24px; line-height: 1.2; color: #111827;">
+                  You're invited to a workspace
+                </h1>
+                <p style="margin: 8px 0 0 0; font-size: 14px; color: #6b7280;">
+                  Sign in with the email below to see your pending invitation in the workspace hub.
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding: 0 24px 16px 24px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 10px 0; border-top: 1px solid #e5e7eb; width: 170px; font-size: 13px; font-weight: 700; color: #374151;">Client</td>
+                    <td style="padding: 10px 0; border-top: 1px solid #e5e7eb; font-size: 14px; color: #111827;">{{{CLIENT_NAME}}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 10px 0; border-top: 1px solid #e5e7eb; width: 170px; font-size: 13px; font-weight: 700; color: #374151;">Role</td>
+                    <td style="padding: 10px 0; border-top: 1px solid #e5e7eb; font-size: 14px; color: #111827;">{{{ROLE}}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 10px 0; border-top: 1px solid #e5e7eb; width: 170px; font-size: 13px; font-weight: 700; color: #374151;">Sign in as</td>
+                    <td style="padding: 10px 0; border-top: 1px solid #e5e7eb; font-size: 14px; color: #111827;">
+                      <a href="mailto:{{{INVITEE_EMAIL}}}" style="color: #2563eb; text-decoration: none;">{{{INVITEE_EMAIL}}}</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 10px 0; border-top: 1px solid #e5e7eb; width: 170px; font-size: 13px; font-weight: 700; color: #374151;">Invitation ID</td>
+                    <td style="padding: 10px 0; border-top: 1px solid #e5e7eb; font-size: 14px; color: #111827; font-family: Consolas, 'Courier New', monospace;">{{{INVITATION_ID}}}</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding: 0 24px 20px 24px;">
+                <p style="margin: 0 0 8px 0; font-size: 13px; font-weight: 700; color: #374151;">Sign in</p>
+                <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; text-align: center;">
+                  <a
+                    href="{{{SIGN_IN_URL}}}"
+                    style="display: inline-block; background-color: #2563eb; color: #ffffff; font-size: 14px; font-weight: 700; text-decoration: none; padding: 12px 24px; border-radius: 8px;"
+                  >
+                    Open workspace hub
+                  </a>
+                  <p style="margin: 14px 0 0 0; font-size: 12px; line-height: 1.5; color: #6b7280;">
+                    Or paste this URL into your browser:<br />
+                    <span style="word-break: break-all; color: #374151;">{{{SIGN_IN_URL}}}</span>
+                  </p>
+                </div>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding: 0 24px 24px 24px;">
+                <p style="margin: 0; font-size: 12px; color: #6b7280;">
+                  Tip: publish in Resend as tenant_invite (or any name), copy the template id into RESEND_INVITE_TEMPLATE_ID; the API sends only these variables.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

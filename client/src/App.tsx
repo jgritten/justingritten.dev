@@ -15,6 +15,7 @@ import {
   AccountSettings,
   ApplicationSettings,
   ClientSettings,
+  UsersSettings,
 } from './Components/SaaS/Settings'
 
 function SaasRoutesLayout() {
@@ -60,6 +61,7 @@ function App() {
                 <Route path="account" element={<AccountSettings />} />
                 <Route path="application" element={<ApplicationSettings />} />
                 <Route path="client" element={<ClientSettings />} />
+                <Route path="users" element={<UsersSettings />} />
               </Route>
             </Route>
           </Route>

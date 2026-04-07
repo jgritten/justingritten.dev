@@ -78,6 +78,7 @@ describe('sidebarConfig', () => {
         { id: 'saas-settings-account', label: 'Account', to: '/saas/settings/account' },
         { id: 'saas-settings-application', label: 'Application', to: '/saas/settings/application' },
         { id: 'saas-settings-client', label: 'Client', to: '/saas/settings/client' },
+        { id: 'saas-settings-users', label: 'Users', to: '/saas/settings/users' },
       ],
     })
   })

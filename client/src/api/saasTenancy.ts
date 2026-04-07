@@ -1,7 +1,11 @@
 import {
+  apiDeleteWithTenantNoContent,
   apiGetWithBearer,
+  apiGetWithTenant,
+  apiPatchWithTenantNoContent,
   apiPostWithBearer,
   apiPostWithBearerNoContent,
+  apiPostWithTenant,
   apiPutWithBearer,
 } from './client'
 
@@ -81,4 +85,89 @@ export async function declineTenantInvitation(
   invitationId: string
 ): Promise<void> {
   await apiPostWithBearerNoContent(`/api/v1/Tenancy/invitations/${invitationId}/decline`, token)
+}
+
+export type TenantClientMemberDto = {
+  membershipId: string
+  clerkUserId: string
+  /** Roster email when known (owner session or accepted invite); otherwise omit/null. */
+  email?: string | null
+  role: string
+  createdAtUtc: string
+  isCurrentUser: boolean
+}
+
+export type TenantPendingInvitationDto = {
+  invitationId: string
+  inviteeEmail: string
+  role: string
+  /** Display status for the Users table (e.g. "Invited"). */
+  status: string
+}
+
+export type TenantClientRosterDto = {
+  members: TenantClientMemberDto[]
+  pendingInvitations: TenantPendingInvitationDto[]
+}
+
+export async function fetchTenantClientRoster(
+  token: string | null,
+  tenantClientId: string
+): Promise<TenantClientRosterDto> {
+  return apiGetWithTenant<TenantClientRosterDto>(
+    '/api/v1/Tenancy/clients/members',
+    token,
+    tenantClientId
+  )
+}
+
+/** Updates a member’s client role (Admin or User only). Caller must be Owner or Admin of the tenant. */
+export type CreateTenantInvitationResponse = {
+  invitationId: string
+  inviteeEmail: string
+  role: string
+}
+
+/** Creates a pending invitation (Admin or User role). Caller must be Owner or Admin. */
+export async function createTenantInvitation(
+  token: string | null,
+  tenantClientId: string,
+  inviteeEmail: string,
+  role: 'Admin' | 'User'
+): Promise<CreateTenantInvitationResponse> {
+  return apiPostWithTenant<CreateTenantInvitationResponse>(
+    '/api/v1/Tenancy/clients/invitations',
+    { inviteeEmail, role },
+    token,
+    tenantClientId
+  )
+}
+
+export async function patchTenantMemberRole(
+  token: string | null,
+  tenantClientId: string,
+  membershipId: string,
+  role: 'Admin' | 'User'
+): Promise<void> {
+  await apiPatchWithTenantNoContent(
+    `/api/v1/Tenancy/clients/members/${membershipId}`,
+    { role },
+    token,
+    tenantClientId
+  )
+}
+
+/** Removes a pending invitation. Caller must be Owner or Admin on the tenant client. */
+export async function deleteTenantPendingInvitation(
+  token: string | null,
+  tenantClientId: string,
+  invitationId: string
+): Promise<void> {
+  const id = invitationId.trim()
+  if (!id) throw new Error('Invitation id is required.')
+  await apiDeleteWithTenantNoContent(
+    `/api/v1/Tenancy/clients/invitations/${encodeURIComponent(id)}`,
+    token,
+    tenantClientId
+  )
 }

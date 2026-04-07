@@ -3,10 +3,13 @@ import {
   getApiUrl,
   apiGet,
   apiGetWithBearer,
+  apiGetWithTenant,
+  apiDeleteWithTenantNoContent,
   apiPostWithBearer,
   apiPutWithBearer,
   apiPostWithBearerNoContent,
 } from './client'
+import { X_TENANT_CLIENT_ID } from './tenantHeaders'
 
 // Base URL is set in vitest.config env (VITE_API_URL); API_BASE is read at module load.
 describe('getApiUrl', () => {
@@ -87,6 +90,72 @@ describe('apiGetWithBearer', () => {
       'http://localhost:5237/api/v1/me',
       expect.objectContaining({
         headers: {},
+      })
+    )
+  })
+})
+
+describe('apiGetWithTenant', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn())
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('sends X-Tenant-Client-Id and optional Authorization', async () => {
+    const data = { members: [{ membershipId: 'm1' }], pendingInvitations: [] }
+    ;(fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve(data),
+    })
+    const result = await apiGetWithTenant<typeof data>(
+      '/api/v1/Tenancy/clients/members',
+      'tok',
+      'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'
+    )
+    expect(result).toEqual(data)
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:5237/api/v1/Tenancy/clients/members',
+      expect.objectContaining({
+        headers: {
+          [X_TENANT_CLIENT_ID]: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+          Authorization: 'Bearer tok',
+        },
+      })
+    )
+  })
+})
+
+describe('apiDeleteWithTenantNoContent', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn())
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('sends DELETE with tenant header and Authorization', async () => {
+    ;(fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      status: 204,
+      text: () => Promise.resolve(''),
+    })
+    await apiDeleteWithTenantNoContent(
+      '/api/v1/Tenancy/clients/invitations/11111111-1111-1111-1111-111111111111',
+      'jwt',
+      'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'
+    )
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:5237/api/v1/Tenancy/clients/invitations/11111111-1111-1111-1111-111111111111',
+      expect.objectContaining({
+        method: 'DELETE',
+        headers: {
+          [X_TENANT_CLIENT_ID]: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+          Authorization: 'Bearer jwt',
+        },
       })
     )
   })

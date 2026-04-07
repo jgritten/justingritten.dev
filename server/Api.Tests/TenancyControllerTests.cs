@@ -47,4 +47,22 @@ public class TenancyControllerTests : IClassFixture<ApiWebApplicationFactory>
         var response = await _client.PostAsync($"/api/v1/Tenancy/invitations/{id}/accept", null);
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
+
+    [Fact]
+    public async Task ListClientMembers_WithoutToken_Returns401()
+    {
+        var response = await _client.GetAsync("/api/v1/Tenancy/clients/members");
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task RevokeClientInvitation_WithoutToken_Returns401()
+    {
+        var id = Guid.NewGuid();
+        using var request = new HttpRequestMessage(
+            HttpMethod.Delete,
+            $"/api/v1/Tenancy/clients/invitations/{id}");
+        var response = await _client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
 }

@@ -8,10 +8,17 @@ namespace Api.Services;
 public class TenancyService : ITenancyService
 {
     private readonly ITenantRepository _tenantRepository;
+    private readonly ITenantInvitationEmailSender _invitationEmailSender;
+    private readonly ILogger<TenancyService> _logger;
 
-    public TenancyService(ITenantRepository tenantRepository)
+    public TenancyService(
+        ITenantRepository tenantRepository,
+        ITenantInvitationEmailSender invitationEmailSender,
+        ILogger<TenancyService> logger)
     {
         _tenantRepository = tenantRepository;
+        _invitationEmailSender = invitationEmailSender;
+        _logger = logger;
     }
 
     public async Task<TenantWorkspaceResponseDto> GetWorkspaceAsync(
@@ -42,7 +49,7 @@ public class TenancyService : ITenancyService
                 i.Id.ToString(),
                 i.TenantClientId.ToString(),
                 i.TenantClient.Name,
-                i.InviteeEmailNormalized,
+                string.IsNullOrWhiteSpace(i.InviteeEmail) ? i.InviteeEmailNormalized : i.InviteeEmail.Trim(),
                 i.Role,
                 i.Status.ToString(),
                 i.TenantClientId == NorthwindsDemoTenant.ClientId))
@@ -65,14 +72,147 @@ public class TenancyService : ITenancyService
     public async Task<CreateTenantClientResponseDto?> CreateClientAsync(
         string clerkUserId,
         string name,
+        string? ownerEmailFromSession,
         CancellationToken cancellationToken)
     {
         var trimmed = name.Trim();
         if (trimmed.Length == 0 || trimmed.Length > 200)
             return null;
 
-        var (client, _) = await _tenantRepository.CreateClientAndMembershipAsync(clerkUserId, trimmed, cancellationToken);
+        var ownerEmail =
+            string.IsNullOrWhiteSpace(ownerEmailFromSession) ? null : ownerEmailFromSession.Trim();
+        var (client, _) = await _tenantRepository.CreateClientAndMembershipAsync(
+            clerkUserId,
+            trimmed,
+            ownerEmail,
+            cancellationToken);
         return new CreateTenantClientResponseDto(client.Id.ToString(), client.Name);
+    }
+
+    public async Task<(TenantInvitationCreateOutcome Outcome, CreateTenantInvitationResponseDto? Created)>
+        TryCreateInvitationAsync(
+            string callerClerkUserId,
+            Guid tenantClientId,
+            string inviteeEmail,
+            string role,
+            string? callerEmailFromSession,
+            CancellationToken cancellationToken)
+    {
+        var caller = await _tenantRepository.GetCallerMembershipInClientAsync(
+            callerClerkUserId,
+            tenantClientId,
+            cancellationToken);
+        if (caller is null || (caller.Role != TenantRoles.Owner && caller.Role != TenantRoles.Admin))
+            return (TenantInvitationCreateOutcome.Forbidden, null);
+
+        var trimmedDisplay = inviteeEmail?.Trim() ?? string.Empty;
+        if (trimmedDisplay.Length == 0 || trimmedDisplay.Length > 320)
+            return (TenantInvitationCreateOutcome.InvalidEmail, null);
+
+        var norm = NormalizeEmail(trimmedDisplay);
+        if (string.IsNullOrEmpty(norm) || norm.Length > 254)
+            return (TenantInvitationCreateOutcome.InvalidEmail, null);
+
+        var callerNorm = NormalizeEmail(callerEmailFromSession);
+        if (!string.IsNullOrEmpty(callerNorm) && callerNorm == norm)
+            return (TenantInvitationCreateOutcome.CannotInviteSelf, null);
+
+        var normalizedRole = TryNormalizeAssignableRole(role);
+        if (normalizedRole is null)
+            return (TenantInvitationCreateOutcome.InvalidRole, null);
+
+        if (await _tenantRepository.PendingInvitationExistsForClientAndEmailAsync(
+                tenantClientId,
+                norm,
+                cancellationToken))
+            return (TenantInvitationCreateOutcome.PendingExists, null);
+
+        if (await _tenantRepository.MembershipHasNormalizedEmailInClientAsync(
+                tenantClientId,
+                norm,
+                cancellationToken))
+            return (TenantInvitationCreateOutcome.AlreadyMember, null);
+
+        var invitation = new TenantInvitation
+        {
+            Id = Guid.NewGuid(),
+            TenantClientId = tenantClientId,
+            InviteeEmail = trimmedDisplay,
+            InviteeEmailNormalized = norm,
+            Role = normalizedRole,
+            Status = InvitationStatus.Pending,
+            CreatedAtUtc = DateTime.UtcNow,
+        };
+
+        try
+        {
+            await _tenantRepository.AddInvitationAsync(invitation, cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            return (TenantInvitationCreateOutcome.Conflict, null);
+        }
+
+        TenantInvitationEmailSendResult sendResult;
+        try
+        {
+            var clientName =
+                await _tenantRepository.GetTenantClientNameAsync(tenantClientId, cancellationToken)
+                ?? "a workspace";
+            sendResult = await _invitationEmailSender.SendTenantInvitationAsync(
+                new TenantInvitationEmail
+                {
+                    InvitationId = invitation.Id,
+                    InviteeEmail = trimmedDisplay,
+                    ClientName = clientName,
+                    Role = normalizedRole,
+                },
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(
+                ex,
+                "Tenant invitation email threw after save. Rolling back invitation {InvitationId}",
+                invitation.Id);
+            await _tenantRepository.DeletePendingInvitationAsync(invitation.Id, tenantClientId, cancellationToken);
+            return (TenantInvitationCreateOutcome.InvitationEmailRejected, null);
+        }
+
+        if (sendResult != TenantInvitationEmailSendResult.Sent)
+        {
+            await _tenantRepository.DeletePendingInvitationAsync(invitation.Id, tenantClientId, cancellationToken);
+            return sendResult == TenantInvitationEmailSendResult.Misconfigured
+                ? (TenantInvitationCreateOutcome.InvitationEmailMisconfigured, null)
+                : (TenantInvitationCreateOutcome.InvitationEmailRejected, null);
+        }
+
+        return (
+            TenantInvitationCreateOutcome.Created,
+            new CreateTenantInvitationResponseDto(
+                invitation.Id.ToString(),
+                trimmedDisplay,
+                normalizedRole));
+    }
+
+    public async Task<TenantInvitationRevokeOutcome> TryRevokePendingInvitationAsync(
+        string callerClerkUserId,
+        Guid tenantClientId,
+        Guid invitationId,
+        CancellationToken cancellationToken)
+    {
+        var caller = await _tenantRepository.GetCallerMembershipInClientAsync(
+            callerClerkUserId,
+            tenantClientId,
+            cancellationToken);
+        if (caller is null || (caller.Role != TenantRoles.Owner && caller.Role != TenantRoles.Admin))
+            return TenantInvitationRevokeOutcome.Forbidden;
+
+        var deleted = await _tenantRepository.DeletePendingInvitationAsync(
+            invitationId,
+            tenantClientId,
+            cancellationToken);
+        return deleted ? TenantInvitationRevokeOutcome.Revoked : TenantInvitationRevokeOutcome.NotFound;
     }
 
     public async Task<bool> UpdatePreferencesAsync(
@@ -149,6 +289,89 @@ public class TenancyService : ITenancyService
         return true;
     }
 
+    public async Task<TenantClientRosterResponseDto?> GetTenantClientRosterAsync(
+        string clerkUserId,
+        Guid tenantClientId,
+        CancellationToken cancellationToken)
+    {
+        if (!await _tenantRepository.UserHasMembershipAsync(clerkUserId, tenantClientId, cancellationToken))
+            return null;
+
+        var members = await _tenantRepository.GetMembershipsForClientAsync(tenantClientId, cancellationToken);
+        var memberDtos = members
+            .Select(m => new TenantClientMemberResponseDto(
+                m.Id.ToString(),
+                m.ClerkUserId,
+                m.MemberEmail,
+                m.Role,
+                m.CreatedAtUtc,
+                string.Equals(m.ClerkUserId, clerkUserId, StringComparison.Ordinal)))
+            .ToList();
+
+        var pending = await _tenantRepository.GetPendingInvitationsForClientAsync(tenantClientId, cancellationToken);
+        var inviteDtos = pending
+            .Select(i => new TenantClientPendingInvitationDto(
+                i.Id.ToString(),
+                string.IsNullOrWhiteSpace(i.InviteeEmail) ? i.InviteeEmailNormalized : i.InviteeEmail.Trim(),
+                i.Role,
+                "Invited"))
+            .ToList();
+
+        return new TenantClientRosterResponseDto(memberDtos, inviteDtos);
+    }
+
+    public async Task<TenantMemberRoleUpdateOutcome> UpdateMemberRoleAsync(
+        string callerClerkUserId,
+        Guid tenantClientId,
+        Guid membershipId,
+        string requestedRole,
+        CancellationToken cancellationToken)
+    {
+        var caller = await _tenantRepository.GetCallerMembershipInClientAsync(
+            callerClerkUserId,
+            tenantClientId,
+            cancellationToken);
+        if (caller is null)
+            return TenantMemberRoleUpdateOutcome.Forbidden;
+
+        if (caller.Role is not TenantRoles.Owner and not TenantRoles.Admin)
+            return TenantMemberRoleUpdateOutcome.Forbidden;
+
+        var normalizedRole = TryNormalizeAssignableRole(requestedRole);
+        if (normalizedRole is null)
+            return TenantMemberRoleUpdateOutcome.InvalidRole;
+
+        var members = await _tenantRepository.GetMembershipsForClientAsync(tenantClientId, cancellationToken);
+        var target = members.FirstOrDefault(m => m.Id == membershipId);
+        if (target is null)
+            return TenantMemberRoleUpdateOutcome.NotFound;
+
+        if (target.Role == TenantRoles.Owner)
+            return TenantMemberRoleUpdateOutcome.InvalidRole;
+
+        if (string.Equals(target.Role, normalizedRole, StringComparison.Ordinal))
+            return TenantMemberRoleUpdateOutcome.Success;
+
+        var ok = await _tenantRepository.ApplyMembershipRoleInClientAsync(
+            membershipId,
+            tenantClientId,
+            normalizedRole,
+            cancellationToken);
+        return ok ? TenantMemberRoleUpdateOutcome.Success : TenantMemberRoleUpdateOutcome.NotFound;
+    }
+
+    private static string? TryNormalizeAssignableRole(string requested)
+    {
+        if (string.IsNullOrWhiteSpace(requested))
+            return null;
+        var t = requested.Trim();
+        if (t.Equals(TenantRoles.Admin, StringComparison.OrdinalIgnoreCase))
+            return TenantRoles.Admin;
+        if (t.Equals(TenantRoles.User, StringComparison.OrdinalIgnoreCase))
+            return TenantRoles.User;
+        return null;
+    }
+
     private async Task EnsureNorthwindsDemoInvitationAsync(
         string clerkUserId,
         string emailNorm,
@@ -167,6 +390,7 @@ public class TenancyService : ITenancyService
         {
             Id = Guid.NewGuid(),
             TenantClientId = NorthwindsDemoTenant.ClientId,
+            InviteeEmail = emailNorm,
             InviteeEmailNormalized = emailNorm,
             Role = TenantRoles.User,
             Status = InvitationStatus.Pending,

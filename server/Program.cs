@@ -120,14 +120,18 @@ var emailProvider = (builder.Configuration["EMAIL_PROVIDER"] ?? "Resend").Trim()
 if (emailProvider.Equals("Resend", StringComparison.OrdinalIgnoreCase))
 {
     builder.Services.AddHttpClient(nameof(ResendContactEmailSender));
+    builder.Services.AddHttpClient(nameof(ResendTenantInvitationEmailSender));
     builder.Services.Configure<ResendEmailOptions>(options =>
     {
         options.ApiKey = builder.Configuration["RESEND_API_KEY"] ?? string.Empty;
         options.FromEmail = builder.Configuration["RESEND_FROM_EMAIL"] ?? string.Empty;
         options.ToEmail = builder.Configuration["CONTACT_TO_EMAIL"] ?? string.Empty;
         options.ContactTemplateId = builder.Configuration["RESEND_CONTACT_TEMPLATE_ID"] ?? string.Empty;
+        options.InviteTemplateId = builder.Configuration["RESEND_INVITE_TEMPLATE_ID"] ?? string.Empty;
+        options.PublicAppOrigin = builder.Configuration["APP_PUBLIC_ORIGIN"] ?? string.Empty;
     });
     builder.Services.AddScoped<IContactEmailSender, ResendContactEmailSender>();
+    builder.Services.AddScoped<ITenantInvitationEmailSender, ResendTenantInvitationEmailSender>();
 }
 else if (emailProvider.Equals("Ses", StringComparison.OrdinalIgnoreCase))
 {
@@ -138,10 +142,12 @@ else if (emailProvider.Equals("Ses", StringComparison.OrdinalIgnoreCase))
         options.ToEmail = builder.Configuration["CONTACT_TO_EMAIL"] ?? string.Empty;
     });
     builder.Services.AddScoped<IContactEmailSender, SesContactEmailSender>();
+    builder.Services.AddScoped<ITenantInvitationEmailSender, NoOpTenantInvitationEmailSender>();
 }
 else
 {
     builder.Services.AddScoped<IContactEmailSender, NoOpContactEmailSender>();
+    builder.Services.AddScoped<ITenantInvitationEmailSender, NoOpTenantInvitationEmailSender>();
 }
 
 // Configure CORS for React frontend (local and production)

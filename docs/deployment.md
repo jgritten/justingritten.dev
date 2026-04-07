@@ -112,6 +112,8 @@ Contact notification delivery is provider-agnostic and selected at runtime using
   - `RESEND_FROM_EMAIL`
   - `CONTACT_TO_EMAIL`
   - `RESEND_CONTACT_TEMPLATE_ID` (published Resend template UUID for contact notifications; must match template variables in `docs/resend/templates/contact-email-template.resend.html`)
+  - `APP_PUBLIC_ORIGIN` (HTTPS origin of the SPA, no trailing slash, e.g. `https://www.justingritten.dev`) — invitation emails set `SIGN_IN_URL` to `{origin}/saas`. If unset, the API uses `https://www.justingritten.dev` as the origin (logs a warning); set this explicitly for non-production or alternate domains.
+  - `RESEND_INVITE_TEMPLATE_ID` (**required** for tenant invitations when using Resend) — published Resend template UUID for invitee-facing emails (suggested dashboard name: **tenant_invite**). Creating an invitation **fails** if the template cannot be sent (missing key/from/template or Resend API error). HTML and variable names: `docs/resend/templates/tenant-invite-email-template.resend.html`.
 - `EMAIL_PROVIDER=Ses` (scaffolded; AWS SDK send logic can be added later)
   - `SES_REGION` (or `AWS_REGION`)
   - `SES_FROM_EMAIL`

@@ -274,6 +274,11 @@ namespace Api.Migrations
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("InviteeEmail")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("InviteeEmailNormalized")
                         .IsRequired()
                         .HasMaxLength(254)
@@ -314,6 +319,10 @@ namespace Api.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MemberEmail")
+                        .HasMaxLength(320)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Role")

@@ -43,6 +43,7 @@ namespace Api.Data;
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.ClerkUserId).IsRequired().HasMaxLength(128);
                 entity.Property(e => e.Role).IsRequired().HasMaxLength(64);
+                entity.Property(e => e.MemberEmail).HasMaxLength(320);
                 entity.Property(e => e.CreatedAtUtc);
                 entity.HasIndex(e => e.ClerkUserId);
                 entity.HasIndex(e => new { e.ClerkUserId, e.TenantClientId }).IsUnique();
@@ -60,6 +61,7 @@ namespace Api.Data;
             modelBuilder.Entity<TenantInvitation>(entity =>
             {
                 entity.HasKey(e => e.Id);
+                entity.Property(e => e.InviteeEmail).IsRequired().HasMaxLength(320);
                 entity.Property(e => e.InviteeEmailNormalized).IsRequired().HasMaxLength(254);
                 entity.Property(e => e.Role).IsRequired().HasMaxLength(64);
                 entity.Property(e => e.Status).HasConversion<int>();

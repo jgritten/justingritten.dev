@@ -8,10 +8,10 @@ export function ClientSettings() {
         Client
       </Heading>
       <Text as="p" size="2" color="gray" className="settings__description">
-        Client access, affiliations, and user management. Request access, leave client, office location, and client-level settings.
+        Tenant profile for the client you have selected: name, branding, document headers and footers, offices, and other client-wide defaults.
       </Text>
       <Text as="p" size="2" color="gray">
-        Application settings placeholder — Client section. Future: request client access, leave client, user management, office location, contact info.
+        Placeholder — future: logo upload, document templates, office directory, and client-level preferences. Manage people under Settings → Users.
       </Text>
     </div>
   )

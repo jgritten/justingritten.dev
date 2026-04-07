@@ -1,0 +1,172 @@
+/* Reusable SaaS layout: main content + sliding CRUD column (desktop) or right sheet (mobile). */
+
+.crud-slide-panel-layout {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  width: 100%;
+  min-height: 100%;
+  position: relative;
+}
+
+.crud-slide-panel-layout__main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.crud-slide-panel-layout__aside {
+  flex-shrink: 0;
+  width: 0;
+  overflow: hidden;
+  transition: width 0.28s ease;
+  border-left: none;
+  background: transparent;
+  box-sizing: border-box;
+}
+
+.crud-slide-panel-layout__aside--open {
+  width: 30rem;
+  max-width: 100%;
+}
+
+/* Shares .content-card glass, shadow, and theme backgrounds from App.css */
+.crud-slide-panel__surface.content-card {
+  padding: 0;
+  width: 30rem;
+  max-width: 100%;
+  height: 100%;
+  min-height: 12rem;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Desktop: panel sits beside main card — round only the trailing (right) edge */
+@media (min-width: 769px) {
+  .crud-slide-panel__surface.content-card {
+    border-radius: 0 12px 12px 0;
+  }
+}
+
+/* Mobile sheet: round the edge that meets the backdrop (left side of the sheet) */
+@media (max-width: 768px) {
+  .crud-slide-panel__surface.content-card {
+    border-radius: 12px 0 0 12px;
+  }
+}
+
+.crud-slide-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1.5rem 2rem 0.75rem;
+  flex-shrink: 0;
+}
+
+.crud-slide-panel__title {
+  margin: 0;
+  font-size: var(--font-size-4);
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--gray-12);
+}
+
+.crud-slide-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.crud-slide-panel__body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0.5rem 2rem 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .crud-slide-panel__header {
+    padding: 1.25rem 1.25rem 0.75rem;
+  }
+
+  .crud-slide-panel__body {
+    padding: 0.5rem 1.25rem 1.25rem;
+  }
+}
+
+.crud-slide-panel__success {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: crud-slide-panel-fade-in 0.2s ease;
+  z-index: 2;
+  backdrop-filter: blur(4px);
+  background: var(--color-panel);
+}
+
+html[data-theme='light'] .crud-slide-panel__success {
+  background-color: rgba(255, 255, 255, 0.72);
+}
+
+html[data-theme='dark'] .crud-slide-panel__success {
+  background-color: rgba(0, 0, 0, 0.55);
+}
+
+@keyframes crud-slide-panel-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.crud-slide-panel-layout__backdrop {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .crud-slide-panel-layout__aside {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: auto;
+    width: 100%;
+    max-width: min(30rem, 100vw);
+    z-index: 160;
+    border-left: none;
+    transform: translateX(100%);
+    transition: transform 0.28s ease;
+  }
+
+  .crud-slide-panel-layout__aside--open {
+    width: min(30rem, 100vw);
+    transform: translateX(0);
+  }
+
+  .crud-slide-panel-layout__aside-inner {
+    width: 100%;
+    max-width: min(30rem, 100vw);
+    min-height: 100%;
+  }
+
+  .crud-slide-panel-layout__backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 155;
+    background: var(--black-a6);
+    cursor: pointer;
+    border: none;
+    padding: 0;
+    animation: crud-slide-panel-fade-in 0.2s ease;
+  }
+}

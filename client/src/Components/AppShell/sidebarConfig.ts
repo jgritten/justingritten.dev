@@ -165,6 +165,11 @@ export const saasSidebarConfig: SidebarConfig = {
             label: 'Client',
             to: '/saas/settings/client',
           },
+          {
+            id: 'saas-settings-users',
+            label: 'Users',
+            to: '/saas/settings/users',
+          },
         ],
       },
     },
