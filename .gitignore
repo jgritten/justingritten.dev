@@ -44,3 +44,6 @@ client/coverage/
 server/Api.Tests/TestResults/
 
 temp/
+
+# AI retro artifacts (local workflow metadata)
+.ai-retro/

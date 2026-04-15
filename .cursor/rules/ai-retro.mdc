@@ -1,0 +1,94 @@
+---
+description: Optional, low-overhead AI workflow retrospectives to improve rules and prompts from recurring patterns without slowing delivery.
+alwaysApply: true
+---
+
+# AI workflow retrospective (optional cadence)
+
+This rule is for periodic improvement of AI-assisted delivery quality.
+It is intentionally non-blocking and must not slow normal ticket execution.
+
+## Purpose
+
+Use short, evidence-based retros to identify repeated workflow failures and make small, targeted improvements to prompts/rules.
+
+## Non-goal
+
+Do not require per-ticket heavy logging or manual process overhead during normal implementation work.
+
+## Trigger
+
+Run this retro only when one of these is true:
+
+- Roughly every 10 completed tickets, or
+- Biweekly cadence, or
+- A recurring issue clearly appears across multiple recent tickets.
+
+## Inputs (keep lightweight)
+
+Use available context from recent tickets/runs/chats and commit history.
+If detailed notes are missing, perform a best-effort review from memory plus recent diffs/conversation context.
+
+## Retro process (20-30 minutes max)
+
+1. Identify the top 2 recurring failure patterns (drift, overreach, unclear acceptance, unrelated fixes, etc.).
+2. For each pattern, note likely root cause in prompts/rules/workflow.
+3. Propose one minimal intervention per pattern (prompt tweak, checklist tweak, or single rule line).
+4. Choose at most one rule change to apply in this retro cycle.
+5. Define what success looks like for the next batch (what should improve).
+6. Write one retro summary file for this run (see output format below).
+
+## Retro output artifact (one file per retro)
+
+Create exactly one new file per retro run under:
+
+`.ai-retro/YYYY-MM-DD-HHMM-brief-topic.md`
+
+This is a retro summary file, not per-ticket logging. Keep it short and practical.
+Use a brief topic slug so multiple retros on the same day stay separate and scannable.
+
+Minimum sections:
+
+- Scope reviewed (time window or approximate ticket count)
+- Top 2 recurring patterns
+- Root causes (brief)
+- Intervention selected (single change, if any)
+- Success signal for next batch
+- Deferred ideas (optional)
+
+If no rule/prompt changes are needed, explicitly state "No change this cycle" and why.
+
+After completing a retro run, create if missing and then update:
+
+`.ai-retro/last-evaluated.txt`
+
+Set it to the latest completed retro artifact filename (or ISO timestamp) so commit-prep cadence checks can determine when retro is ready/overdue.
+
+## Change threshold (avoid overfitting)
+
+- One-off issue: do not change rules.
+- 2-3 occurrences: add/try prompt-level guidance first.
+- 4+ occurrences: codify with a concise rule update.
+
+## Rule update policy
+
+- Prefer small edits over new files.
+- Keep changes specific, testable, and tied to a repeated pattern.
+- Do not add broad constraints from a single incident.
+- If a rule change is made, briefly record why and expected effect.
+
+## Suggested kickoff phrase
+
+Use:
+
+`run ai retro`
+
+Optional:
+
+`run ai retro on last 10 tickets`
+
+## Relationship to other rules
+
+- `ticket-workflow` governs ticket execution.
+- `tests-before-commit` and `site-versioning` govern ship/commit prep.
+- `ai-retro` governs periodic improvement of those workflows.
