@@ -3,13 +3,17 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import { RecentActivityWidget } from './RecentActivityWidget'
 
+function isoDaysAgo(daysAgo: number) {
+  return new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString()
+}
+
 const mockCommits = [
   {
     sha: 'abc123',
     html_url: 'https://github.com/jgritten/justingritten.dev/commit/abc123',
     commit: {
       message: 'feat: add Recent Activity widget',
-      author: { name: 'Justin Gritten', email: 'j@example.com', date: '2026-03-09T12:00:00Z' },
+      author: { name: 'Justin Gritten', email: 'j@example.com', date: isoDaysAgo(1) },
     },
     author: {
       login: 'jgritten',
@@ -130,7 +134,7 @@ describe('RecentActivityWidget', () => {
       commit: {
         ...mockCommits[0].commit,
         message: `Commit ${i}`,
-        author: { ...mockCommits[0].commit.author, date: `2026-03-0${9 - i}T12:00:00Z` },
+        author: { ...mockCommits[0].commit.author, date: isoDaysAgo(i + 1) },
       },
     }))
     ;(fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(() =>

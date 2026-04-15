@@ -43,7 +43,13 @@ describe('CICDWidget', () => {
   it('describes hosting with S3 and Squarespace', () => {
     render(<CICDWidgetWithTheme />)
     expect(
-      screen.getByText(/Squarespace handles domain and DNS/)
+      screen.getByText(/Squarespace-managed DNS/)
     ).toBeTruthy()
+  })
+
+  it('describes API deployment to Elastic Beanstalk', () => {
+    render(<CICDWidgetWithTheme />)
+    expect(screen.getByText(/API to Elastic Beanstalk/)).toBeTruthy()
+    expect(screen.getByText(/post-deploy health\/event checks/)).toBeTruthy()
   })
 })

@@ -28,12 +28,14 @@ const PIPELINE_STEPS = [
   {
     id: 'actions',
     title: 'GitHub Actions',
-    description: 'On push to main (or manual run): checkout → Node 20 → install → test → build → AWS OIDC → S3 upload (assets, static files, index.html) → CloudFront invalidation.',
+    description:
+      'On push to main (or manual run), workflows run client + server tests, build the SPA with production env vars, deploy frontend assets to S3 with CloudFront invalidation, and publish + deploy the API to Elastic Beanstalk with post-deploy health/event checks.',
   },
   {
     id: 'hosting',
     title: 'S3 + Squarespace',
-    description: 'Compiled site is served from an S3 bucket; Squarespace handles domain and DNS.',
+    description:
+      'Frontend is served from S3 behind CloudFront with Squarespace-managed DNS; the API runs on Elastic Beanstalk behind api.justingritten.dev.',
   },
 ] as const
 
