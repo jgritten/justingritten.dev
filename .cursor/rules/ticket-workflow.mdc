@@ -1,0 +1,118 @@
+---
+description: Enforce scope triage, ticket intake, bounded implementation, and end-of-ticket self-review before commit-prep rules apply.
+alwaysApply: true
+---
+
+# Ticket intake and execution workflow
+
+This rule defines how to run a ticket from intake to completion so work stays scoped, testable, and aligned with intent.
+
+## When this rule applies
+
+Apply this workflow when the user asks to implement, fix, refactor, or deliver a discrete ticket/task.
+Do not use this workflow for simple factual questions or one-off read-only explanations.
+
+## Step 0: Scope triage gate (before intake)
+
+Before any normal intake summary, classify ticket scope:
+
+- **Small/clear ticket:** Narrow behavior change with obvious touched areas and low architectural impact.
+- **Medium ticket:** Multiple files/surfaces but still deliverable as one bounded ticket.
+- **Large/epic ticket:** Broad capability or platform feature likely requiring architecture, phased delivery, or multiple tickets.
+
+Use this effort guidance when classifying scope:
+
+- **Small/clear:** Usually less than one focused work session.
+- **Medium:** Usually one to three focused work sessions.
+- **Large/epic:** Usually more than three sessions or clearly multi-ticket.
+
+Treat these as **risk signals**, not automatic epic classification:
+
+- Touches 3+ domains (UI, API, data model, deployment, security, docs).
+- Depends on external integrations/third-party systems with unknown constraints.
+- Requires architectural decisions or phased rollout.
+- Lacks measurable acceptance criteria and cannot be safely inferred.
+
+Classify as **large/epic** when risk signals indicate uncertainty/architecture/rollout risk that cannot be safely delivered as one bounded ticket.
+Do **not** auto-classify as epic from domain count alone.
+
+Example: a standard feature spanning UI + API + docs (e.g. loading client info on dashboard with a matching endpoint and doc update) can still be **small/medium** if requirements and acceptance criteria are clear.
+
+If scope appears **large/epic**, stop and call it out immediately before planning implementation.
+Examples of red-flag requests include broad asks like "add document generation", "build auth", "add billing", or "add notifications everywhere" without constraints.
+
+For large/epic scope, the agent must:
+
+1. Explain why the request is oversized/risky in concrete terms (surface area, data model, infra, UX, security, testing, rollout).
+2. Propose decomposition into smaller, testable sub-tickets with suggested order.
+3. Recommend starting with a thin slice/MVP sub-ticket.
+4. Ask for confirmation on which sub-ticket to execute first.
+
+Do not proceed to full implementation planning until the user confirms scope.
+
+## Step 1: Ticket intake (after scope is right-sized)
+
+Before writing code, the agent must:
+
+1. Summarize the ticket in 2-5 bullets (goal, expected behavior, constraints).
+2. Identify likely impacted areas (files/modules/routes/tests/docs).
+3. Identify the initial expected file set before coding.
+   - If likely touched files exceed a reasonable bounded set, call that out as a scope risk.
+4. State assumptions and unknowns explicitly.
+5. Define clear acceptance criteria/checks that will be verified before completion.
+6. List 1-3 explicit non-goals to prevent scope creep.
+7. Call out ambiguity or conflicting requirements.
+8. Propose a minimal numbered implementation plan.
+9. Pause for confirmation when requirements are ambiguous or materially incomplete.
+
+If the request is clear and low-risk, proceed with only Step 1 of the plan first, then re-check scope before continuing.
+
+## Step 2: Bounded implementation
+
+During implementation, the agent must:
+
+- Stay within ticket scope; do not change unrelated files.
+- Prefer the smallest viable change that satisfies acceptance criteria.
+- Avoid opportunistic refactors unless requested or required for correctness.
+- Reuse existing patterns/components/services before introducing new abstractions.
+- Keep code and tests aligned with current architecture and module intent.
+- Update docs only when the ticket changes behavior, structure, routes, or operations.
+
+## Step 3: Validation while working
+
+After substantive edits, the agent must:
+
+- Run or update relevant tests for changed behavior.
+- Verify lint/build for touched areas when practical.
+- Check that acceptance criteria are actually met (not only that code compiles).
+- If tests fail outside the touched area, report those failures separately and do not fold unrelated fixes into this ticket by default.
+- If waiting on external dependencies/decisions, stop implementation and return a dependency checklist plus proposed fallback/stub approach.
+- If the change includes auth, API surface/data model, or deployment shifts, ensure ADR/doc requirements from `docs-and-intention` are handled before considering the ticket complete.
+- Report blockers early with a concrete next action.
+
+## Step 4: End-of-ticket self-review (before commit-prep flow)
+
+Before moving to commit message/commit/PR preparation, the agent must perform a brief self-review against the original ticket:
+
+- What was requested vs what was delivered.
+- Files changed and why each change was necessary.
+- Anything intentionally out of scope.
+- Did any part of implementation exceed the original acceptance criteria or introduce hidden behavior changes?
+- Remaining risks, follow-ups, or test gaps.
+- Metrics opportunities (if meaningful new user/system actions were introduced).
+
+## Restraint rules (always)
+
+- Do not immediately code without scope triage and intake.
+- Do not expand scope without user approval.
+- Do not silently change behavior beyond the ticket.
+- Do not invent requirements; ask when uncertain.
+- Do not bypass existing commit-prep rules (`tests-before-commit`, `site-versioning`).
+
+## Rule layering with existing rules
+
+Use this order of operations:
+
+1. `ticket-workflow` (scope triage -> intake -> bounded execution -> self-review)
+2. `docs-and-intention` + `site-map` (during implementation decisions)
+3. `tests-before-commit` + `site-versioning` (only when commit/PR prep is requested)
