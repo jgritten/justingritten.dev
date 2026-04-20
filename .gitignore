@@ -43,7 +43,10 @@ server/*.db
 client/coverage/
 server/Api.Tests/TestResults/
 
-temp/
+# Local-only at repo root (not shipped). Leading `/` = root only; nested `.../templates/` elsewhere stays tracked.
+# Cursor @-mentions often skip gitignored paths.
+/temp/
+/templates/
 
 # AI retro artifacts (local workflow metadata)
 .ai-retro/

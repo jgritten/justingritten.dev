@@ -6,6 +6,7 @@ alwaysApply: true
 # Tests before commit
 
 This rule keeps the repo healthy by ensuring automated tests run before changes are committed.
+It also captures one lightweight commit-prep artifact per commit so AI retro has reliable material to review for recurring pain points.
 
 ## When the user asks for a commit message or to commit changes
 
@@ -17,24 +18,63 @@ This rule keeps the repo healthy by ensuring automated tests run before changes 
   - Run the **server** build (e.g. `dotnet build server` from repo root) to ensure the API still builds.
   - **Evaluate changes for test coverage:** Review the set of changed/staged files (client and server). If new or modified production code was added (e.g. new API endpoints, new components, new services), consider whether corresponding tests exist or are needed. If coverage gaps are obvious, call them out and suggest adding tests before commit (or note the gap in the commit message so it can be addressed later).
   - **Evaluate metrics capture opportunities:** The site uses **first-party** visitor and product metrics (`POST /api/metrics/visit`, overview/summary endpoints—not a third-party analytics SDK). When reviewing changes, consider whether new **meaningful user or system actions** (e.g. new routes, CTAs, auth milestones, errors worth counting) should emit or aggregate metrics. If a gap is obvious, call it out or note it in the commit message for a follow-up—same spirit as the test-coverage check, without requiring metrics on every change.
-  - **Check retro cadence status:** Before finalizing commit prep output, evaluate retro cadence from `.ai-retro/` and `.ai-retro/last-evaluated.txt` (if present), then prompt the user when due.
-  - **Create retro artifact:** Create one new `.ai-retro/YYYY-MM-DD-HHMM-brief-topic.md` file for the commit-prep run with concise notes: scope reviewed, key issues/gaps found (if any), single intervention selected (or "No change this cycle"), and next-batch success signal.
+- **Check retro cadence status:** Before finalizing commit prep output, evaluate retro cadence from `.ai-retro/artifacts/` and `.ai-retro/last-evaluated.txt` (if present), then prompt the user when due.
+- **Create commit-prep artifact:** Create one new `.ai-retro/artifacts/YYYY-MM-DD-HHMM-brief-topic.md` file for the commit-prep run with concise factual notes that can be reviewed later by `run ai retro` (what changed, notable gaps/risks, and any suggested follow-up).
 
-## AI retro artifact during commit prep
+## AI retro material artifact during commit prep
 
-To keep retros lightweight and consistent, commit prep should write one retro summary artifact:
+To keep retros lightweight and evidence-based, commit prep should write one material artifact:
 
-- Path format: `.ai-retro/YYYY-MM-DD-HHMM-brief-topic.md`
-- Content should remain brief and practical (not per-ticket heavy logging).
-- Keep each retro as a separate file so multiple same-day retros remain distinct.
-- If there are no meaningful recurring patterns yet, explicitly record: `No change this cycle`.
+- Path format: `.ai-retro/artifacts/YYYY-MM-DD-HHMM-brief-topic.md`
+- Content should remain brief and practical (lightweight per commit-prep, not heavy logging).
+- Keep each artifact as a separate file so multiple same-day entries remain distinct.
+- Do not perform rule changes in commit prep; `run ai retro` evaluates batches of these artifacts.
+
+### Commit-prep artifact template (required)
+
+Each `.ai-retro/artifacts/*.md` entry should use this structure so retros have enough signal:
+
+```md
+# Commit Prep Artifact - YYYY-MM-DD-HHMM - brief-topic
+
+## Scope
+- Branch/context:
+- Change window:
+- Primary files/systems touched:
+
+## What changed
+- 2-5 bullets of factual changes shipped/prepared.
+
+## Verification results
+- Client tests:
+- Server tests:
+- Client build:
+- Server build:
+
+## Coverage + metrics review
+- Test coverage gaps spotted:
+- Metrics capture opportunities spotted:
+
+## Friction / miscommunication signals
+- Any unclear requirements, drift, overreach, rework, or avoidable back-and-forth.
+- Use `None` if not observed.
+
+## Suggested follow-up
+- One concise follow-up action (or `None`).
+```
+
+Guidelines:
+
+- Keep artifact size short (target 10-25 lines of content).
+- Prefer concrete observations over opinions.
+- If a section is not applicable, write `None` rather than omitting the section.
 
 ## Retro cadence prompt during `prep commit`
 
 To signal when an AI retro is due, commit prep should:
 
 - Read `.ai-retro/last-evaluated.txt` (if it exists). This marker should store the filename or timestamp of the last completed retro evaluation.
-- Count retro artifacts created since that marker.
+- Count commit-prep artifacts in `.ai-retro/artifacts/` created since that marker.
 - Prompt based on count:
   - If count is **10 or more**, say: `You're overdue for an AI Retro.`
   - If count is **8-9**, say: `You're ready for an AI Retro.`

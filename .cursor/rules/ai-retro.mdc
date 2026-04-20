@@ -3,9 +3,10 @@ description: Optional, low-overhead AI workflow retrospectives to improve rules 
 alwaysApply: true
 ---
 
-# AI workflow retrospective (optional cadence)
+# AI workflow retrospective (artifact-driven)
 
-This rule is for periodic improvement of AI-assisted delivery quality.
+This rule periodically reviews past AI agent interactions to ensure prompt/rule behavior stays aligned with developer expectations and application goals.
+It uses commit-prep artifacts as evidence, then applies minimal, targeted adjustments to reduce recurring workflow pain points.
 It is intentionally non-blocking and must not slow normal ticket execution.
 
 ## Purpose
@@ -14,20 +15,45 @@ Use short, evidence-based retros to identify repeated workflow failures and make
 
 ## Non-goal
 
-Do not require per-ticket heavy logging or manual process overhead during normal implementation work.
+Do not require heavy logging or manual process overhead during normal implementation work.
 
-## Trigger
+## Workflow model
 
-Run this retro only when one of these is true:
+This process has two layers:
 
-- Roughly every 10 completed tickets, or
+1. **Commit-prep artifacts** (lightweight material) are written during commit prep.
+2. **AI retro evaluation** (`run ai retro`) reviews a batch of those artifacts and decides whether rules/prompts should change.
+
+You cannot run a meaningful retro without material; the commit-prep artifacts are that material.
+
+## Trigger for `run ai retro`
+
+Run this retro evaluation when one of these is true:
+
+- Roughly every 10 new commit-prep artifacts since the last evaluation, or
 - Biweekly cadence, or
-- A recurring issue clearly appears across multiple recent tickets.
+- A recurring issue clearly appears across multiple recent artifacts.
 
-## Inputs (keep lightweight)
+## Inputs (artifact-first)
 
-Use available context from recent tickets/runs/chats and commit history.
-If detailed notes are missing, perform a best-effort review from memory plus recent diffs/conversation context.
+Primary input is recent files under:
+
+`.ai-retro/artifacts/`
+
+Use chat/commit context only as secondary support when an artifact is unclear.
+
+### Artifact quality bar (for reliable retro analysis)
+
+When reviewing `.ai-retro/artifacts/`, expect each artifact to include:
+
+- Scope/context (what work window was captured)
+- Factual change summary
+- Verification outcomes (tests/builds)
+- Coverage and metrics observations
+- Friction/miscommunication signals (or explicit `None`)
+- Suggested follow-up (or explicit `None`)
+
+If an artifact is missing fields, still proceed with best effort, but note data-quality limits in the retro summary.
 
 ## Retro process (20-30 minutes max)
 
@@ -36,20 +62,23 @@ If detailed notes are missing, perform a best-effort review from memory plus rec
 3. Propose one minimal intervention per pattern (prompt tweak, checklist tweak, or single rule line).
 4. Choose at most one rule change to apply in this retro cycle.
 5. Define what success looks like for the next batch (what should improve).
-6. Write one retro summary file for this run (see output format below).
+6. Cite the artifact batch reviewed (filenames or date range).
+7. Write one retro evaluation summary file for this run (see output format below).
 
-## Retro output artifact (one file per retro)
+## Retro output artifact (one file per retro evaluation)
 
 Create exactly one new file per retro run under:
 
-`.ai-retro/YYYY-MM-DD-HHMM-brief-topic.md`
+`.ai-retro/retros/YYYY-MM-DD-HHMM-brief-topic.md`
 
-This is a retro summary file, not per-ticket logging. Keep it short and practical.
+This is the evaluation summary that references a reviewed batch of commit-prep artifacts.
+Keep it short and practical.
 Use a brief topic slug so multiple retros on the same day stay separate and scannable.
 
 Minimum sections:
 
 - Scope reviewed (time window or approximate ticket count)
+- Artifact batch reviewed (file range/list)
 - Top 2 recurring patterns
 - Root causes (brief)
 - Intervention selected (single change, if any)
@@ -62,7 +91,7 @@ After completing a retro run, create if missing and then update:
 
 `.ai-retro/last-evaluated.txt`
 
-Set it to the latest completed retro artifact filename (or ISO timestamp) so commit-prep cadence checks can determine when retro is ready/overdue.
+Set it to the latest reviewed commit-prep artifact filename (or ISO timestamp aligned to the reviewed boundary) so cadence checks can determine when retro is ready/overdue.
 
 ## Change threshold (avoid overfitting)
 
