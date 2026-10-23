@@ -141,5 +141,5 @@ When you add, remove, or significantly change a route or navigation entry:
 3. **Update this document** (`docs/sitemap.md`):
    - Add, remove, or modify entries under **Route tree**.
    - Adjust the **Per-page navigation** section as needed.
-4. If you introduce an entirely new module (e.g. another SaaS product), also review the `.cursor/rules/site-map.mdc` rule to ensure the conceptual module map stays in sync.
+4. If you introduce an entirely new module (e.g. another SaaS product), also review the site map in `AGENTS.md` to ensure the conceptual module map stays in sync.
 

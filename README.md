@@ -29,7 +29,7 @@ dotnet run --project server
 ```
 
 API (local): **http://localhost:5237**.  
-API (production): **https://api.justingritten.dev**.  
+API (production): `https://api.justingritten.dev` ([health check](https://api.justingritten.dev/health)).  
 The client uses `VITE_API_URL` (see `client/.env.example`) to choose the API base URL.
 
 ---

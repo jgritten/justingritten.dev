@@ -1,6 +1,6 @@
 ---
 description: Run client and server tests, builds, bump site version once at commit prep only, and coverage evaluation before preparing commit messages or committing changes.
-alwaysApply: true
+alwaysApply: false
 ---
 
 # Tests before commit
@@ -10,7 +10,7 @@ It also captures one lightweight commit-prep artifact per commit so AI retro has
 
 ## When the user asks for a commit message or to commit changes
 
-- **Always** do the following **before** proposing a commit message or running any git commit:
+- **Always** do the following **before** proposing a commit message (Justin runs every git commit himself):
   - **Bump the site version once** (see “Site version” below)—**only in this commit-prep flow**, not during earlier implementation turns on the same uncommitted work. If files changed, update `SITE_VERSION` in `client/src/utils/siteVersion.ts` from the **current repo value** by exactly one segment: **Major (X.0.0)** = big revamp or v1 launch (then set minor and patch to 0); **Minor (0.Y.0)** = new sections, notable UX, or visible features (then set patch to 0); **Patch (0.0.Z)** = bug fixes, config, deployment, docs, or other small changes—increment only the last number. After bumping, re-run client tests and client build.
   - Run the **client** test suite (e.g. `npm test` in `client/`). All client tests must pass.
   - Run the **server** test suite (e.g. `dotnet test server/Api.Tests/Api.Tests.csproj` from repo root). All API tests must pass.

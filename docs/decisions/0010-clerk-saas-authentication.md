@@ -36,4 +36,4 @@ The roadmap and [ADR 0009](0009-auth-observability-and-infra-choices.md) lock **
 ## References
 
 - [Clerk: Session tokens](https://clerk.com/docs/guides/sessions/session-tokens)  
-- [Clerk: Manual JWT verification](https://clerk.com/docs/backend-requests/manual-jwt)
+- [Clerk: Manual JWT verification](https://clerk.com/docs/guides/sessions/manual-jwt-verification)

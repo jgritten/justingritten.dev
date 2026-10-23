@@ -1,6 +1,6 @@
 ---
 description: Bump site version only during commit prep (one bump per commit); major, minor, or patch with reset rules.
-alwaysApply: true
+alwaysApply: false
 ---
 
 # Site versioning on commit
